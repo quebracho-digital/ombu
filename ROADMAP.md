@@ -34,6 +34,13 @@ the cut line moves as we go.
 | Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `ombu` in this repo (listings, reviews, the Circle import, the agent door), a wallet-auth module (several wallets per account, several chains). The recipe builds the demo site. Repos under `quebracho-digital`: `ombu` (this one, the hackathon entry), `x402_pay`, `wallet_auth`: one per drupal.org project, not one per module |
 | Name | Module: `x402_pay` (drupal.org `x402` maintainers never answered). The mall: **Ombú** (no chain in the name; "on Arc" as the tagline) |
 | Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
+| The x402 field | `x402_pay` ships a field type (`x402_price`) that makes **any fieldable entity** payable over x402 by adding the field. Basic settings: on/off, price, network, seller key (`payTo` is derived from the key, never typed, so the money cannot go to a wallet that does not sign), per-entity override allowed or not. Advanced (collapsed): charge on the canonical URL, agent detection (`PAYMENT-SIGNATURE`, `Accept`, User-Agent list with regex), price per visitor type (training crawler, query agent, person), what is delivered (markdown, JSON, a view mode), free preview for people, how long a person's access lasts, payment timeout |
+| Where it charges | **Both**: the entity's own URL for whoever counts as an agent (browsers still see the normal page), and a separate route `/x402/{entity_type}/{id}` announced with a `Link` header |
+| Catalogue | A View of every entity with the field, payable list for people and JSON export for agents, editable like any View. With Search API installed, an optional index-based version that spans several entity types in one catalogue |
+| People | Pay with x402 in the browser too: one wallet signature, no gas. A purchase is recorded on the buyer's account (signed in with the wallet) and reopens the content; anonymous buyers get a signed cookie. The **people door of the hackathon**, instead of Commerce checkout |
+| Commerce | An Arc USDC gateway (`x402_pay_commerce`) is still delivered, reusing the same browser signature, for carts of several items |
+| Rules | ECA, not Rules (barely alive in D11) and not a home-made regex language: a "before charging" event (entity, request, visitor type, display) that can change the price, make it free or deny; `x402_pay_eca` exposes it to ECA |
+| Renaming | Public identifiers use the protocol's name, not the module's: field type `x402_price`, routes `/x402/…`, `drush x402:…`. Internals share one prefix, so `x402_pay` → `x402` is one scripted `sed` until the first drupal.org release. The `x402` takeover runs in parallel (project queue, 14 days, then the ownership queue): it cannot land before 10-17 |
 | Secrets | Wallet credentials via the `key` module from an environment variable, never in exportable config |
 | Licence | `Apache-2.0 OR GPL-2.0-or-later` (drupal.org requires the GPL) |
 | Hosting | Demo on minisforum through the Cloudflare tunnel, **Arc testnet only**. The market's hostname needs a WAF skip rule: agents cannot pass a managed challenge |
@@ -54,11 +61,27 @@ the cut line moves as we go.
    - [ ] Browser wallet.
 1. [x] **Terms analyzer, first slice** (`ai_provider_universal` 59758eb).
    - **Done:** Mercado Libre AR terms, 8/9 categories, 0 invented quotes.
-2. [ ] **`x402_pay`, receiving** (10-11). Price and `payTo` come from the
-   caller, not from config, so the market can set them per listing.
-   - **Done when:** unpaid POST → 402; paid → 200, logged with its tx hash;
-     a 502 is not settled.
-3. [ ] **Market, agent door** (10-12). Listing = Commerce product with
+2. [ ] **`x402_pay`, receiving** (10-10/11).
+   - ✅ **Core, 2026-10-09** (`x402_pay` 4b0f112, 34 tests): EIP-712 and
+     signing equal to viem byte for byte, the v2 headers, Circle's client
+     (seller proof, polling a pending settlement), and the gate: verify →
+     handler → settle only on 2xx → body only once settled; every outcome
+     in `x402_pay_log`.
+   - [ ] **The `x402_price` field**, basic settings, the separate route, the
+     canonical URL with agent detection, delivery as markdown/JSON.
+   - [ ] **The catalogue View** (and the Search API version when present).
+   - **Done when:** a node with the field answers 402 to an agent on both
+     URLs and a browser still sees the page; a viem script pays it on Arc
+     testnet and gets the markdown; the tx is on arcscan and in the log; a
+     handler failing with 502 is not settled; the View lists it.
+2b. [ ] **People pay in the browser** (10-11/12). A *Pay $0.01* button, one
+   MetaMask signature, the content shows; the purchase is recorded and
+   reopens it (account or cookie). Depends on the browser-wallet day-1 check.
+   - **Done when:** a person pays a node on Arc testnet with MetaMask,
+     reloads, and still sees it without paying again.
+3. [ ] **Market, agent door** (10-12). Listings get the `x402_price`
+   field; Ombú answers the paid call with the service itself through the
+   field's delivery hook. Listing = Commerce product with
    price, `payTo`, seller endpoint and description. `GET /market.json` is
    the catalogue agents read; `POST /market/{listing}` is the x402 door.
    Our three sellers listed, each with its own wallet.
@@ -102,11 +125,11 @@ the cut line moves as we go.
    price, `payTo` and endpoint, paid over x402; lands unpublished for
    approval. Posted in the Arc Discord.
    - **Done when:** at least one listing and one sale that are not ours.
-6. [ ] **People door** (10-15). `x402_pay_commerce`: checkout signs with the
-   browser wallet, the order goes to the seller's agent, and the result
-   shows on the order page.
-   - **Done when:** a person buys a terms analysis and reads it on the order.
-
+6. [ ] **Commerce gateway: Arc USDC** (10-15). `x402_pay_commerce`: checkout
+   signs with the browser wallet (the same code as 2b) and the order is paid
+   on Arc. Delivered even if the demo does not use it.
+   - **Done when:** an order with two items is paid on Arc testnet and goes
+     to *completed* with the tx hash on the payment.
 6b. [ ] **MCP tools** (10-16): search, get, review, through the contrib
    MCP module. Last before the cut: likely to fit, first to drop.
 
@@ -120,6 +143,13 @@ the cut line moves as we go.
    business, and the submission says so.
 
 ## 🎯 Full marketplace
+
+- [ ] **Purchases on the account, every edge case**: an anonymous buyer
+  without the cookie is recognised by the wallet when they pay again (no
+  double charge), and their earlier purchases attach to the account when
+  they sign in.
+- [ ] **`x402_pay_eca`**: the "before charging" event in ECA.
+- [ ] **Price per visitor type and per display**, if not finished in 2.
 
 - [ ] **Seller accounts**: an agent and its operator sign up, manage their
   listings and see their sales. Who is legally the seller to a person.

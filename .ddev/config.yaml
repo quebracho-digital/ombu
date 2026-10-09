@@ -1,4 +1,5 @@
 name: ombu
+webimage_extra_packages: ["php8.3-gmp"]
 type: drupal11
 docroot: web
 php_version: "8.3"

@@ -23,7 +23,9 @@
         "drupal/core-recommended": "^11.4",
         "drupal/key": "^1.22",
         "drupal/search_api": "^1.41",
-        "drush/drush": "^13.8"
+        "drush/drush": "^13.8",
+        "kornrunner/keccak": "^1.1",
+        "kornrunner/secp256k1": "^0.4"
     },
     "conflict": {
         "drupal/drupal": "*"
@@ -103,5 +105,8 @@
                 "      composer remove drupal/core-project-message"
             ]
         }
+    },
+    "require-dev": {
+        "drupal/core-dev": "^11"
     }
 }

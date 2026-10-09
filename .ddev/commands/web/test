@@ -1,0 +1,7 @@
+#!/bin/bash
+## Description: Run PHPUnit for our modules (unit + kernel). Extra args go to phpunit.
+## Usage: test [phpunit args]
+## Example: ddev test --filter PaymentGate
+cp -n web/core/phpunit.xml.dist web/core/phpunit.xml 2>/dev/null || true
+mkdir -p web/sites/simpletest
+SIMPLETEST_DB=mysql://db:db@db/db vendor/bin/phpunit -c web/core/phpunit.xml "$@" web/modules/custom/x402_pay/tests

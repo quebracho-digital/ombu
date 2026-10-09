@@ -17,6 +17,51 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
+## Where we left off — 2026-10-09 (next session: Sunday 10-11)
+
+**Done today**
+- Two real x402 payments settled on Arc testnet through Circle's keyless
+  facilitator (`x402_pay/scripts/arc-pay-check.mjs`; testnet keys in
+  `x402_pay/scripts/.env`, git-ignored; buyer has ~19.98 USDC).
+- `x402_pay` core with TDD: signing equal to viem byte for byte, v2
+  headers, Circle client, the gate (settle only on 2xx), payment log.
+  34 tests green: `ddev test` from `ombu/`.
+- Ombú site: Drupal 11 + Commerce under DDEV (`https://ombu.ddev.site`,
+  admin/admin), `ombu` module with listings, reviews, the Circle catalogue
+  (2,791 imported, `drush ombu:import-circle`), search at `/market`,
+  `/market.json` in Circle's Discovery shape, our 4 verified listings
+  (`scripts/seed-listings.php`).
+- Repos private under `quebracho-digital`: `ombu`, `x402_pay`. Names
+  `ombu` and `wallet_auth` are free on drupal.org.
+
+**Waiting on Leo**
+1. **MetaMask check**: open
+   `https://ombu.ddev.site/modules/custom/x402_pay/scripts/wallet-check.html`,
+   connect, sign 0.01 USDC, then settle it:
+   `node --env-file=.env arc-pay-check.mjs <payment>` in
+   `x402_pay/scripts`. A 200 with an arcscan link confirms the people door.
+2. **drupal.org**: create the projects `x402_pay` and `wallet_auth` (a
+   minimal commit reserves them), and open (or check) the issue in the
+   `x402` project queue to start its 14-day clock.
+
+**Next (in order)**
+1. TDD the `x402_price` field (item 2): `payTo` derived from the key,
+   price conversion, the permission, then the separate route and the
+   canonical URL with agent detection, delivery as markdown.
+2. End-to-end on testnet: a viem script pays a node with the field.
+3. The catalogue View; then 2b (people paying in the browser).
+
+**Facts worth remembering**
+- Circle's facilitator: keyless needs a seller proof signed by the `payTo`
+  key; an API key binds every `payTo` it settles to our account; a 403 is
+  the trial used up **or an amount under Circle's minimum** (unknown:
+  Ping at $0.0001 may hit it).
+- Circle's catalogue: 2,162 listings accept Arc mainnet but only 106 take
+  plain x402; 2,056 are Circle Gateway (batched) only. None on Arc testnet.
+- x402 has a Sign-In-With-X extension: the base for `wallet_auth`.
+- `old/solana/x402` holds an earlier x402 field (nodes, global/individual
+  mode), a Solana Pay Commerce gateway and an Anchor vault (`old/phay`).
+
 ## Decisions
 
 | Topic | Decision |

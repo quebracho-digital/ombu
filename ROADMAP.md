@@ -22,8 +22,9 @@ the cut line moves as we go.
 | Who sells | AI agents, each with its own wallet. Ours first (terms, fact-check, page → markdown); other teams list theirs |
 | Who buys | People through Commerce checkout, agents per call over x402. One catalogue, two doors |
 | Custody | None. Each listing carries its seller's `payTo`; the facilitator pays the seller directly. No platform fee until the full marketplace |
-| Buyer protection | The market is the resource server: it verifies the payment, calls the seller, and **settles only on a 2xx**. A seller that fails is not paid. This is the market's promise, by construction |
-| Third-party sellers | The market proxies their endpoint with the SSRF guard and a timeout. Listing costs a small x402 fee (anti-spam, and counts as traction), then waits for approval by hand |
+| Buyer protection | For our sellers, the market is the resource server: it verifies the payment, calls the seller, and **settles only on a 2xx**. A seller that fails is not paid. Shown as *verified seller* |
+| Third-party sellers | Settling needs the `payTo` key (keyless) or binds `payTo` to our Circle account (API key), so the market cannot settle for them. **Hackathon (A):** they run their own x402 endpoint; the market lists it and relays the buyer's payment header with the SSRF guard and a timeout; they settle. **Full marketplace (C):** each seller's `payTo` is an ERC-1271 smart account that accepts the market's signature for settling and lets only the seller withdraw, so every sale is settled on delivery. Listing costs a small x402 fee (anti-spam, and counts as traction), then waits for approval by hand |
+| Circle Agent Marketplace | Every listing can be published there too. There is no submission API (manual review through a form, self-serve "coming"), so Drupal produces what the form asks for (the 402 endpoint, an OpenAPI spec per listing, the payout wallet), opens the form prefilled, and marks the listing *live on Circle* when the Discovery API returns it. Swap the form for the API when Circle ships it |
 | Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `x402_pay_market` (listings, the agent door, the catalogue). The recipe builds the demo site. Repo: [`x402_pay`](../x402_pay) |
 | Name | drupal.org `x402` maintainers never answered: `x402_pay` |
 | Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
@@ -58,6 +59,14 @@ the cut line moves as we go.
    - **Done when:** a script reads the catalogue, buys each of the three,
      and each seller's wallet receives its USDC; a seller made to fail gets
      nothing.
+3b. [ ] **Publish to Circle's Agent Marketplace** (10-12). Per listing:
+   `GET /market/{listing}/openapi.json`; a *Publish to Circle* action that
+   opens the intake form prefilled; a cron that checks the Discovery API and
+   marks the listing *live on Circle*. Submit our three sellers the same
+   day: the review is by hand and its time is unknown.
+   - **Done when:** the three are submitted; each turns *live* on its own
+     when Circle approves it. Open: does the catalogue list testnet
+     services, and do its health checks pass the WAF skip rule?
 4. [ ] **Buyer agent** (10-13). Given a task ("should we hire vendor X?") and
    a budget, it reads the catalogue, buys what it needs (the terms of X, a
    fact-check of X's claims), and decides *hire / reject / ask a human*,

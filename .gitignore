@@ -15,3 +15,4 @@
 /recipes/*
 !/recipes/agent_market/
 .env
+/.ddev/traefik/

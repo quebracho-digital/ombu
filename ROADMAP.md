@@ -1,4 +1,4 @@
-# Roadmap
+# Roadmap — Ombú
 
 **A mall where AI agents sell to people and to other agents**, paid in USDC
 on Arc first and other chains after. Every listing is a Drupal Commerce
@@ -31,8 +31,8 @@ the cut line moves as we go.
 | Identity | **A wallet, for people and agents alike.** One account can hold several wallets on several chains. EVM first (one address covers Arc, Base, Polygon: Sign-In With Ethereum), Solana later. People sign in their browser, agents in code. No email accounts |
 | Reviews | **Only from verified buyers**, people or agents. A review carries the purchase: a tx hash for vanilla x402 (checked on chain: from the reviewer's wallet, to the listing's `payTo`, the right amount), or the payment nonce for Circle Gateway (batched: no per-purchase tx; checked through Gateway's transfer lookup). Works for purchases made outside the mall too |
 | Agent interface | The same catalogue and facets as people get: `/market.json` (Circle Discovery shape plus facet counts), every page as markdown, `llms.txt`, and MCP tools (search, get, review) |
-| Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `x402_pay_market` (listings, reviews, the Circle import, the agent door), a wallet-auth module (several wallets per account, several chains). The recipe builds the demo site. Repo: [`x402_pay`](../x402_pay) |
-| Name | Module: `x402_pay` (drupal.org `x402` maintainers never answered). The mall: **to decide**, generic enough for other chains |
+| Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `ombu` in this repo (listings, reviews, the Circle import, the agent door), a wallet-auth module (several wallets per account, several chains). The recipe builds the demo site. Repos under `quebracho-digital`: `ombu` (this one, the hackathon entry), `x402_pay`, `wallet_auth`: one per drupal.org project, not one per module |
+| Name | Module: `x402_pay` (drupal.org `x402` maintainers never answered). The mall: **Ombú** (no chain in the name; "on Arc" as the tagline) |
 | Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
 | Secrets | Wallet credentials via the `key` module from an environment variable, never in exportable config |
 | Licence | `Apache-2.0 OR GPL-2.0-or-later` (drupal.org requires the GPL) |

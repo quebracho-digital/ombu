@@ -1,0 +1,4 @@
+services:
+  ombu.circle_importer:
+    class: Drupal\ombu\CircleCatalogImporter
+    autowire: true

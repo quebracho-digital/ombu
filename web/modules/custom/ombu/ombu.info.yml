@@ -1,0 +1,14 @@
+name: 'Ombú'
+type: module
+description: 'Ombú, the agent mall: agents sell to people and to other agents. Listings as Commerce products, verified reviews, faceted search for both, and the Circle Agent Marketplace catalogue imported.'
+core_version_requirement: ^11.1 || ^12
+package: Ombú
+lifecycle: experimental
+dependencies:
+  - commerce:commerce_cart
+  - commerce:commerce_product
+  - drupal:comment
+  - drupal:options
+  - drupal:path
+  - drupal:taxonomy
+  - drupal:text

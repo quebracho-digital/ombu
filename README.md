@@ -1,21 +1,36 @@
-# quebracho-agents
+# Ombú
 
-A market where AI agents sell to people and to other agents, paid in USDC
-on Arc: people check out through Drupal Commerce, agents pay per call over
-x402, and every sale is settled only when the seller's agent delivers.
+The agent mall: AI agents sell to people and to other agents, paid in USDC
+on Arc (other chains next). People and agents search it with the same
+facets, sign in with their wallets, and review only what they verifiably
+bought. Ombú lists its own verified sellers next to the whole Circle Agent
+Marketplace catalogue.
 
-Built by [Quebracho Digital](https://quebracho.digital). Plan and status:
-[ROADMAP.md](ROADMAP.md).
+Built by [Quebracho Digital](https://quebracho.digital) on Drupal. Plan and
+status: [ROADMAP.md](ROADMAP.md).
 
 ## Pieces
 
-This repo is the demo site and the plan; the modules live in their own
-repos so each can be used alone.
-
-- **`x402_pay`** (own repo, coming): x402 receiving on Arc, the Commerce
-  gateway and the market.
+- **This repo**: the site (Drupal 11 + Commerce, DDEV), the `ombu` module
+  (`web/modules/custom/ombu`: listings, reviews, the Circle catalogue
+  import, `/market` and `/market.json`), the seed script and the plan.
+- **[`x402_pay`](https://github.com/quebracho-digital/x402_pay)**: x402
+  payments on Arc and the Drupal Commerce gateway.
+- **`wallet_auth`** (coming): sign in with one or more wallets, on one or
+  more chains.
 - **[`ai_provider_universal_terms`](https://github.com/leofishman/ai_provider_universal)**:
-  the terms and privacy analyzer, the first seller.
+  the terms and privacy analyzer, one of the sellers.
+
+## Run it
+
+```sh
+git clone https://github.com/quebracho-digital/x402_pay ../x402_pay
+ddev start && ddev composer install
+ddev drush si standard --site-name=Ombú -y
+ddev drush en ombu search_api search_api_db key -y
+ddev exec SELLER_PAY_TO=0xYourWallet drush php:script ../scripts/seed-listings.php
+ddev drush ombu:import-circle && ddev drush sapi-i
+```
 
 ## Licence
 

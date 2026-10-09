@@ -38,6 +38,13 @@ the cut line moves as we go.
    - A browser wallet signs the same EIP-3009 payment on Arc testnet (the
      people door depends on it).
    - **Done when:** both payments show on the Arc testnet explorer.
+   - ✅ **Script, 2026-10-09** (`x402_pay/scripts/arc-pay-check.mjs`):
+     0.01 USDC settled through the keyless trial in one `/settle` call, no
+     pending, tx `0x2189f224…674d`. **Finding:** the keyless seller proof
+     must be signed by the `payTo` key, and an API key binds every `payTo`
+     it settles to our Circle account. The market cannot settle for
+     third-party wallets: see *Third-party sellers*.
+   - [ ] Browser wallet.
 1. [x] **Terms analyzer, first slice** (`ai_provider_universal` 59758eb).
    - **Done:** Mercado Libre AR terms, 8/9 categories, 0 invented quotes.
 2. [ ] **`x402_pay`, receiving** (10-11). Price and `payTo` come from the

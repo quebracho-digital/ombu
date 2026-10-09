@@ -1,102 +1,103 @@
 # Roadmap
 
-Drupal modules that let a site **charge** for an API with x402 and let its AI
-agents **pay** x402 services within hard spending rules, plus the first paid
-service: a terms-of-service analyzer that quotes every clause it reports.
+**A market where AI agents sell to people and to other agents**, paid in USDC
+on Arc. Every listing is a Drupal Commerce product with two doors: people
+check out, agents pay per call over x402. Either way the money goes straight
+to the seller's wallet, and the sale is settled only when the seller's
+agent actually delivers.
 
 Three tiers. Every item has a **done when** that can be checked. Inside 🏁 the
 order is the priority: if time runs out, items are cut from the bottom, and
 the cut line moves as we go.
 
 - 🏁 **Tameion Agents Hackathon** (Arc × Canteen): submission closes
-  **2026-10-17, 23:59 ET**.
-- 🎯 **Circle Developer Grants milestones**, after the hackathon.
+  **2026-10-17, 23:59 ET**. A working market with real sellers and buyers.
+- 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
 ## Decisions
 
 | Topic | Decision |
 |---|---|
-| Who pays | AI agents and developers, per call over x402, with no account |
-| Modules | `x402` (base) plus one submodule per chain family: `x402_evm` (Arc, Base, Polygon: the same EIP-3009 scheme), `x402_solana` later. Third-party facilitators; for receiving, only an address per network |
-| Paying from Drupal | Yes, from a Circle Agent Wallet. **Two layers of rules:** Drupal always checks before signing (per-hour/day/week/month caps, allowed recipients, a human-approval queue above a threshold), and pushes the same rules to the wallet when the chain enforces them natively. Each chain plugin declares which rules it enforces; Drupal enforces the rest |
+| Who sells | AI agents, each with its own wallet. Ours first (terms, fact-check, page → markdown); other teams list theirs |
+| Who buys | People through Commerce checkout, agents per call over x402. One catalogue, two doors |
+| Custody | None. Each listing carries its seller's `payTo`; the facilitator pays the seller directly. No platform fee until the full marketplace |
+| Buyer protection | The market is the resource server: it verifies the payment, calls the seller, and **settles only on a 2xx**. A seller that fails is not paid. This is the market's promise, by construction |
+| Third-party sellers | The market proxies their endpoint with the SSRF guard and a timeout. Listing costs a small x402 fee (anti-spam, and counts as traction), then waits for approval by hand |
+| Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `x402_pay_market` (listings, the agent door, the catalogue). The recipe builds the demo site. Repo: [`x402_pay`](../x402_pay) |
+| Name | drupal.org `x402` maintainers never answered: `x402_pay` |
+| Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
 | Secrets | Wallet credentials via the `key` module from an environment variable, never in exportable config |
-| Analyzer | `ai_provider_universal_terms`, a submodule of [ai_provider_universal](https://github.com/leofishman/ai_provider_universal), next to its fact-check. x402 stays a separate project that integrates easily |
-| Charging | Settle a payment **only on a 2xx response**: a failed analysis (502) costs nothing |
 | Licence | `Apache-2.0 OR GPL-2.0-or-later` (drupal.org requires the GPL) |
-| Name | drupal.org `x402` exists but is empty (since 2025-11); co-maintenance requested on 2026-10-07. Without an answer by 2026-10-10, `x402_pay` |
-| Hosting | Demo on minisforum through the Cloudflare tunnel, **Arc testnet only**. A VPS once it is serious |
+| Hosting | Demo on minisforum through the Cloudflare tunnel, **Arc testnet only**. The market's hostname needs a WAF skip rule: agents cannot pass a managed challenge |
 
 ## 🏁 Hackathon
 
-0. [ ] **Day-1 checks.** These change how `x402_evm` is written.
+0. [ ] **Day-1 checks** (10-09/10). These change how everything is written.
    - A script pays a 402 endpoint on Arc testnet through Circle's facilitator.
-   - Does the Agent Wallet have an HTTP API, or only the Circle CLI?
-   - Are spending policies enforced on testnet? Is there an hourly window?
-   - **Done when:** one paid request returns 200 and its transaction shows on
-     the Arc testnet explorer; the three answers are written here.
+   - A browser wallet signs the same EIP-3009 payment on Arc testnet (the
+     people door depends on it).
+   - **Done when:** both payments show on the Arc testnet explorer.
 1. [x] **Terms analyzer, first slice** (`ai_provider_universal` 59758eb).
-   `POST /api/terms/analyze` with `{"text"}` or `{"url"}`, measured prompt,
-   invented quotes dropped, cache by document hash.
-   - **Done:** Mercado Libre AR terms, 8/9 categories, 0 invented quotes;
-     0.9 s when cached.
-2. [ ] **Demo site.** A Composer project (`ai`, `ai_agents`, `eca`, `key`,
-   `ai_provider_universal`) on minisforum, behind the Cloudflare tunnel.
-   - **Done when:** the analyzer answers at a public URL.
-3. [ ] **`x402` + `x402_evm`, receiving.** Price per route in config; the 402
-   response carries the payment requirements; verify and settle through the
-   facilitator; settle only on 2xx; a payment log (route, amount, payer,
-   tx hash).
-   - **Done when:** an unpaid POST gets 402; a paid one gets 200 and is
-     logged with its tx hash; a request that fails with 502 is not settled.
-4. [ ] **The analyzer behind x402, with a warm cache.** Pre-analyze the terms
-   of the vendors Quebracho really uses (Cloudflare, Brevo, Telefónica,
-   Circle), so the demo answers at once.
-   - **Done when:** the four are cached and each paid lookup answers in under
-     2 s.
-5. [ ] **Offer the endpoint to other teams.** Post price, URL and an example
-   in the Arc Discord: vendor and compliance agents need it.
-   - **Done when:** it is posted and at least one payment comes from a wallet
-     that is not ours.
-6. [ ] **`x402_evm`, paying.** Drupal pays x402 services from the Agent
-   Wallet. Rules checked in Drupal before signing (caps per window, allowed
-   recipients), a queue for a human above a threshold, and the same rules
-   pushed to the wallet policy when Circle enforces them.
-   - **Done when:** a payment over a cap is refused before signing, one
-     above the threshold waits in the queue until approved, one under both
-     is paid, and all three are logged.
-7. [ ] **Vendor and compliance agent** (`ai_agents`). Given a vendor (name,
-   terms URL, address, amount), it buys the terms analysis, decides *pay /
-   reject / ask a human* with its reasons, pays within the rules, and
-   records the decision.
-   - **Done when:** it has run on Quebracho's four real vendors and the four
-     decisions, with reasons and tx hashes, are in the log.
+   - **Done:** Mercado Libre AR terms, 8/9 categories, 0 invented quotes.
+2. [ ] **`x402_pay`, receiving** (10-11). Price and `payTo` come from the
+   caller, not from config, so the market can set them per listing.
+   - **Done when:** unpaid POST → 402; paid → 200, logged with its tx hash;
+     a 502 is not settled.
+3. [ ] **Market, agent door** (10-12). Listing = Commerce product with
+   price, `payTo`, seller endpoint and description. `GET /market.json` is
+   the catalogue agents read; `POST /market/{listing}` is the x402 door.
+   Our three sellers listed, each with its own wallet.
+   - **Done when:** a script reads the catalogue, buys each of the three,
+     and each seller's wallet receives its USDC; a seller made to fail gets
+     nothing.
+4. [ ] **Buyer agent** (10-13). Given a task ("should we hire vendor X?") and
+   a budget, it reads the catalogue, buys what it needs (the terms of X, a
+   fact-check of X's claims), and decides *hire / reject / ask a human*,
+   with reasons and the tx hashes it spent.
+   - **Done when:** it has run on Quebracho's real vendors (Cloudflare,
+     Brevo, Telefónica, Circle) within budget, and a run that would go over
+     budget stops before paying.
+5. [ ] **Third-party sellers** (10-14). `POST /market/listings` with name,
+   price, `payTo` and endpoint, paid over x402; lands unpublished for
+   approval. Posted in the Arc Discord.
+   - **Done when:** at least one listing and one sale that are not ours.
+6. [ ] **People door** (10-15). `x402_pay_commerce`: checkout signs with the
+   browser wallet, the order goes to the seller's agent, and the result
+   shows on the order page.
+   - **Done when:** a person buys a terms analysis and reads it on the order.
 
    ✂️ *cut line: move it as we go*
 
-8. [ ] **Submission** (cannot be cut). Public repo, video under 3 minutes,
-   the Google Form, and the traction answers: real usage and USDC moved,
-   counted from the payment log. Quebracho is the author's own business,
-   and the submission says so.
+7. [ ] **Recipe** (10-16). `drush recipe` on a clean Drupal gives the market
+   with our three sellers.
+8. [ ] **Submission** (10-16/17, cannot be cut). Public repo, video under 3
+   minutes, the Google Form, and traction from the payment log: sales,
+   USDC moved, sellers that are not ours. Quebracho is the author's own
+   business, and the submission says so.
 
-## 🎯 Grant milestones
+## 🎯 Full marketplace
 
-- [ ] **`x402_solana`**: the same receive/pay contract on Solana; rules
-  Solana does not enforce stay in Drupal.
-- [ ] **Drupal Commerce payment gateway**: USDC checkout over x402.
-- [ ] **Commerce recipe with agents**: orders, treasury, vendors and
-  compliance (using the terms analyzer), on top of the gateway.
-- [ ] **Fact-check behind x402**: the `ai_provider_universal_factcheck`
-  verifier as a paid endpoint.
-- [ ] **drupal.org releases**: `x402` (or `x402_pay`) and the terms submodule.
-- [ ] **Lapacho plugin**: the Lapacho clipboard/keyboard calls the paid API
-  for documents that are not in its offline catalogue.
+- [ ] **Seller accounts**: an agent and its operator sign up, manage their
+  listings and see their sales. Who is legally the seller to a person.
+- [ ] **Platform fee**: a split at settlement (contract or two transfers).
+- [ ] **Reputation** from the payment log: delivered, failed, refused.
+- [ ] **Async jobs**: listings that take minutes, paid upfront into escrow
+  and released on delivery; refunds and disputes.
+- [ ] **Paying from Drupal**: site agents buy within hard rules (caps per
+  window, allowed sellers, a human queue above a threshold), from a Circle
+  Agent Wallet, pushing the rules to the wallet when the chain enforces them.
+- [ ] **More products**: fact-check as a page for people, Fabric patterns as
+  digital goods, Lapacho calling the market for documents not in its
+  catalogue.
+- [ ] **Discovery**: catalogue in the formats agents already read (x402
+  discovery, MCP).
+- [ ] **Solana** (`x402_pay_solana`), then mainnet.
+- [ ] **drupal.org releases**: `x402_pay` and the terms submodule.
 
 ## 🔭 Later
 
-- [ ] Move from minisforum to a VPS; mainnet.
-- [ ] Terms analyzer: settings form, severity per finding (once measured),
-  the versioned catalogue with "what changed since you accepted", lookups
-  by hash prefix.
+- [ ] Move from minisforum to a VPS.
+- [ ] Terms analyzer: severity per finding, versioned catalogue with "what
+  changed since you accepted".
 - [ ] Paying without revealing who paid (Privacy Pass or similar).
-- [ ] More chains, each declaring which rules it enforces.

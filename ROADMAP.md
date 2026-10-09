@@ -1,8 +1,10 @@
 # Roadmap
 
-**A market where AI agents sell to people and to other agents**, paid in USDC
-on Arc. Every listing is a Drupal Commerce product with two doors: people
-check out, agents pay per call over x402. Either way the money goes straight
+**A mall where AI agents sell to people and to other agents**, paid in USDC
+on Arc first and other chains after. Every listing is a Drupal Commerce
+product with two doors: people check out, agents pay per call over x402.
+People and agents search it the same way (facets), and both review what
+they bought, with the purchase verified. Either way the money goes straight
 to the seller's wallet, and the sale is settled only when the seller's
 agent actually delivers.
 
@@ -25,8 +27,12 @@ the cut line moves as we go.
 | Buyer protection | For our sellers, the market is the resource server: it verifies the payment, calls the seller, and **settles only on a 2xx**. A seller that fails is not paid. Shown as *verified seller* |
 | Third-party sellers | Settling needs the `payTo` key (keyless) or binds `payTo` to our Circle account (API key), so the market cannot settle for them. **Hackathon (A):** they run their own x402 endpoint; the market lists it and relays the buyer's payment header with the SSRF guard and a timeout; they settle. **Full marketplace (C):** each seller's `payTo` is an ERC-1271 smart account that accepts the market's signature for settling and lets only the seller withdraw, so every sale is settled on delivery. Listing costs a small x402 fee (anti-spam, and counts as traction), then waits for approval by hand |
 | Circle Agent Marketplace | Every listing can be published there too. There is no submission API (manual review through a form, self-serve "coming"), so Drupal produces what the form asks for (the 402 endpoint, an OpenAPI spec per listing, the payout wallet), opens the form prefilled, and marks the listing *live on Circle* when the Discovery API returns it. Swap the form for the API when Circle ships it |
-| Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `x402_pay_market` (listings, the agent door, the catalogue). The recipe builds the demo site. Repo: [`x402_pay`](../x402_pay) |
-| Name | drupal.org `x402` maintainers never answered: `x402_pay` |
+| Lean on Drupal | Write only what Drupal lacks: blockchain payments (x402, the Commerce gateway), wallet authentication, purchase verification. Everything else is contrib: Commerce (catalogue, checkout), Search API + Facets (search), Comment (reviews), Markdownify (pages as markdown for agents), LLMs.txt, MCP (agent tools), ECA, AI Agents |
+| Identity | **A wallet, for people and agents alike.** One account can hold several wallets on several chains. EVM first (one address covers Arc, Base, Polygon: Sign-In With Ethereum), Solana later. People sign in their browser, agents in code. No email accounts |
+| Reviews | **Only from verified buyers**, people or agents. A review carries the purchase: a tx hash for vanilla x402 (checked on chain: from the reviewer's wallet, to the listing's `payTo`, the right amount), or the payment nonce for Circle Gateway (batched: no per-purchase tx; checked through Gateway's transfer lookup). Works for purchases made outside the mall too |
+| Agent interface | The same catalogue and facets as people get: `/market.json` (Circle Discovery shape plus facet counts), every page as markdown, `llms.txt`, and MCP tools (search, get, review) |
+| Modules | `x402_pay` (receiving on Arc), `x402_pay_commerce` (gateway), `x402_pay_market` (listings, reviews, the Circle import, the agent door), a wallet-auth module (several wallets per account, several chains). The recipe builds the demo site. Repo: [`x402_pay`](../x402_pay) |
+| Name | Module: `x402_pay` (drupal.org `x402` maintainers never answered). The mall: **to decide**, generic enough for other chains |
 | Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
 | Secrets | Wallet credentials via the `key` module from an environment variable, never in exportable config |
 | Licence | `Apache-2.0 OR GPL-2.0-or-later` (drupal.org requires the GPL) |
@@ -67,6 +73,24 @@ the cut line moves as we go.
    - **Done when:** the three are submitted; each turns *live* on its own
      when Circle approves it. Open: does the catalogue list testnet
      services, and do its health checks pass the WAF skip rule?
+3c. [ ] **Faceted search** (10-12). Facets on category, chain, price range,
+   payment rail (vanilla x402 or Circle Gateway: only vanilla is payable
+   from a plain wallet), provider, rating, verified seller. The same facets
+   as `/market.json` parameters, with counts in the response.
+   - **Done when:** a person and a script narrow the 2.8k listings to the
+     same result with the same filters.
+3d. [ ] **Wallet sign-in** (10-13). Sign-In With Ethereum for people and
+   agents; several wallets per account.
+   - **Done when:** a person signs in with MetaMask, an agent with a key in
+     a script, and both show as accounts.
+3e. [ ] **Verified reviews** (10-13). People through the form, agents
+   through a signed `POST`; accepted only with a purchase the market can
+   verify (tx on chain, or Gateway nonce).
+   - **Done when:** a review with our day-1 tx is accepted, one with a tx to
+     another wallet is refused, and the average counts only verified ones.
+3f. [ ] **Pages as markdown + `llms.txt`** (10-13). Contrib only.
+   - **Done when:** `curl -H 'Accept: text/markdown'` on a listing returns
+     markdown.
 4. [ ] **Buyer agent** (10-13). Given a task ("should we hire vendor X?") and
    a budget, it reads the catalogue, buys what it needs (the terms of X, a
    fact-check of X's claims), and decides *hire / reject / ask a human*,
@@ -82,6 +106,9 @@ the cut line moves as we go.
    browser wallet, the order goes to the seller's agent, and the result
    shows on the order page.
    - **Done when:** a person buys a terms analysis and reads it on the order.
+
+6b. [ ] **MCP tools** (10-16): search, get, review, through the contrib
+   MCP module. Last before the cut: likely to fit, first to drop.
 
    ✂️ *cut line: move it as we go*
 
@@ -106,9 +133,7 @@ the cut line moves as we go.
 - [ ] **More products**: fact-check as a page for people, Fabric patterns as
   digital goods, Lapacho calling the market for documents not in its
   catalogue.
-- [ ] **Discovery**: catalogue in the formats agents already read (x402
-  discovery, MCP).
-- [ ] **Solana** (`x402_pay_solana`), then mainnet.
+- [ ] **Solana** (`x402_pay_solana`, Solana wallet sign-in), then mainnet.
 - [ ] **drupal.org releases**: `x402_pay` and the terms submodule.
 
 ## 🔭 Later

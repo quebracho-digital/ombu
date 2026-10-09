@@ -1,0 +1,17 @@
+/vendor/
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/libraries/
+/web/sites/*/files/
+/web/sites/*/settings*.php
+/web/sites/*/services*.yml
+/web/modules/custom/x402_pay
+/web/*.php
+/web/*.txt
+/web/.*
+/web/web.config
+/recipes/*
+!/recipes/agent_market/
+.env

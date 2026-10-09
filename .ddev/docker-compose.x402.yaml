@@ -1,0 +1,5 @@
+# The x402_pay module lives in its own repo next to this one.
+services:
+  web:
+    volumes:
+      - ../../x402_pay:/var/www/html/web/modules/custom/x402_pay

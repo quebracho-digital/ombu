@@ -77,6 +77,15 @@ the cut line moves as we go.
   in `/market.json`); a test fails without the fix.
 - `x402_pay` passes phpcs (Drupal + DrupalPractice): every docblock says
   something, none left empty by phpcbf.
+- **Public: `https://ombu.quebrachos.digital`** (minisforum, DDEV behind
+  the Cloudflare tunnel; origin TLS verified against minisforum's mkcert
+  CA; the hostname lives only in minisforum's `.ddev/config.public.yaml`).
+  `quebrachos.digital` has no managed challenge, so no WAF rule was needed
+  (`fishman.work` has one: agents get 403). `buy-ours.sh` against it
+  bought all four on Arc testnet, each balance up on chain: terms
+  `0x6cb949c0…f271` (27.5 s, the model 23.4 s), ping `0x5c468057…d70c`,
+  markdown `0x6d625710…418d`, fact-check `0x8609fd52…febd6`. minisforum's
+  copy is rsynced from the laptop: it does not follow git yet.
 
 **Next (in order)**
 1. 2b, people paying in the browser: needs the MetaMask check below.
@@ -91,8 +100,6 @@ the cut line moves as we go.
 - The fact-check judges with the model alone (no Tavily key): honest in
   the answer (`"evidence": "model_only"`) and in the listing, but weaker
   than "against sources". A search key fixes it.
-- The demo runs on the laptop's DDEV and reaches minisforum's LLM over the
-  LAN; hosting on minisforum (decided) needs the WAF skip rule.
 - **Markdownify (3f) can leak paid content:** its middleware turns
   `Accept: text/markdown` into `?_format=markdown` before the page cache,
   and it serves `.md` paths. Not tried. Install it, try both on a paid

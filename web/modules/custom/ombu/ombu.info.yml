@@ -12,3 +12,5 @@ dependencies:
   - drupal:path
   - drupal:taxonomy
   - drupal:text
+  - key:key
+  - x402_pay:x402_pay

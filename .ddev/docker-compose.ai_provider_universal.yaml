@@ -1,0 +1,6 @@
+# The terms analyzer and the fact-checker, two of Ombú's sellers, live in
+# ai_provider_universal, in its own repo next to this one.
+services:
+  web:
+    volumes:
+      - ../../ai_provider_universal:/var/www/html/web/modules/custom/ai_provider_universal

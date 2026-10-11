@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_x402_price
+  module:
+    - x402_pay
+id: commerce_product.listing.field_x402_price
+field_name: field_x402_price
+entity_type: commerce_product
+bundle: listing
+label: 'Price for agents'
+description: 'What an agent pays per call. The seller is the listing''s own key.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+# Sold at /x402/commerce_product/{id}/full; the page for people stays free.
+# No field-wide key: each listing names its seller (field_seller_key).
+settings:
+  enabled: true
+  amount: '0.01'
+  network: 'eip155:5042002'
+  key_id: ''
+  allow_override: true
+  view_mode: full
+  canonical: false
+field_type: x402_price

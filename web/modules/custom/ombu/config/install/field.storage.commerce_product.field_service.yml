@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+    - options
+id: commerce_product.field_service
+field_name: field_service
+entity_type: commerce_product
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: ping
+      label: 'Ping: a signed timestamp'
+    -
+      value: terms
+      label: 'Terms and privacy analysis'
+    -
+      value: factcheck
+      label: 'Fact-check a claim'
+    -
+      value: markdown
+      label: 'Web page to markdown'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

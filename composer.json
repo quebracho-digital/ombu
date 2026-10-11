@@ -16,6 +16,7 @@
     ],
     "require": {
         "composer/installers": "^2.3",
+        "drupal/ai": "^1.5",
         "drupal/commerce": "^3.3",
         "drupal/core-composer-scaffold": "^11.4",
         "drupal/core-project-message": "^11.4",

@@ -57,14 +57,36 @@ the cut line moves as we go.
   (it answered in one call, never pending): an inference, not checked.
 
 - **Item 2 done**: the catalogue is `/x402/discovery` (see item 2).
+- **Item 3 done** (97 tests, x402_pay + ombu): our four listings sell over
+  x402, each to its own wallet, each delivering its service. In x402_pay:
+  `PriceEvent` chooses the seller, the mime type and the payment timeout;
+  `DeliveryEvent` answers instead of the markdown; the catalogue quotes
+  like the sale. `scripts/buy-ours.sh` read `/market.json` and bought all
+  four on Arc testnet; each seller's balance rose on chain (ping +0.0001,
+  markdown +0.001, terms +0.01, fact-check +0.02). The markdown seller
+  asked for a private address answered 422, `not_settled`, +0 on chain.
+- **Found on the way:** the buyer's signature lived 60 s, but a model
+  seller answers in 25–45 s and settling comes after: a longer document
+  would have made the sale fail after the work was done. Model sellers now
+  give 600 s. And `/x402/discovery` listed `payTo` from the field's key,
+  not the seller the sale would pay: now both ask `Delivery::quote()`.
+- Ping at 0.0001 USDC settled: Circle's minimum is at or below that.
 
 **Next (in order)**
-1. Item 3: listings get the field. Their delivery is the seller's service,
-   not a view mode: the view mode is the default delivery, a hook will
-   replace it.
-2. 2b, people paying in the browser: needs the MetaMask check below.
+1. 2b, people paying in the browser: needs the MetaMask check below.
+2. 3b, publish our listings to Circle's Agent Marketplace (its review is by
+   hand: submit early).
+3. 3c–3f, then 4, the buyer agent.
 
 **Known gaps**
+- The terms analyzer describes its findings in Spanish (its categories
+  are written so): for an English-speaking jury, translate or let the
+  buyer pick the language.
+- The fact-check judges with the model alone (no Tavily key): honest in
+  the answer (`"evidence": "model_only"`) and in the listing, but weaker
+  than "against sources". A search key fixes it.
+- The demo runs on the laptop's DDEV and reaches minisforum's LLM over the
+  LAN; hosting on minisforum (decided) needs the WAF skip rule.
 - **Markdownify (3f) can leak paid content:** its middleware turns
   `Accept: text/markdown` into `?_format=markdown` before the page cache,
   and it serves `.md` paths. Not tried. Install it, try both on a paid
@@ -187,12 +209,17 @@ the cut line moves as we go.
    reopens it (account or cookie). Depends on the browser-wallet day-1 check.
    - **Done when:** a person pays a node on Arc testnet with MetaMask,
      reloads, and still sees it without paying again.
-3. [ ] **Market, agent door** (10-12). Listings get the `x402_price`
+3. [x] **Market, agent door** (10-12; done 10-11). Listings get the `x402_price`
    field; Ombú answers the paid call with the service itself through the
    field's delivery hook. Listing = Commerce product with
    price, `payTo`, seller endpoint and description. `GET /market.json` is
    the catalogue agents read; `POST /market/{listing}` is the x402 door.
    Our three sellers listed, each with its own wallet.
+   - ✅ **2026-10-11**: the door is `/x402/commerce_product/{id}/full`
+     (x402_pay's route), not `/market/{listing}`: one door for every paid
+     entity. Four sellers, not three (Ping too). Each listing names its key
+     (`field_seller_key`) and its service (`field_service`); the field's
+     price is the listing's. `scripts/buy-ours.sh` met the done-when.
    - **Done when:** a script reads the catalogue, buys each of the three,
      and each seller's wallet receives its USDC; a seller made to fail gets
      nothing.

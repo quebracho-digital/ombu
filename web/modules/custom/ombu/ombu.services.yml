@@ -2,3 +2,21 @@ services:
   ombu.circle_importer:
     class: Drupal\ombu\CircleCatalogImporter
     autowire: true
+  logger.channel.ombu:
+    parent: logger.channel_base
+    arguments: ['ombu']
+  # The model sellers and the guarded fetch come from ai_provider_universal;
+  # without it those sellers answer 503 and nothing is charged.
+  ombu.sellers:
+    class: Drupal\ombu\Sellers
+    arguments:
+      - '@key.repository'
+      - '@logger.channel.ombu'
+      - '@?Drupal\ai_provider_universal_factcheck\Service\PageFetcher'
+      - '@?Drupal\ai_provider_universal_terms\Service\TermsAnalyzer'
+      - '@?Drupal\ai_provider_universal_factcheck\Service\FactChecker'
+  ombu.seller_subscriber:
+    class: Drupal\ombu\EventSubscriber\SellerSubscriber
+    arguments: ['@ombu.sellers']
+    tags:
+      - { name: event_subscriber }

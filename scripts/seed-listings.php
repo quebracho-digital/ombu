@@ -5,12 +5,16 @@
  * Creates the store (if missing) and Quebracho's own verified listings.
  * Idempotent: listings are keyed by SKU.
  *
- * Run: SELLER_PAY_TO=0x… ddev drush php:script ../scripts/seed-listings.php
+ * Each listing has its own seller wallet: a key `seller_<sku>` read from the
+ * environment variable SELLER_KEY_<SKU> (in the git-ignored .ddev/.env).
+ * Price, payTo and the agent door come from x402_pay, never typed here.
+ *
+ * Run: ddev drush php:script ../scripts/seed-listings.php
  */
 
 use Drupal\commerce_price\Price;
+use Drupal\key\Entity\Key;
 
-$payTo = getenv('SELLER_PAY_TO') ?: throw new \RuntimeException('Set SELLER_PAY_TO to the seller wallet.');
 $etm = \Drupal::entityTypeManager();
 $store = $etm->getStorage('commerce_store')->loadDefault();
 if (!$store) {
@@ -33,13 +37,20 @@ $term = function (string $vid, string $name) use ($etm): int {
 $listings = [
   ['ping', 'Ping: the cheapest thing in the mall', '0.0001', 'Pay a hundredth of a cent and get a signed timestamp back. Exists to test a wallet, an agent or a checkout end to end.', 'INFRASTRUCTURE', ['type' => 'object', 'properties' => new \stdClass()], ['x402', 'test']],
   ['terms', 'Terms of service and privacy analysis', '0.01', 'Reads a terms of service or privacy policy and reports what matters to you or your agent (data sharing, arbitration, auto-renewal, liability…), each point quoting the clause it comes from. Quotes not found in the text are dropped.', 'COMPLIANCE', ['type' => 'object', 'properties' => ['url' => ['type' => 'string', 'format' => 'uri'], 'text' => ['type' => 'string']]], ['compliance', 'legal', 'privacy', 'vendors']],
-  ['factcheck', 'Fact-check a claim', '0.02', 'Checks a claim against sources and returns a verdict with the evidence and the reliability of each source.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['claim'], 'properties' => ['claim' => ['type' => 'string']]], ['fact-check', 'research']],
+  ['factcheck', 'Fact-check a claim', '0.02', 'Returns a verdict on one claim: supported, refuted or not enough information. For now the model judges on its own, without web sources; the answer says so.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['claim'], 'properties' => ['claim' => ['type' => 'string']]], ['fact-check', 'research']],
   ['markdown', 'Web page to clean markdown', '0.001', 'Fetches a public URL and returns its main content as markdown, without navigation or ads.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['url'], 'properties' => ['url' => ['type' => 'string', 'format' => 'uri']]], ['scraping', 'markdown']],
 ];
 
 $variations = $etm->getStorage('commerce_product_variation');
 $products = $etm->getStorage('commerce_product');
 foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
+  $env = 'SELLER_KEY_' . strtoupper($sku);
+  if (!getenv($env)) {
+    throw new \RuntimeException("Set $env to the seller's private key.");
+  }
+  if (!Key::load("seller_$sku")) {
+    Key::create(['id' => "seller_$sku", 'label' => "Seller: $title", 'key_type' => 'authentication', 'key_provider' => 'env', 'key_provider_settings' => ['env_variable' => $env, 'base64_encoded' => FALSE, 'strip_line_breaks' => TRUE]])->save();
+  }
   $found = $variations->loadByProperties(['sku' => "ours-$sku"]);
   $v = $found ? reset($found) : $variations->create(['type' => 'listing', 'sku' => "ours-$sku", 'status' => 1]);
   $v->setPrice(new Price($price, 'USD'))->save();
@@ -50,7 +61,13 @@ foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
     'field_provider' => 'Quebracho',
     'field_docs_url' => 'https://quebracho.digital',
     'field_http_method' => 'POST',
-    'field_pay_to' => $payTo,
+    'field_service' => $sku,
+    'field_seller_key' => "seller_$sku",
+    'field_x402_price' => ['enabled' => 1, 'amount' => $price],
+    // Derived by x402_pay for our listings (see /market.json).
+    'field_pay_to' => NULL,
+    'field_accepts' => NULL,
+    'field_endpoint' => NULL,
     'field_network' => ['eip155:5042002'],
     'field_source' => 'ours',
     'field_verified' => TRUE,
@@ -61,17 +78,5 @@ foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
     $p->set($field, $value);
   }
   $p->save();
-  // The agent door is the listing's own URL; x402_pay serves it.
-  $p->set('field_endpoint', $p->toUrl('canonical', ['absolute' => TRUE])->toString() . '/call');
-  $p->set('field_accepts', json_encode([[
-    'scheme' => 'exact',
-    'network' => 'eip155:5042002',
-    'asset' => '0x3600000000000000000000000000000000000000',
-    'payTo' => $payTo,
-    'amount' => bcmul($price, '1000000', 0),
-    'maxTimeoutSeconds' => 60,
-    'extra' => ['name' => 'USDC', 'version' => '2'],
-  ]], JSON_UNESCAPED_SLASHES));
-  $p->save();
-  echo $p->id(), ' ', $p->get('field_endpoint')->value, "\n";
+  echo $p->id(), " /x402/commerce_product/{$p->id()}/full\n";
 }

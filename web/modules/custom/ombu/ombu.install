@@ -18,3 +18,19 @@ function ombu_install(): void {
   user_role_grant_permissions('anonymous', ['view commerce_product', 'access comments']);
   user_role_grant_permissions('authenticated', ['view commerce_product', 'access comments', 'post comments', 'skip comment approval']);
 }
+
+/**
+ * Listings sell over x402: the price field, the seller key and the service.
+ */
+function ombu_update_10001(): void {
+  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  foreach (['field_x402_price', 'field_seller_key', 'field_service'] as $field) {
+    // Storage first: a field needs its storage.
+    foreach (["field.storage.commerce_product.$field", "field.field.commerce_product.listing.$field"] as $name) {
+      if (\Drupal::config($name)->isNew()) {
+        $type = \Drupal::service('config.manager')->getEntityTypeIdByName($name);
+        \Drupal::entityTypeManager()->getStorage($type)->createFromStorageRecord($source->read($name))->save();
+      }
+    }
+  }
+}

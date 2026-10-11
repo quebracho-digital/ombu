@@ -17,6 +17,15 @@ function ombu_install(): void {
   // Everyone browses; signed-in people review.
   user_role_grant_permissions('anonymous', ['view commerce_product', 'access comments']);
   user_role_grant_permissions('authenticated', ['view commerce_product', 'access comments', 'post comments', 'skip comment approval']);
+  _ombu_llms_txt();
+}
+
+/**
+ * Writes /llms.txt from the module's llms.txt.md.
+ */
+function _ombu_llms_txt(): void {
+  $text = file_get_contents(\Drupal::service('extension.list.module')->getPath('ombu') . '/llms.txt.md');
+  \Drupal::configFactory()->getEditable('llms_txt.settings')->set('content', $text)->save();
 }
 
 /**
@@ -136,4 +145,12 @@ function ombu_update_10003(): void {
 function ombu_update_10004(): void {
   _ombu_config('optional', ['search_api.index.listings', 'views.view.market'], TRUE);
   \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
+}
+
+/**
+ * Agents find the market: /llms.txt and /openapi.json.
+ */
+function ombu_update_10005(): void {
+  \Drupal::service('module_installer')->install(['llms_txt']);
+  _ombu_llms_txt();
 }

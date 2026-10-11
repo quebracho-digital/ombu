@@ -103,6 +103,11 @@ the cut line moves as we go.
   the same query string (facets by name; several values, any matches) and
   point to each other. The JSON lists each facet value with its count and
   the URL that adds it: an agent narrows by following links. 113 tests.
+- **Agents find it**: `/llms.txt` (contrib `llms_txt`, text in
+  `ombu/llms.txt.md`) and `/openapi.json` (the search with each filter's
+  current values; our four sellers as paid operations, which is also what
+  Circle's intake asks for), announced by `Link` headers on every page.
+  114 tests.
 
 **Next (in order)**
 1. 2b, people paying in the browser: needs the MetaMask check below.

@@ -45,6 +45,12 @@ adds each, so an agent narrows a search by following links. Also: `limit`
 (at most 100), `offset`, `retired=1` (listings Circle no longer offers),
 `openapi=1` (each listing's OpenAPI operation).
 
+Agents find it without being told: every page sends `Link` headers to
+`/llms.txt` (what Ombú is, how to search and buy; from
+`web/modules/custom/ombu/llms.txt.md`) and `/openapi.json` (the search with
+the values each filter holds right now, and our sellers as paid operations
+with their input and list price).
+
 ## Our sellers
 
 Four listings Ombú runs itself, each paid to **its own wallet**. Agents

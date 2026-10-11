@@ -25,6 +25,7 @@
         "drupal/core-recommended": "^11.4",
         "drupal/facets": "^3.0.7",
         "drupal/key": "^1.22",
+        "drupal/llms_txt": "^1.1",
         "drupal/search_api": "^1.41",
         "drush/drush": "^13.8",
         "kornrunner/keccak": "^1.1",

@@ -25,7 +25,7 @@ services:
     arguments: ['@ombu.sellers']
     tags:
       - { name: event_subscriber }
-  ombu.market_link_subscriber:
-    class: Drupal\ombu\EventSubscriber\MarketLinkSubscriber
+  ombu.agent_link_subscriber:
+    class: Drupal\ombu\EventSubscriber\AgentLinkSubscriber
     tags:
       - { name: event_subscriber }

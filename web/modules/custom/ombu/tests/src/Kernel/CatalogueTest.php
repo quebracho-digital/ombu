@@ -79,6 +79,14 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertStringContainsString('/market?payment=vanilla', urldecode($page['links']['html']));
   }
 
+  public function testTheOpenApiListsWhatTheFiltersHold(): void {
+    $spec = $this->get('/openapi.json');
+    $parameters = array_column($spec['paths']['/market.json']['get']['parameters'], NULL, 'name');
+    $this->assertSame(['Infrastructure', 'Web search research'], $parameters['category']['schema']['items']['enum']);
+    $this->assertSame(['Example', 'Sponge'], $parameters['provider']['schema']['items']['enum']);
+    $this->assertContains('eip155:5042', $parameters['network']['schema']['items']['enum']);
+  }
+
   public function testRetiredOnlyWhenAsked(): void {
     $this->assertNotContains('Gone', $this->titles($this->get('/market.json')));
     $this->assertContains('Gone', $this->titles($this->get('/market.json?retired=1')));

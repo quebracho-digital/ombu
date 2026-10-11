@@ -34,16 +34,36 @@ the cut line moves as we go.
   type: `scripts/x402-demo-node.php` adds `article`, the seller key (env
   `SELLER_PRIVATE_KEY`, in the git-ignored `.ddev/.env`) and a paid node.
 
+- **Afternoon: products, translations and the price event** (73 tests).
+  Each `x402_price` field sells one view mode; several per bundle, never
+  two for the same view mode, at most one on the canonical URL.
+  `/x402/{type}/{id}/{view_mode}`, one `Link` each. Translatable field =
+  price per translation. `PriceEvent` before every sale (change, free,
+  deny) and the *Access x402 content free* permission. Delivery is only
+  what the display configures: no byline, no title twice, no price.
+  Paid on testnet: the summary of node 3 at 0.002 (tx
+  `0x3855abe0…06bc`).
+- **Two more bugs found by trying it on the site:** fields saved before
+  `view_mode`/`canonical` existed had neither, so the canonical URL was
+  **free for agents** (update 10002 fills them, with a test that
+  reproduces it); and the form's conflict message was escaped twice
+  (caught by a new functional test that drives the settings form).
+- `x402_pay` published on drupal.org: `git.drupal.org:project/x402_pay`.
+
 **Next (in order)**
 1. The catalogue View (rest of item 2).
 2. 2b, people paying in the browser: needs the MetaMask check below.
-3. Item 3: listings get the field.
+3. Item 3: listings get the field. Their delivery is the seller's service,
+   not a view mode: the view mode is the default delivery, a hook will
+   replace it.
 
 **Known gaps**
-- The markdown includes the node byline and the price field itself; a
-  dedicated view mode fixes both (the "what is delivered" setting).
+- **Markdownify (3f) can leak paid content:** its middleware turns
+  `Accept: text/markdown` into `?_format=markdown` before the page cache,
+  and it serves `.md` paths. Not tried. Install it, try both on a paid
+  node, and block them for paid entities before 3f ships.
 - phpcs fails on `x402_pay`, including the 10-09 code: fix before the
-  first drupal.org release.
+  first drupal.org release (which also needs a `1.0.x` branch).
 
 ## Before — 2026-10-09
 
@@ -104,6 +124,10 @@ the cut line moves as we go.
 | Paying | Our buyer agent is a script with Circle's x402 client and a testnet key; its budget is enforced in the script. Paying from Drupal waits for the full marketplace |
 | The x402 field | `x402_pay` ships a field type (`x402_price`) that makes **any fieldable entity** payable over x402 by adding the field. Basic settings: on/off, price, network, seller key (`payTo` is derived from the key, never typed, so the money cannot go to a wallet that does not sign), per-entity override allowed or not. Advanced (collapsed): charge on the canonical URL, agent detection (`PAYMENT-SIGNATURE`, `Accept`, User-Agent list with regex), price per visitor type (training crawler, query agent, person), what is delivered (markdown, JSON, a view mode), free preview for people, how long a person's access lasts, payment timeout |
 | Where it charges | **Both**: the entity's own URL for whoever counts as an agent (browsers still see the normal page), and a separate route `/x402/{entity_type}/{id}` announced with a `Link` header |
+| Products | Each `x402_price` field sells one view mode at one price; a bundle can have several (full text, summary). Never two fields for the same view mode (one thing, two prices); at most one charges on the canonical URL (one URL, one price: x402's `accepts` lists ways to pay for one resource, not a menu). The rest at `/x402/{entity_type}/{id}/{view_mode}` |
+| Price at request time | The field says what is sold; `PriceEvent` says what it costs now, with entity (in the request's language), view mode, request and account: change the price, make it free, deny. Translations price through a translatable field, no code. Per role, per visitor type, per anything: the event, and ECA on top of it later |
+| Paying agents have accounts | An agent is not anonymous by nature: it signs in with its wallet (`wallet_auth`, 3d) and its account's roles count in the price event. To be priced by account it must identify before the 402 (x402's Sign-In-With-X); after paying it is known anyway, since the EIP-3009 signature is the payer's, so purchases attach to its wallet's account |
+| Markdown | Ours: three lines over `league/html-to-markdown`, the same library Markdownify uses. x402_pay does not depend on Markdownify; if present, its converter may be used. What is delivered is what the display configures, never the entity's template |
 | Catalogue | A View of every entity with the field, payable list for people and JSON export for agents, editable like any View. With Search API installed, an optional index-based version that spans several entity types in one catalogue |
 | People | Pay with x402 in the browser too: one wallet signature, no gas. A purchase is recorded on the buyer's account (signed in with the wallet) and reopens the content; anonymous buyers get a signed cookie. The **people door of the hackathon**, instead of Commerce checkout |
 | Commerce | An Arc USDC gateway (`x402_pay_commerce`) is still delivered, reusing the same browser signature, for carts of several items |

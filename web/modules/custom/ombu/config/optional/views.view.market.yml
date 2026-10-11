@@ -115,12 +115,7 @@ display:
             hard_limit: 0
             min_count: 1
             show_numbers: true
-            processor_configs:
-              translate_entity:
-                processor_id: translate_entity
-                weights:
-                  build: 5
-                settings: {  }
+            processor_configs: {  }
         facets_network:
           id: facets_network
           table: search_api_index_listings
@@ -140,12 +135,12 @@ display:
               ombu_chain_name:
                 processor_id: ombu_chain_name
                 weights:
-                  build: 5
+                  post_query: 50
                 settings: {  }
-        facets_provider_id:
-          id: facets_provider_id
+        facets_provider_name:
+          id: facets_provider_name
           table: search_api_index_listings
-          field: facets_provider_id
+          field: facets_provider_name
           plugin_id: facets_filter
           exposed: true
           expose:
@@ -157,12 +152,7 @@ display:
             hard_limit: 0
             min_count: 1
             show_numbers: true
-            processor_configs:
-              translate_entity:
-                processor_id: translate_entity
-                weights:
-                  build: 5
-                settings: {  }
+            processor_configs: {  }
         facets_rails:
           id: facets_rails
           table: search_api_index_listings
@@ -182,12 +172,12 @@ display:
               list_item:
                 processor_id: list_item
                 weights:
-                  build: 5
+                  build: 50
                 settings: {  }
-        facets_tags:
-          id: facets_tags
+        facets_tag:
+          id: facets_tag
           table: search_api_index_listings
-          field: facets_tags
+          field: facets_tag
           plugin_id: facets_filter
           exposed: true
           expose:
@@ -199,12 +189,7 @@ display:
             hard_limit: 30
             min_count: 1
             show_numbers: true
-            processor_configs:
-              translate_entity:
-                processor_id: translate_entity
-                weights:
-                  build: 5
-                settings: {  }
+            processor_configs: {  }
         facets_source:
           id: facets_source
           table: search_api_index_listings
@@ -224,7 +209,7 @@ display:
               list_item:
                 processor_id: list_item
                 weights:
-                  build: 5
+                  build: 50
                 settings: {  }
         retired:
           id: retired

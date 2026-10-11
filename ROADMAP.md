@@ -99,6 +99,10 @@ the cut line moves as we go.
   the same filters by name (comma lists, `retired=1`, `openapi=1`) and
   returns the counts. **Bug fixed:** tags went to the `tags` vocabulary,
   not the field's `listing_tag` (22,910 references moved).
+- **One search for people and agents**: `/market` and `/market.json` take
+  the same query string (facets by name; several values, any matches) and
+  point to each other. The JSON lists each facet value with its count and
+  the URL that adds it: an agent narrows by following links. 113 tests.
 
 **Next (in order)**
 1. 2b, people paying in the browser: needs the MetaMask check below.

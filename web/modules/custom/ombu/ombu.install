@@ -129,3 +129,11 @@ function ombu_update_10003(): void {
   _ombu_config('optional', ['search_api.index.listings', 'views.view.market'], TRUE);
   \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
 }
+
+/**
+ * Facets by name, the same on /market and /market.json.
+ */
+function ombu_update_10004(): void {
+  _ombu_config('optional', ['search_api.index.listings', 'views.view.market'], TRUE);
+  \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
+}

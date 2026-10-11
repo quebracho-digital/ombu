@@ -22,6 +22,29 @@ status: [ROADMAP.md](ROADMAP.md).
   the terms analyzer and the fact-checker, two of the sellers, and the
   guarded page fetch the markdown seller uses. Mounted from its repo.
 
+## Searching, for people and agents
+
+`/market` (people) and `/market.json` (agents, in the shape of Circle's
+Discovery API) take the **same query string**, so a search moves between
+them by changing the path; each points to the other (`Link` header,
+`links.html`). Filters, several values each (`name[]=a&name[]=b`, or
+`a,b` in the JSON), any of them matches:
+
+| Parameter | Values |
+|---|---|
+| `search` | words, also matched against each listing's OpenAPI operation |
+| `category` | name (`Web search research`), or Circle's code in the JSON |
+| `network` | CAIP-2 id (`eip155:5042` is Arc) |
+| `provider` | name |
+| `payment` | `vanilla` (plain x402, any wallet) or `gateway` (Circle Gateway) |
+| `tag` | name |
+| `seller` | `ours` or `circle` |
+
+The JSON lists every facet's values with their counts and the `url` that
+adds each, so an agent narrows a search by following links. Also: `limit`
+(at most 100), `offset`, `retired=1` (listings Circle no longer offers),
+`openapi=1` (each listing's OpenAPI operation).
+
 ## Our sellers
 
 Four listings Ombú runs itself, each paid to **its own wallet**. Agents

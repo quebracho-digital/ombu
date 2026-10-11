@@ -31,14 +31,6 @@ field_settings:
     dependencies:
       config:
         - field.storage.commerce_product.body
-  category:
-    label: category
-    datasource_id: 'entity:commerce_product'
-    property_path: field_category
-    type: integer
-    dependencies:
-      config:
-        - field.storage.commerce_product.field_category
   openapi:
     label: openapi
     datasource_id: 'entity:commerce_product'
@@ -48,6 +40,16 @@ field_settings:
     dependencies:
       config:
         - field.storage.commerce_product.field_openapi
+  category:
+    label: category
+    datasource_id: 'entity:commerce_product'
+    property_path: 'field_category:entity:name'
+    type: string
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_category
+      module:
+        - taxonomy
   network:
     label: network
     datasource_id: 'entity:commerce_product'
@@ -64,14 +66,16 @@ field_settings:
     dependencies:
       module:
         - commerce_product
-  provider_id:
-    label: provider_id
+  provider_name:
+    label: provider_name
     datasource_id: 'entity:commerce_product'
-    property_path: field_provider_term
-    type: integer
+    property_path: 'field_provider_term:entity:name'
+    type: string
     dependencies:
       config:
         - field.storage.commerce_product.field_provider_term
+      module:
+        - taxonomy
   rails:
     label: rails
     datasource_id: 'entity:commerce_product'
@@ -121,14 +125,16 @@ field_settings:
     dependencies:
       module:
         - commerce_product
-  tags:
-    label: tags
+  tag:
+    label: tag
     datasource_id: 'entity:commerce_product'
-    property_path: field_tags
-    type: integer
+    property_path: 'field_tags:entity:name'
+    type: string
     dependencies:
       config:
         - field.storage.commerce_product.field_tags
+      module:
+        - taxonomy
   tag_names:
     label: tag_names
     datasource_id: 'entity:commerce_product'

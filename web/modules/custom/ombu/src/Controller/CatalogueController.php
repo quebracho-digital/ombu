@@ -9,8 +9,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
+use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
-use Drupal\search_api\Query\QueryInterface;
 use Drupal\x402_pay\Delivery;
 use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -26,39 +26,31 @@ use Symfony\Component\HttpFoundation\Request;
  * wallet), so the catalogue never announces a stale price or payTo; the
  * imported ones carry what their source said.
  *
- * Query: search, and the facets people get on /market, each a comma-
- * separated list (any of them matches): network (CAIP-2 id), category
- * (Circle's code or its name), provider, payment (vanilla, gateway), tag,
- * source (ours, circle). limit (max 100), offset. Retired listings only
- * with retired=1; the operation of the provider's OpenAPI with openapi=1.
- * The response counts every facet's values over the matches.
+ * Query: search, and the facets people get on /market, with the same names
+ * and values, so the same query string works on both: category, network
+ * (CAIP-2 id), provider, payment (vanilla, gateway), tag, seller (ours,
+ * circle). Each takes several values (name[]=a&name[]=b, or a,b): any of
+ * them matches. limit (max 100), offset. Retired listings only with
+ * retired=1; the operation of the provider's OpenAPI with openapi=1.
+ *
+ * The response lists every facet's values with their counts and the URL
+ * that adds each, so an agent narrows by following links; and links.html,
+ * the same search for people.
  */
 final class CatalogueController implements ContainerInjectionInterface {
 
   use AutowireTrait;
 
   /**
-   * The facets: index field => what a value is (term, or as indexed).
-   */
-  private const FACETS = [
-    'network' => NULL,
-    'category' => 'listing_category',
-    'provider_id' => 'listing_provider',
-    'rails' => NULL,
-    'tags' => 'listing_tag',
-    'source' => NULL,
-  ];
-
-  /**
-   * Query parameter => index field.
+   * Query parameter => index field. The same on /market, for people.
    */
   private const PARAMS = [
-    'network' => 'network',
     'category' => 'category',
-    'provider' => 'provider_id',
+    'network' => 'network',
+    'provider' => 'provider_name',
     'payment' => 'rails',
-    'tag' => 'tags',
-    'source' => 'source',
+    'tag' => 'tag',
+    'seller' => 'source',
   ];
 
   public function __construct(
@@ -76,10 +68,14 @@ final class CatalogueController implements ContainerInjectionInterface {
     if ($keys = trim((string) $request->query->get('search', ''))) {
       $query->keys($keys);
     }
+    $selected = [];
     foreach (self::PARAMS as $param => $field) {
-      $values = array_filter(array_map('trim', explode(',', (string) $request->query->get($param, ''))), 'strlen');
-      if ($values) {
-        $this->filter($query, $field, $values);
+      if ($selected[$param] = $this->values($request, $param)) {
+        // Tagged, so this facet still counts its other values (any of them
+        // matches), like /market.
+        $group = $query->createConditionGroup('OR', ["facet:$field"]);
+        $group->addCondition($field, $selected[$param], 'IN');
+        $query->addConditionGroup($group);
       }
     }
     if (!$request->query->getBoolean('retired')) {
@@ -87,11 +83,11 @@ final class CatalogueController implements ContainerInjectionInterface {
     }
     $query->setOption('search_api_facets', array_map(fn($field) => [
       'field' => $field,
-      'limit' => $field === 'tags' ? 30 : 0,
-      'operator' => 'and',
+      'limit' => $field === 'tag' ? 30 : 0,
+      'operator' => 'or',
       'min_count' => 1,
       'missing' => FALSE,
-    ], array_combine(array_keys(self::FACETS), array_keys(self::FACETS))));
+    ], array_combine(self::PARAMS, self::PARAMS)));
     $results = $query->execute();
 
     $items = [];
@@ -101,48 +97,54 @@ final class CatalogueController implements ContainerInjectionInterface {
         $items[] = $this->item($product, $request);
       }
     }
+    $page = $request->query->all();
+    unset($page['limit'], $page['offset'], $page['openapi']);
     return new JsonResponse([
       'x402Version' => 2,
       'items' => $items,
       'pagination' => ['limit' => $limit, 'offset' => $offset, 'total' => (int) $results->getResultCount()],
-      'facets' => $this->counts($results->getExtraData('search_api_facets', [])),
+      'facets' => $this->facets($results->getExtraData('search_api_facets', []), $selected, $request),
+      'links' => [
+        'html' => Url::fromRoute('view.market.page_1', [], ['query' => $page, 'absolute' => TRUE])->toString(),
+      ],
     ]);
   }
 
   /**
-   * Matches any of the values; term facets take names, not ids.
+   * A parameter's values: name[]=a&name[]=b, as /market sends, or a,b.
    */
-  private function filter(QueryInterface $query, string $field, array $values): void {
-    if ($vid = self::FACETS[$field]) {
-      if ($vid === 'listing_category') {
-        $values = array_map([CircleCatalogImporter::class, 'categoryLabel'], $values);
-      }
-      $ids = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery()->accessCheck(FALSE)
-        ->condition('vid', $vid)->condition('name', $values, 'IN')->execute();
-      $values = array_map('intval', $ids) ?: [-1];
-    }
-    $query->addCondition($field, $values, 'IN');
+  private function values(Request $request, string $param): array {
+    $raw = $request->query->all()[$param] ?? [];
+    $values = is_array($raw) ? $raw : explode(',', (string) $raw);
+    $values = array_values(array_filter(array_map('trim', array_filter($values, 'is_string')), 'strlen'));
+    // Circle's category codes work too.
+    return $param === 'category' ? array_map([CircleCatalogImporter::class, 'categoryLabel'], $values) : $values;
   }
 
   /**
-   * Facet counts by parameter, keyed by what the parameter takes.
+   * Every facet's values with their counts, and the URL that adds each.
    */
-  private function counts(array $facets): array {
+  private function facets(array $facets, array $selected, Request $request): array {
+    $labels = [
+      'payment' => ['vanilla' => 'Plain x402', 'gateway' => 'Circle Gateway'],
+      'seller' => ['ours' => 'Quebracho', 'circle' => 'Circle Agent Marketplace', 'third_party' => 'Third party'],
+    ];
+    $query = $request->query->all();
+    unset($query['offset']);
     $out = [];
     foreach (self::PARAMS as $param => $field) {
-      $counts = [];
       foreach ($facets[$field] ?? [] as $row) {
-        $counts[trim((string) $row['filter'], '"')] = (int) $row['count'];
+        $value = trim((string) $row['filter'], '"');
+        $with = $query;
+        $with[$param] = array_values(array_unique([...$selected[$param], $value]));
+        $out[$param][] = [
+          'value' => $value,
+          'label' => $param === 'network' ? Chains::name($value) : ($labels[$param][$value] ?? $value),
+          'count' => (int) $row['count'],
+          'selected' => in_array($value, $selected[$param], TRUE),
+          'url' => Url::fromRoute('ombu.catalogue', [], ['query' => $with, 'absolute' => TRUE])->toString(),
+        ];
       }
-      if ($vid = self::FACETS[$field]) {
-        $named = [];
-        foreach ($this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple(array_keys($counts)) as $id => $term) {
-          $name = $vid === 'listing_category' ? CircleCatalogImporter::categoryCode($term->label()) : $term->label();
-          $named[$name] = $counts[$id];
-        }
-        $counts = $named;
-      }
-      $out[$param] = $counts;
     }
     return $out;
   }

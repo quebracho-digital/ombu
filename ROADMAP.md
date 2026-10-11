@@ -17,7 +17,35 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
-## Where we left off — 2026-10-09 (next session: Sunday 10-11)
+## Where we left off — 2026-10-11
+
+**Done today**
+- The `x402_price` field (item 2): a node on `ombu.ddev.site` answers 402
+  to agents on `/node/2` and `/x402/node/2`, browsers get the page with a
+  `Link` header, and `buy.mjs` paid it 0.01 USDC on Arc testnet and got the
+  markdown (tx `0x796ba101af3f92d311529b49fe5b33998d05a5f2a7b473fc5e10eb72f2466290`,
+  status 1 on chain, `settled` in `x402_pay_log`).
+- **Bug found by trying it, not by the tests:** the page cache stored the
+  paid page on the second browser visit (the render cache skips view hooks)
+  and then handed it to agents free. Fixed by deciding on the response;
+  a functional test covers it and fails without the fix. Kernel tests
+  cannot see the page cache: it ignores command-line requests.
+- `x402_pay` was never enabled on the site: now it is. The site had no node
+  type: `scripts/x402-demo-node.php` adds `article`, the seller key (env
+  `SELLER_PRIVATE_KEY`, in the git-ignored `.ddev/.env`) and a paid node.
+
+**Next (in order)**
+1. The catalogue View (rest of item 2).
+2. 2b, people paying in the browser: needs the MetaMask check below.
+3. Item 3: listings get the field.
+
+**Known gaps**
+- The markdown includes the node byline and the price field itself; a
+  dedicated view mode fixes both (the "what is delivered" setting).
+- phpcs fails on `x402_pay`, including the 10-09 code: fix before the
+  first drupal.org release.
+
+## Before — 2026-10-09
 
 **Done today**
 - Two real x402 payments settled on Arc testnet through Circle's keyless
@@ -44,12 +72,7 @@ the cut line moves as we go.
    minimal commit reserves them), and open (or check) the issue in the
    `x402` project queue to start its 14-day clock.
 
-**Next (in order)**
-1. TDD the `x402_price` field (item 2): `payTo` derived from the key,
-   price conversion, the permission, then the separate route and the
-   canonical URL with agent detection, delivery as markdown.
-2. End-to-end on testnet: a viem script pays a node with the field.
-3. The catalogue View; then 2b (people paying in the browser).
+**Next (in order)**: done on 10-11, see above.
 
 **Facts worth remembering**
 - Circle's facilitator: keyless needs a seller proof signed by the `payTo`
@@ -112,8 +135,12 @@ the cut line moves as we go.
      (seller proof, polling a pending settlement), and the gate: verify →
      handler → settle only on 2xx → body only once settled; every outcome
      in `x402_pay_log`.
-   - [ ] **The `x402_price` field**, basic settings, the separate route, the
-     canonical URL with agent detection, delivery as markdown/JSON.
+   - ✅ **The `x402_price` field, 2026-10-11** (60 tests): basic settings,
+     `payTo` from the key, exact dollar → atomic conversion, the
+     *Set x402 prices* permission, `/x402/{entity_type}/{id}`, the canonical
+     URL with agent detection (browsers still see the page), delivery as
+     markdown. Paid on Arc testnet by `x402_pay/scripts/buy.mjs`: tx
+     `0x796ba101…6290`, `settled` in the log. Markdown only; JSON waits.
    - [ ] **The catalogue View** (and the Search API version when present).
    - **Done when:** a node with the field answers 402 to an agent on both
      URLs and a browser still sees the page; a viem script pays it on Arc

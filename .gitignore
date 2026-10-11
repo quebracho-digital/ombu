@@ -16,3 +16,4 @@
 !/recipes/agent_market/
 .env
 /.ddev/traefik/
+/web/sites/simpletest/

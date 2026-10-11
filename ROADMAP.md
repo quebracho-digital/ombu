@@ -56,12 +56,13 @@ the cut line moves as we go.
   plain page: 85–220 ms. Settle is probably Circle waiting for the chain
   (it answered in one call, never pending): an inference, not checked.
 
+- **Item 2 done**: the catalogue is `/x402/discovery` (see item 2).
+
 **Next (in order)**
-1. The catalogue View (rest of item 2).
-2. 2b, people paying in the browser: needs the MetaMask check below.
-3. Item 3: listings get the field. Their delivery is the seller's service,
+1. Item 3: listings get the field. Their delivery is the seller's service,
    not a view mode: the view mode is the default delivery, a hook will
    replace it.
+2. 2b, people paying in the browser: needs the MetaMask check below.
 
 **Known gaps**
 - **Markdownify (3f) can leak paid content:** its middleware turns
@@ -171,7 +172,12 @@ the cut line moves as we go.
      URL with agent detection (browsers still see the page), delivery as
      markdown. Paid on Arc testnet by `x402_pay/scripts/buy.mjs`: tx
      `0x796ba101…6290`, `settled` in the log. Markdown only; JSON waits.
-   - [ ] **The catalogue View** (and the Search API version when present).
+   - ✅ **The catalogue, 2026-10-11** (79 tests): `/x402/discovery`, every
+     product of every entity type in Circle's Discovery shape, cached by
+     list tags. **Not a View for agents**: a View covers one entity type
+     and JSON from Views needs `rest`. People list with Views directly (the
+     field gives a *Charge for this* filter and the price formatter); in
+     Ombú that list is `/market` once listings have the field (item 3).
    - **Done when:** a node with the field answers 402 to an agent on both
      URLs and a browser still sees the page; a viem script pays it on Arc
      testnet and gets the markdown; the tx is on arcscan and in the log; a

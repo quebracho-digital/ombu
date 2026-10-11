@@ -71,6 +71,12 @@ the cut line moves as we go.
   give 600 s. And `/x402/discovery` listed `payTo` from the field's key,
   not the seller the sale would pay: now both ask `Delivery::quote()`.
 - Ping at 0.0001 USDC settled: Circle's minimum is at or below that.
+- **Review of item 3:** a listing whose seller key is unusable fell back
+  to the field's key, so a key ever set on the field would have been paid
+  for another seller's sale. Now it is not for sale (403, and no `accepts`
+  in `/market.json`); a test fails without the fix.
+- `x402_pay` passes phpcs (Drupal + DrupalPractice): every docblock says
+  something, none left empty by phpcbf.
 
 **Next (in order)**
 1. 2b, people paying in the browser: needs the MetaMask check below.
@@ -91,8 +97,7 @@ the cut line moves as we go.
   `Accept: text/markdown` into `?_format=markdown` before the page cache,
   and it serves `.md` paths. Not tried. Install it, try both on a paid
   node, and block them for paid entities before 3f ships.
-- phpcs fails on `x402_pay`, including the 10-09 code: fix before the
-  first drupal.org release (which also needs a `1.0.x` branch).
+- The first drupal.org release of `x402_pay` needs a `1.0.x` branch.
 
 ## Before — 2026-10-09
 

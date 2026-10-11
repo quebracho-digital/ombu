@@ -33,9 +33,13 @@ final class SellerSubscriber implements EventSubscriberInterface {
     if (!$service = $this->service($event->entity)) {
       return;
     }
-    if ($seller = $this->sellers->seller($event->entity)) {
-      $event->setSeller($seller);
+    $seller = $this->sellers->seller($event->entity);
+    if (!$seller) {
+      // Never fall back to the field's key: that wallet is not this seller's.
+      $event->deny();
+      return;
     }
+    $event->setSeller($seller);
     $event->setMimeType('application/json');
     if (in_array($service, self::SLOW, TRUE)) {
       $event->setTimeout(600);

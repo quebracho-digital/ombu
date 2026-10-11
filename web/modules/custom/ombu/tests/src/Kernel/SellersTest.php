@@ -70,6 +70,15 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame((new Signer(self::MARKDOWN_KEY))->address(), $this->required($markdown)['accepts'][0]['payTo']);
   }
 
+  public function testAListingWithoutAUsableSellerKeyIsNotForSale(): void {
+    // Even with a key on the field: that wallet is not this seller's.
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('commerce_product.listing.field_x402_price');
+    $field->setSetting('key_id', 'seller_markdown')->save();
+    $listing = $this->listing('ping', 'missing', '0.0001');
+    $response = $this->container->get('http_kernel')->handle(Request::create("/x402/commerce_product/{$listing->id()}/full", 'POST', content: '{}'));
+    $this->assertSame(403, $response->getStatusCode(), $response->getContent());
+  }
+
   public function testModelSellersGiveTheBuyerTenMinutes(): void {
     $this->assertSame(60, $this->required($this->listing('ping', 'seller_ping', '0.0001'))['accepts'][0]['maxTimeoutSeconds']);
     $this->assertSame(600, $this->required($this->listing('terms', 'seller_ping', '0.01'))['accepts'][0]['maxTimeoutSeconds']);

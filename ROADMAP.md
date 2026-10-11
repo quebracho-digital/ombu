@@ -49,6 +49,12 @@ the cut line moves as we go.
   reproduces it); and the form's conflict message was escaped twice
   (caught by a new functional test that drives the settings form).
 - `x402_pay` published on drupal.org: `git.drupal.org:project/x402_pay`.
+- **Where a paid request's time goes** (3 purchases of node 3's summary,
+  `buy.mjs` + the gate's `Server-Timing`): total 4.4–8.2 s. **Settle
+  3.6 s every time (80 %)**, verify 0.6 s (once 4.5 s), our handler
+  11–21 ms, sign 5 ms, asking for the 402 100–270 ms, the rest ~70 ms. The
+  plain page: 85–220 ms. Settle is probably Circle waiting for the chain
+  (it answered in one call, never pending): an inference, not checked.
 
 **Next (in order)**
 1. The catalogue View (rest of item 2).
@@ -239,6 +245,23 @@ the cut line moves as we go.
    business, and the submission says so.
 
 ## 🎯 Full marketplace
+
+- [ ] **Faster payments**, in this order (measured 10-11: settle 3.6 s and
+  verify 0.6 s of a ~4.4 s purchase; ours is ~0.1 s):
+  1. **Verify locally**: recover the EIP-3009 signer, check balance and
+     nonce over RPC; skip Circle's verify. No new risk: settle checks it
+     all again. Saves ~0.6 s and verify's outliers.
+  2. **Deliver before settling, for accounts with credit**: settle in the
+     background. Needs `wallet_auth`: the payment's `from` must be one of
+     the account's wallets, and unpaid debt per account is capped (a
+     failed settle stops its credit; clean history raises the cap).
+     Changes "body only once settled" for those accounts. ~4.4 s → ~0.8 s;
+     with 1, ~0.2 s.
+  3. **Prepaid**: only through Circle Gateway (the buyer deposits at
+     Circle, payments batch offchain), never a balance of ours: custody
+     stays none.
+  - An agent that knows the price (from `/market.json`) can already send
+    the payment on its first request and skip the 402: x402 allows it.
 
 - [ ] **Purchases on the account, every edge case**: an anonymous buyer
   without the cookie is recognised by the wallet when they pay again (no

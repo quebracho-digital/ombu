@@ -71,7 +71,9 @@ foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
     'field_network' => ['eip155:5042002'],
     'field_source' => 'ours',
     'field_verified' => TRUE,
-    'field_category' => $term('listing_category', $cat),
+    'field_category' => $term('listing_category', \Drupal\ombu\CircleCatalogImporter::categoryLabel($cat)),
+    'field_provider_term' => $term('listing_provider', 'Quebracho'),
+    'field_rails' => ['vanilla'],
     'field_tags' => array_map(fn($t) => $term('listing_tag', $t), $tags),
     'field_input_schema' => json_encode($schema),
   ] as $field => $value) {

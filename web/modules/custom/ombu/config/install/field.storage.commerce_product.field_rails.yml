@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+    - options
+id: commerce_product.field_rails
+field_name: field_rails
+entity_type: commerce_product
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: vanilla
+      label: 'Plain x402'
+    -
+      value: gateway
+      label: 'Circle Gateway'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_rails
+  module:
+    - options
+id: commerce_product.listing.field_rails
+field_name: field_rails
+entity_type: commerce_product
+bundle: listing
+label: 'Payment rail'
+description: 'Plain x402 is payable from any wallet; Circle Gateway needs a deposit at Circle.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

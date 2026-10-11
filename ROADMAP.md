@@ -86,6 +86,19 @@ the cut line moves as we go.
   `0x6cb949c0…f271` (27.5 s, the model 23.4 s), ping `0x5c468057…d70c`,
   markdown `0x6d625710…418d`, fact-check `0x8609fd52…febd6`. minisforum's
   copy is rsynced from the laptop: it does not follow git yet.
+- **The catalogue, kept and faceted (3c)** (109 tests): providers are terms
+  (site, docs, OpenAPI); each listing keeps the operation of its
+  provider's OpenAPI that documents it (807 of 2,786; one fetch per
+  provider per run, 36 specs, aisa's 52 MB over the 5 MB cap), shown on
+  its page and searched. Payment rail (plain x402 / Circle Gateway) and
+  SIWX imported. A listing updates when a hash of what Circle says
+  changes, not only `lastUpdated`. What Circle drops is **retired**: page
+  and reviews stay, buying and x402 do not, search leaves it out unless
+  asked. Re-import every 6 h. `/market` has facets with counts (category,
+  network by name, provider, payment, tags, seller); `/market.json` takes
+  the same filters by name (comma lists, `retired=1`, `openapi=1`) and
+  returns the counts. **Bug fixed:** tags went to the `tags` vocabulary,
+  not the field's `listing_tag` (22,910 references moved).
 
 **Next (in order)**
 1. 2b, people paying in the browser: needs the MetaMask check below.
@@ -243,7 +256,7 @@ the cut line moves as we go.
    - **Done when:** the three are submitted; each turns *live* on its own
      when Circle approves it. Open: does the catalogue list testnet
      services, and do its health checks pass the WAF skip rule?
-3c. [ ] **Faceted search** (10-12). Facets on category, chain, price range,
+3c. [~] **Faceted search** (10-12). Done 10-11 except rating and price range. Facets on category, chain, price range,
    payment rail (vanilla x402 or Circle Gateway: only vanilla is payable
    from a plain wallet), provider, rating, verified seller. The same facets
    as `/market.json` parameters, with counts in the response.

@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Listing provider'
+vid: listing_provider
+description: 'Who offers a listing: one term per provider, with its site and its OpenAPI.'
+weight: 0
+new_revision: false

@@ -5,7 +5,12 @@ dependencies:
     - field.storage.commerce_product.body
     - field.storage.commerce_product.field_category
     - field.storage.commerce_product.field_network
+    - field.storage.commerce_product.field_openapi
     - field.storage.commerce_product.field_provider
+    - field.storage.commerce_product.field_provider_term
+    - field.storage.commerce_product.field_rails
+    - field.storage.commerce_product.field_retired
+    - field.storage.commerce_product.field_siwx
     - field.storage.commerce_product.field_source
     - field.storage.commerce_product.field_tags
     - field.storage.commerce_product.field_verified
@@ -34,6 +39,15 @@ field_settings:
     dependencies:
       config:
         - field.storage.commerce_product.field_category
+  openapi:
+    label: openapi
+    datasource_id: 'entity:commerce_product'
+    property_path: field_openapi
+    type: text
+    boost: 0.5
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_openapi
   network:
     label: network
     datasource_id: 'entity:commerce_product'
@@ -50,6 +64,30 @@ field_settings:
     dependencies:
       module:
         - commerce_product
+  provider_id:
+    label: provider_id
+    datasource_id: 'entity:commerce_product'
+    property_path: field_provider_term
+    type: integer
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_provider_term
+  rails:
+    label: rails
+    datasource_id: 'entity:commerce_product'
+    property_path: field_rails
+    type: string
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_rails
+  retired:
+    label: retired
+    datasource_id: 'entity:commerce_product'
+    property_path: field_retired
+    type: boolean
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_retired
   provider:
     label: provider
     datasource_id: 'entity:commerce_product'
@@ -59,6 +97,14 @@ field_settings:
     dependencies:
       config:
         - field.storage.commerce_product.field_provider
+  siwx:
+    label: siwx
+    datasource_id: 'entity:commerce_product'
+    property_path: field_siwx
+    type: boolean
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_siwx
   source:
     label: source
     datasource_id: 'entity:commerce_product'
@@ -75,6 +121,14 @@ field_settings:
     dependencies:
       module:
         - commerce_product
+  tags:
+    label: tags
+    datasource_id: 'entity:commerce_product'
+    property_path: field_tags
+    type: integer
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_tags
   tag_names:
     label: tag_names
     datasource_id: 'entity:commerce_product'
@@ -122,6 +176,7 @@ processor_settings:
     all_fields: false
     fields:
       - body
+      - openapi
       - provider
       - tag_names
       - title

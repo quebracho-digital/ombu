@@ -1,7 +1,12 @@
 services:
   ombu.circle_importer:
     class: Drupal\ombu\CircleCatalogImporter
-    autowire: true
+    arguments:
+      - '@http_client'
+      - '@entity_type.manager'
+      - '@logger.factory'
+      - '@lock'
+      - '@?Drupal\ai_provider_universal_factcheck\Service\PageFetcher'
   logger.channel.ombu:
     parent: logger.channel_base
     arguments: ['ombu']

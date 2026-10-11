@@ -9,26 +9,45 @@ use Drupal\commerce_price\Price;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use GuzzleHttp\ClientInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Imports the Circle Agent Marketplace catalogue as listing products.
  *
  * The Discovery API is public and read-only. Each resource becomes one
- * listing keyed by method + URL; listings Circle no longer returns are
- * unpublished, never deleted, so their reviews survive.
+ * listing keyed by method + URL, under its provider (a term holding the
+ * provider's site and OpenAPI). Each listing keeps the operation of its
+ * provider's spec that documents it, so people and agents search the API
+ * itself. A listing changes when what Circle says about it changes (a hash
+ * of it, not only lastUpdated). Listings Circle no longer returns are
+ * retired: still published and open to reviews, never for sale, never
+ * deleted.
  */
 final class CircleCatalogImporter {
 
   public const API = 'https://api.circle.com/v2/x402/discovery/resources';
 
+  /**
+   * Bump to refresh every listing once, when the import learns a new field.
+   */
+  private const FORMAT = 2;
+
+  /**
+   * Specs fetched in this run, by URL: one fetch per provider, not per item.
+   *
+   * @var array<string, array|null>
+   */
+  private array $specs = [];
+
   public function __construct(
     private readonly ClientInterface $httpClient,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly LoggerChannelFactoryInterface $loggerFactory,
-    #[Autowire(service: 'lock')]
     private readonly LockBackendInterface $lock,
+    // Specs come through the guarded fetch (public addresses only, 5 MB at
+    // most); without it listings are imported without their OpenAPI.
+    private readonly ?PageFetcher $fetcher = NULL,
   ) {}
 
   /**
@@ -54,7 +73,8 @@ final class CircleCatalogImporter {
   }
 
   private function doImport(int $max): array {
-    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'unpublished' => 0];
+    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'retired' => 0];
+    $this->specs = [];
     $seen = [];
     $offset = 0;
     do {
@@ -77,7 +97,7 @@ final class CircleCatalogImporter {
 
     // Only a complete run knows what disappeared.
     if (!$max) {
-      $counts['unpublished'] = $this->unpublishMissing($seen);
+      $counts['retired'] = $this->retireMissing($seen);
       \Drupal::state()->set('ombu.circle_last', \Drupal::time()->getRequestTime());
     }
     $this->loggerFactory->get('ombu')->info('Circle catalogue import: @c', ['@c' => json_encode($counts)]);
@@ -109,7 +129,11 @@ final class CircleCatalogImporter {
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = $ids ? $products->load(reset($ids)) : NULL;
     $updated = $item['lastUpdated'] ?? '';
-    if ($product && $product->get('field_source_updated')->value === $updated && $product->isPublished()) {
+    $openApiUrl = $provider['openApiUrl'] ?? NULL;
+    $spec = $openApiUrl ? $this->spec($openApiUrl) : NULL;
+    $operation = $spec ? OpenApi::operation($spec, $item['resource'], $method) : NULL;
+    $hash = hash('sha256', json_encode([self::FORMAT, $item, $operation]));
+    if ($product && $product->get('field_source_hash')->value === $hash && !$product->get('field_retired')->value) {
       return 'unchanged';
     }
 
@@ -132,12 +156,21 @@ final class CircleCatalogImporter {
       'field_input_schema' => isset($meta['input']) ? json_encode($meta['input'], JSON_UNESCAPED_SLASHES) : NULL,
       'field_output_schema' => isset($meta['output']) ? json_encode($meta['output'], JSON_UNESCAPED_SLASHES) : NULL,
       'field_provider' => mb_substr($provider['name'] ?? '', 0, 255),
+      'field_provider_term' => $this->provider($provider),
+      'field_openapi' => $operation ? json_encode($operation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : NULL,
+      'field_rails' => array_keys(array_filter([
+        'vanilla' => $meta['supportsVanillax402'] ?? TRUE,
+        'gateway' => $meta['supportsCircleGateway'] ?? FALSE,
+      ])),
+      'field_siwx' => !empty($meta['siwx']),
+      'field_retired' => FALSE,
+      'field_source_hash' => $hash,
       'field_docs_url' => $provider['docsUrl'] ?? $provider['website'] ?? NULL,
       'field_source' => 'circle',
       'field_verified' => FALSE,
       'field_source_updated' => $updated,
-      'field_category' => $this->term('listing_category', $provider['category'] ?? 'OTHER'),
-      'field_tags' => array_map(fn($t) => $this->term('tags', $t), array_slice($provider['tags'] ?? [], 0, 10)),
+      'field_category' => $this->term('listing_category', self::categoryLabel($provider['category'] ?? 'OTHER')),
+      'field_tags' => array_map(fn($t) => $this->term('listing_tag', $t), array_slice($provider['tags'] ?? [], 0, 10)),
       'status' => TRUE,
     ];
 
@@ -158,6 +191,66 @@ final class CircleCatalogImporter {
     }
     $product->save();
     return $outcome;
+  }
+
+  /**
+   * The provider's term, created or updated from what Circle says of it.
+   */
+  private function provider(array $provider): ?int {
+    if (!$tid = $this->term('listing_provider', $provider['name'] ?? '')) {
+      return NULL;
+    }
+    $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($tid);
+    $values = [
+      'description' => $provider['description'] ?? '',
+      'field_website' => $provider['website'] ?? NULL,
+      'field_docs_url' => $provider['docsUrl'] ?? NULL,
+      'field_openapi_url' => $provider['openApiUrl'] ?? NULL,
+    ];
+    $changed = FALSE;
+    foreach ($values as $field => $value) {
+      if ((string) $term->get($field)->value !== (string) $value) {
+        $term->set($field, $value);
+        $changed = TRUE;
+      }
+    }
+    if ($changed) {
+      $term->save();
+    }
+    return $tid;
+  }
+
+  /**
+   * A provider's OpenAPI spec, fetched once per run; NULL if unusable.
+   */
+  private function spec(string $url): ?array {
+    if (!array_key_exists($url, $this->specs)) {
+      try {
+        $this->specs[$url] = $this->fetcher ? OpenApi::parse($this->fetcher->fetch($url)) : NULL;
+      }
+      catch (\Exception $e) {
+        // Too big (over the fetch's 5 MB), down, or not public: the listing
+        // keeps Circle's own input and output schemas.
+        $this->loggerFactory->get('ombu')->notice('OpenAPI @url: @m', ['@url' => $url, '@m' => $e->getMessage()]);
+        $this->specs[$url] = NULL;
+      }
+    }
+    return $this->specs[$url];
+  }
+
+  /**
+   * A Circle category code as people read it: "WEB_SEARCH_RESEARCH" →
+   * "Web search research". A name passes through unchanged.
+   */
+  public static function categoryLabel(string $code): string {
+    return ucfirst(mb_strtolower(str_replace('_', ' ', trim($code))));
+  }
+
+  /**
+   * A category name back to Circle's code, for its Discovery shape.
+   */
+  public static function categoryCode(string $label): string {
+    return mb_strtoupper(str_replace(' ', '_', trim($label)));
   }
 
   /**
@@ -182,20 +275,22 @@ final class CircleCatalogImporter {
   }
 
   /**
-   * Unpublishes Circle listings that the last full run did not return.
+   * Retires Circle listings that the last full run did not return.
    */
-  private function unpublishMissing(array $seen): int {
+  private function retireMissing(array $seen): int {
     $products = $this->entityTypeManager->getStorage('commerce_product');
-    $ids = $products->getQuery()->accessCheck(FALSE)
+    $query = $products->getQuery()->accessCheck(FALSE)
       ->condition('type', 'listing')
-      ->condition('field_source', 'circle')
-      ->condition('status', 1)
+      ->condition('field_source', 'circle');
+    $ids = $query->condition($query->orConditionGroup()
+      ->notExists('field_retired')
+      ->condition('field_retired', FALSE))
       ->execute();
     $n = 0;
     foreach ($products->loadMultiple($ids) as $product) {
       $key = $product->get('field_http_method')->value . ' ' . $product->get('field_endpoint')->value;
       if (!isset($seen[$key])) {
-        $product->setUnpublished()->save();
+        $product->set('field_retired', TRUE)->save();
         $n++;
       }
     }

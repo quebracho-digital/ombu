@@ -12,5 +12,6 @@ dependencies:
   - drupal:path
   - drupal:taxonomy
   - drupal:text
+  - facets:facets_exposed_filters
   - key:key
   - x402_pay:x402_pay

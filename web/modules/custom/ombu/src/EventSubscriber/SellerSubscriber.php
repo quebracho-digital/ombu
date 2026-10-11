@@ -12,6 +12,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Our listings over x402: paid to their own seller, delivering its service.
+ *
+ * A retired listing (any, ours or imported) is not for sale.
  */
 final class SellerSubscriber implements EventSubscriberInterface {
 
@@ -30,6 +32,11 @@ final class SellerSubscriber implements EventSubscriberInterface {
   }
 
   public function onPrice(PriceEvent $event): void {
+    if ($event->entity->hasField('field_retired') && $event->entity->get('field_retired')->value) {
+      // Retired: still shown and reviewed, never sold.
+      $event->deny();
+      return;
+    }
     if (!$service = $this->service($event->entity)) {
       return;
     }

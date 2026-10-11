@@ -79,6 +79,13 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame(403, $response->getStatusCode(), $response->getContent());
   }
 
+  public function testARetiredListingIsNotForSale(): void {
+    $listing = $this->listing('ping', 'seller_ping', '0.0001');
+    $listing->set('field_retired', TRUE)->save();
+    $response = $this->container->get('http_kernel')->handle(Request::create("/x402/commerce_product/{$listing->id()}/full", 'POST', content: '{}'));
+    $this->assertSame(403, $response->getStatusCode(), $response->getContent());
+  }
+
   public function testModelSellersGiveTheBuyerTenMinutes(): void {
     $this->assertSame(60, $this->required($this->listing('ping', 'seller_ping', '0.0001'))['accepts'][0]['maxTimeoutSeconds']);
     $this->assertSame(600, $this->required($this->listing('terms', 'seller_ping', '0.01'))['accepts'][0]['maxTimeoutSeconds']);

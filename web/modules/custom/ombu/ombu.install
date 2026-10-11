@@ -34,3 +34,98 @@ function ombu_update_10001(): void {
     }
   }
 }
+
+/**
+ * Creates (or, with $overwrite, replaces) config shipped by the module.
+ */
+function _ombu_config(string $dir, array $names, bool $overwrite = FALSE): void {
+  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . "/config/$dir");
+  foreach ($names as $name) {
+    $type = \Drupal::service('config.manager')->getEntityTypeIdByName($name);
+    $storage = \Drupal::entityTypeManager()->getStorage($type);
+    $record = $source->read($name);
+    $existing = $storage->load($record['id'] ?? substr($name, strlen($storage->getEntityType()->getConfigPrefix()) + 1));
+    if (!$existing) {
+      $storage->createFromStorageRecord($record)->save();
+    }
+    elseif ($overwrite) {
+      $storage->updateFromStorageRecord($existing, $record)->save();
+    }
+  }
+}
+
+/**
+ * Providers, payment rails, OpenAPI, retired listings; tags where they go.
+ */
+function ombu_update_10002(): void {
+  $names = ['taxonomy.vocabulary.listing_provider'];
+  foreach (['field_website', 'field_docs_url', 'field_openapi_url'] as $field) {
+    $names[] = "field.storage.taxonomy_term.$field";
+    $names[] = "field.field.taxonomy_term.listing_provider.$field";
+  }
+  foreach (['field_provider_term', 'field_rails', 'field_siwx', 'field_retired', 'field_openapi', 'field_source_hash'] as $field) {
+    $names[] = "field.storage.commerce_product.$field";
+    $names[] = "field.field.commerce_product.listing.$field";
+  }
+  _ombu_config('install', $names);
+  _ombu_config('install', ['core.entity_view_display.commerce_product.listing.default'], TRUE);
+
+  $db = \Drupal::database();
+  // The importer filed tags under the "tags" vocabulary, which the field
+  // does not reference: move each to listing_tag, merging with a term of
+  // the same name there.
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  $misfiled = $db->query("SELECT DISTINCT t.tid, t.name FROM {commerce_product__field_tags} f
+    JOIN {taxonomy_term_field_data} t ON t.tid = f.field_tags_target_id WHERE t.vid = 'tags'")->fetchAllKeyed();
+  $existing = $db->query("SELECT name, tid FROM {taxonomy_term_field_data} WHERE vid = 'listing_tag'")->fetchAllKeyed();
+  foreach ($misfiled as $tid => $name) {
+    if (isset($existing[$name])) {
+      $db->update('commerce_product__field_tags')->fields(['field_tags_target_id' => $existing[$name]])->condition('field_tags_target_id', $tid)->execute();
+      $terms->load($tid)?->delete();
+    }
+    else {
+      foreach (['taxonomy_term_data', 'taxonomy_term_field_data'] as $table) {
+        $db->update($table)->fields(['vid' => 'listing_tag'])->condition('tid', $tid)->execute();
+      }
+      $existing[$name] = $tid;
+    }
+  }
+
+  // Listings Circle stopped returning were unpublished: now they are
+  // retired, published and open to reviews. Every other listing is not.
+  $listings = $db->query("SELECT product_id, status FROM {commerce_product_field_data} WHERE type = 'listing'")->fetchAllKeyed();
+  $db->update('commerce_product_field_data')->fields(['status' => 1])->condition('type', 'listing')->execute();
+  $db->delete('commerce_product__field_retired')->execute();
+  $insert = $db->insert('commerce_product__field_retired')->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'field_retired_value']);
+  foreach ($listings as $id => $status) {
+    $insert->values(['listing', 0, $id, $id, 'en', 0, $status ? 0 : 1]);
+  }
+  $insert->execute();
+  $terms->resetCache();
+  \Drupal::entityTypeManager()->getStorage('commerce_product')->resetCache();
+}
+
+/**
+ * Category names people read, our listings under their provider, facets.
+ */
+function ombu_update_10003(): void {
+  $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+  foreach ($terms->loadByProperties(['vid' => 'listing_category']) as $term) {
+    $term->setName(\Drupal\ombu\CircleCatalogImporter::categoryLabel($term->label()))->save();
+  }
+
+  // Ours: Quebracho, paid with plain x402 (no Circle Gateway).
+  $products = \Drupal::entityTypeManager()->getStorage('commerce_product');
+  $ids = $products->getQuery()->accessCheck(FALSE)->condition('type', 'listing')->condition('field_source', 'ours')->execute();
+  if ($ids) {
+    $found = $terms->loadByProperties(['vid' => 'listing_provider', 'name' => 'Quebracho']);
+    $quebracho = $found ? reset($found) : $terms->create(['vid' => 'listing_provider', 'name' => 'Quebracho', 'field_website' => 'https://quebracho.digital']);
+    $quebracho->save();
+    foreach ($products->loadMultiple($ids) as $product) {
+      $product->set('field_provider_term', $quebracho->id())->set('field_rails', ['vanilla'])->save();
+    }
+  }
+
+  _ombu_config('optional', ['search_api.index.listings', 'views.view.market'], TRUE);
+  \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
+}

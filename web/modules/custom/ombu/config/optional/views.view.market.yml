@@ -3,7 +3,9 @@ status: true
 dependencies:
   config:
     - search_api.index.listings
+    - system.menu.main
   module:
+    - facets_exposed_filters
     - search_api
 id: market
 label: Market
@@ -34,11 +36,11 @@ display:
       pager:
         type: full
         options:
-          items_per_page: 24
           offset: 0
-          quantity: 9
+          items_per_page: 24
           expose:
             items_per_page: false
+          quantity: 9
       exposed_form:
         type: basic
         options:
@@ -68,20 +70,20 @@ display:
           field: search_api_relevance
           plugin_id: search_api
           order: DESC
-          exposed: true
           expose:
             label: Relevance
             field_identifier: relevance
+          exposed: true
         price:
           id: price
           table: search_api_index_listings
           field: price
           plugin_id: search_api
           order: ASC
-          exposed: true
           expose:
-            label: 'Price'
+            label: Price
             field_identifier: price
+          exposed: true
       filters:
         search_api_fulltext:
           id: search_api_fulltext
@@ -98,53 +100,139 @@ display:
           parse_mode: terms
           min_length: 3
           fields: {  }
-        category:
-          id: category
+        facets_category:
+          id: facets_category
           table: search_api_index_listings
-          field: category
-          plugin_id: search_api_term
-          operator: or
-          value: {  }
+          field: facets_category
+          plugin_id: facets_filter
           exposed: true
           expose:
-            operator_id: category_op
             label: Category
             identifier: category
-            multiple: false
-            reduce: false
-          type: select
-          limit: true
-          vid: listing_category
-          hierarchy: false
-        network:
-          id: network
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              translate_entity:
+                processor_id: translate_entity
+                weights:
+                  build: 5
+                settings: {  }
+        facets_network:
+          id: facets_network
           table: search_api_index_listings
-          field: network
-          plugin_id: search_api_string
-          operator: '='
-          value:
-            min: ''
-            max: ''
-            value: ''
+          field: facets_network
+          plugin_id: facets_filter
           exposed: true
           expose:
-            operator_id: network_op
-            label: 'Network (e.g. eip155:5042)'
+            label: Network
             identifier: network
-        source:
-          id: source
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              ombu_chain_name:
+                processor_id: ombu_chain_name
+                weights:
+                  build: 5
+                settings: {  }
+        facets_provider_id:
+          id: facets_provider_id
           table: search_api_index_listings
-          field: source
-          plugin_id: search_api_options
-          operator: or
-          value: {  }
+          field: facets_provider_id
+          plugin_id: facets_filter
           exposed: true
           expose:
-            operator_id: source_op
+            label: Provider
+            identifier: provider
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              translate_entity:
+                processor_id: translate_entity
+                weights:
+                  build: 5
+                settings: {  }
+        facets_rails:
+          id: facets_rails
+          table: search_api_index_listings
+          field: facets_rails
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Payment
+            identifier: payment
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              list_item:
+                processor_id: list_item
+                weights:
+                  build: 5
+                settings: {  }
+        facets_tags:
+          id: facets_tags
+          table: search_api_index_listings
+          field: facets_tags
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Tags
+            identifier: tag
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 30
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              translate_entity:
+                processor_id: translate_entity
+                weights:
+                  build: 5
+                settings: {  }
+        facets_source:
+          id: facets_source
+          table: search_api_index_listings
+          field: facets_source
+          plugin_id: facets_filter
+          exposed: true
+          expose:
             label: Seller
-            identifier: source
-            multiple: false
-            reduce: false
+            identifier: seller
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              list_item:
+                processor_id: list_item
+                weights:
+                  build: 5
+                settings: {  }
+        retired:
+          id: retired
+          table: search_api_index_listings
+          field: retired
+          plugin_id: search_api_boolean
+          value: '0'
+          exposed: false
       style:
         type: default
       row:
@@ -154,16 +242,37 @@ display:
         options:
           skip_access: false
       display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:sort_by'
+      tags:
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'
   page_1:
     id: page_1
     display_title: Page
     display_plugin: page
     position: 1
     display_options:
+      display_extenders: {  }
       path: market
       menu:
         type: normal
         title: Market
-        menu_name: main
         weight: -10
-      display_extenders: {  }
+        menu_name: main
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:sort_by'
+      tags:
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'
+

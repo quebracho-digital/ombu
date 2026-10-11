@@ -12,17 +12,24 @@ dependencies:
     - field.field.commerce_product.listing.field_http_method
     - field.field.commerce_product.listing.field_input_schema
     - field.field.commerce_product.listing.field_network
+    - field.field.commerce_product.listing.field_openapi
     - field.field.commerce_product.listing.field_output_schema
     - field.field.commerce_product.listing.field_pay_to
     - field.field.commerce_product.listing.field_provider
+    - field.field.commerce_product.listing.field_provider_term
+    - field.field.commerce_product.listing.field_rails
+    - field.field.commerce_product.listing.field_retired
     - field.field.commerce_product.listing.field_reviews
     - field.field.commerce_product.listing.field_source
+    - field.field.commerce_product.listing.field_source_hash
     - field.field.commerce_product.listing.field_source_updated
+    - field.field.commerce_product.listing.field_siwx
     - field.field.commerce_product.listing.field_tags
     - field.field.commerce_product.listing.field_verified
   module:
     - comment
     - commerce_product
+    - options
 id: commerce_product.listing.default
 targetEntityType: commerce_product
 bundle: listing
@@ -95,14 +102,30 @@ content:
     third_party_settings: {  }
     weight: 9
     region: content
-  field_provider:
-    type: string
+  field_provider_term:
+    type: entity_reference_label
     label: inline
     settings:
-      link_to_entity: false
-      link_rel: canonical
+      link: true
     third_party_settings: {  }
     weight: 3
+    region: content
+  field_rails:
+    type: list_default
+    label: inline
+    settings: {  }
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_siwx:
+    type: boolean
+    label: hidden
+    settings:
+      format: custom
+      format_custom_false: ''
+      format_custom_true: 'Asks the buyer to sign in (SIWX) before paying'
+    third_party_settings: {  }
+    weight: 7
     region: content
   field_reviews:
     type: comment_default
@@ -149,6 +172,10 @@ content:
     weight: 2
     region: content
 hidden:
+  field_openapi: true
+  field_provider: true
+  field_retired: true
+  field_source_hash: true
   created: true
   field_accepts: true
   field_output_schema: true

@@ -10,9 +10,11 @@
  */
 function ombu_cron(): void {
   $state = \Drupal::state();
-  // ponytail: full re-import once a day inside cron; move to a queue if the
-  // catalogue outgrows one cron run (2.9k listings, ~2026-10).
-  if (\Drupal::time()->getRequestTime() - $state->get('ombu.circle_last', 0) < 86400) {
+  // ponytail: full re-import every 6 hours inside cron; move to a queue if
+  // the catalogue outgrows one cron run (2.9k listings, ~2026-10). Run cron
+  // from the system, not automated_cron: an import is minutes of a
+  // visitor's request.
+  if (\Drupal::time()->getRequestTime() - $state->get('ombu.circle_last', 0) < 21600) {
     return;
   }
   try {
@@ -53,4 +55,43 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
     '#weight' => -5,
     '#cache' => ['tags' => ['comment_list']],
   ];
+
+  // Retired: its provider no longer offers it. The page and its reviews
+  // stay; buying does not.
+  if ($product->hasField('field_retired') && $product->get('field_retired')->value) {
+    unset($build['variations']);
+    $build['retired'] = [
+      '#markup' => '<div class="messages messages--warning listing-retired">' . t('Retired: its provider no longer offers this. Reviews stay open.') . '</div>',
+      '#weight' => -6,
+    ];
+  }
+
+  if (isset($build['field_network'])) {
+    foreach (\Drupal\Core\Render\Element::children($build['field_network']) as $delta) {
+      $build['field_network'][$delta]['#context']['value'] = \Drupal\ombu\Chains::name((string) $build['field_network'][$delta]['#context']['value']);
+    }
+  }
+
+  if ($view_mode === 'full' && $product->hasField('field_openapi') && ($operation = json_decode((string) $product->get('field_openapi')->value, TRUE))) {
+    $spec = $product->get('field_provider_term')->entity?->get('field_openapi_url')->value;
+    $build['openapi'] = [
+      '#type' => 'details',
+      '#title' => t('API: @method @path', ['@method' => strtoupper((string) $product->get('field_http_method')->value), '@path' => $operation['path'] ?? '']),
+      '#weight' => 11,
+      'summary' => ['#plain_text' => trim(($operation['summary'] ?? '') . "\n\n" . ($operation['description'] ?? ''))],
+      'operation' => [
+        '#type' => 'html_tag',
+        '#tag' => 'pre',
+        // Third-party text: escaped, never markup.
+        'json' => ['#plain_text' => json_encode($operation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)],
+      ],
+      'spec' => $spec && preg_match('~^https?://~i', $spec) ? [
+        '#type' => 'link',
+        '#title' => t("The provider's full OpenAPI"),
+        '#url' => \Drupal\Core\Url::fromUri($spec),
+        '#prefix' => '<p>',
+        '#suffix' => '</p>',
+      ] : [],
+    ];
+  }
 }

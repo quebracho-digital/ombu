@@ -4,3 +4,8 @@ market:
   css:
     theme:
       css/market.css: {}
+# A listing's page: one readable column, details as a two-column list.
+listing:
+  css:
+    theme:
+      css/listing.css: {}

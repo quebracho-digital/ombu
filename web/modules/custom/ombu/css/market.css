@@ -63,11 +63,39 @@
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: .75rem;
   background: var(--bs-body-bg, #fff);
-  transition: box-shadow .15s, transform .15s;
 }
 .view-market .teaser-belgrade:hover {
   box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .08);
-  transform: translateY(-2px);
+}
+.view-market .teaser-belgrade:focus-within {
+  outline: 3px solid var(--bs-primary, #0d6efd);
+  outline-offset: 2px;
+}
+/* Belgrade inverts the text on hover; a card keeps its colours. */
+.view-market .teaser-belgrade:hover .teaser-belgrade__info,
+.view-market .teaser-belgrade:hover .teaser-belgrade__title,
+.view-market .teaser-belgrade:hover .teaser-belgrade__title a {
+  padding-inline: 0;
+  background: none;
+  color: inherit;
+}
+.view-market .teaser-belgrade:hover .teaser-belgrade__title a {
+  text-decoration: underline;
+}
+/* The whole card clicks through the title link; Belgrade's extra empty
+   link would be a nameless stop for screen readers and the keyboard. */
+.view-market .teaser-belgrade > a.stretched-link {
+  display: none;
+}
+.view-market .teaser-belgrade__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .view-market .teaser-belgrade {
+    transition: box-shadow .15s;
+  }
 }
 .view-market .teaser-belgrade__image {
   display: none;
@@ -82,8 +110,12 @@
   border: 0 !important;
   font-size: .875rem;
 }
-.view-market .teaser-belgrade__title {
+.view-market .teaser-belgrade__title,
+.view-market .teaser-belgrade__title .listing-title {
+  margin: 0;
+  padding: 0;
   font-size: 1.0625rem;
+  font-weight: 700;
   line-height: 1.3;
 }
 .view-market .teaser-belgrade__title a {

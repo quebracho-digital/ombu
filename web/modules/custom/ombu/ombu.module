@@ -72,6 +72,25 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
     }
   }
 
+  if ($view_mode === 'full') {
+    $build['#attached']['library'][] = 'ombu/listing';
+    // Schemas readable: indented, monospaced, escaped.
+    foreach (['field_input_schema', 'field_output_schema'] as $field) {
+      $json = json_decode((string) ($build[$field][0]['#context']['value'] ?? ''), TRUE);
+      if ($json !== NULL) {
+        $build[$field][0] = [
+          '#type' => 'html_tag',
+          '#tag' => 'pre',
+          'json' => ['#plain_text' => json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)],
+        ];
+      }
+    }
+    $docs = (string) ($build['field_docs_url'][0]['#context']['value'] ?? '');
+    if (preg_match('~^https?://~i', $docs)) {
+      $build['field_docs_url'][0] = ['#type' => 'link', '#title' => $docs, '#url' => \Drupal\Core\Url::fromUri($docs)];
+    }
+  }
+
   if ($view_mode === 'full' && $product->hasField('field_openapi') && ($operation = json_decode((string) $product->get('field_openapi')->value, TRUE))) {
     $spec = $product->get('field_provider_term')->entity?->get('field_openapi_url')->value;
     $build['openapi'] = [
@@ -102,5 +121,19 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
 function ombu_views_pre_render(\Drupal\views\ViewExecutable $view): void {
   if ($view->id() === 'market') {
     $view->element['#attached']['library'][] = 'ombu/market';
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for commerce_product.
+ *
+ * A listing's title is the page's h1, and each card's h2 on /market, so
+ * screen readers can jump between them.
+ */
+function ombu_preprocess_commerce_product(array &$variables): void {
+  $tag = ['full' => 'h1', 'teaser' => 'h2'][$variables['elements']['#view_mode']] ?? NULL;
+  if ($tag && isset($variables['product']['title']) && $variables['elements']['#commerce_product']->bundle() === 'listing') {
+    $variables['product']['title']['#prefix'] = "<$tag class=\"listing-title\">";
+    $variables['product']['title']['#suffix'] = "</$tag>";
   }
 }

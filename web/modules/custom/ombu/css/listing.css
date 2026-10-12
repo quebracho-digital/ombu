@@ -1,0 +1,75 @@
+/* Belgrade keeps a column for a product image; listings have none. */
+article:has(h1.listing-title) > .row > .col-md-5:not(:has(*)) {
+  display: none;
+}
+article:has(h1.listing-title) > .row > .col-md-7 {
+  flex: 1 1 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+.listing-title {
+  margin: 0 0 .5rem;
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  line-height: 1.15;
+}
+article:has(h1.listing-title) .field--name-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--bs-success, #198754);
+}
+article:has(h1.listing-title) .field--name-field-verified:not(:empty) {
+  display: inline-block;
+  margin: .5rem 0;
+  padding: .125rem .625rem;
+  border-radius: 1rem;
+  background: var(--bs-success-bg-subtle, #d1e7dd);
+  color: var(--bs-success-text-emphasis, #0a3622);
+  font-size: .875rem;
+  font-weight: 600;
+}
+article:has(h1.listing-title) .field--name-body {
+  margin: 1rem 0 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* Details: label and value side by side, rules between them. */
+article:has(h1.listing-title) .field--label-inline,
+article:has(h1.listing-title) .field--label-above {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .25rem 1rem;
+  padding: .625rem 0;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+}
+@media (min-width: 576px) {
+  article:has(h1.listing-title) .field--label-inline,
+  article:has(h1.listing-title) .field--label-above {
+    grid-template-columns: 11rem minmax(0, 1fr);
+  }
+}
+article:has(h1.listing-title) .field--label-inline .field__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .75rem;
+}
+article:has(h1.listing-title) .field--name-variations {
+  margin-bottom: 1.5rem;
+}
+article:has(h1.listing-title) pre {
+  margin: 0;
+  padding: .75rem 1rem;
+  border-radius: .5rem;
+  background: var(--bs-tertiary-bg, #f8f9fa);
+  font-size: .8125rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+article:has(h1.listing-title) .listing-rating {
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* No reviews yet: no empty grey box (it sits inside the article). */
+article:has(h1.listing-title) .field--comment:not(:has(*)) {
+  display: none;
+}

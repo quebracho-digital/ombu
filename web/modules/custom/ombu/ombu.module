@@ -95,3 +95,12 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
     ];
   }
 }
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function ombu_views_pre_render(\Drupal\views\ViewExecutable $view): void {
+  if ($view->id() === 'market') {
+    $view->element['#attached']['library'][] = 'ombu/market';
+  }
+}

@@ -5,6 +5,7 @@ core_version_requirement: ^11.1 || ^12
 package: Ombú
 lifecycle: experimental
 dependencies:
+  - better_exposed_filters:better_exposed_filters
   - commerce:commerce_cart
   - commerce:commerce_product
   - drupal:comment

@@ -1,0 +1,6 @@
+# /market as a page: filters in a column, listings as cards. Belgrade's
+# Bootstrap variables when present, plain fallbacks otherwise.
+market:
+  css:
+    theme:
+      css/market.css: {}

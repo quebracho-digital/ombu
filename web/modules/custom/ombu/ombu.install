@@ -154,3 +154,11 @@ function ombu_update_10005(): void {
   \Drupal::service('module_installer')->install(['llms_txt']);
   _ombu_llms_txt();
 }
+
+/**
+ * /market as a page: facets as checkboxes in a column, listings as cards.
+ */
+function ombu_update_10006(): void {
+  \Drupal::service('module_installer')->install(['better_exposed_filters']);
+  _ombu_config('optional', ['views.view.market'], TRUE);
+}

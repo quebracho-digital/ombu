@@ -5,6 +5,7 @@ dependencies:
     - search_api.index.listings
     - system.menu.main
   module:
+    - better_exposed_filters
     - facets_exposed_filters
     - search_api
 id: market
@@ -42,13 +43,92 @@ display:
             items_per_page: false
           quantity: 9
       exposed_form:
-        type: basic
+        type: bef
         options:
           submit_button: Search
           reset_button: true
           reset_button_label: Reset
           exposed_sorts_label: 'Sort by'
           expose_sort_order: false
+          bef:
+            general:
+              autosubmit: true
+              autosubmit_exclude_textfield: true
+              autosubmit_hide: false
+              allow_secondary: false
+            filter:
+          facets_category:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: true
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
+          facets_network:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: false
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
+          facets_provider_name:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: false
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
+          facets_rails:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: false
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
+          facets_tag:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: false
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
+          facets_source:
+            plugin_id: bef
+            advanced:
+              collapsible: true
+              collapsible_disable_automatic_open: false
+              open_by_default: true
+              sort_options: false
+              is_secondary: false
+            select_all_none: false
+            soft_limit: 8
+            soft_limit_label_less: 'Show less'
+            soft_limit_label_more: 'Show more'
       access:
         type: none
         options: {  }

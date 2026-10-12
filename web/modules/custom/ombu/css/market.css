@@ -84,7 +84,7 @@
 }
 /* The whole card clicks through the title link; Belgrade's extra empty
    link would be a nameless stop for screen readers and the keyboard. */
-.view-market .teaser-belgrade > a.stretched-link {
+.view-market .teaser-belgrade a.stretched-link {
   display: none;
 }
 .view-market .teaser-belgrade__title a::after {

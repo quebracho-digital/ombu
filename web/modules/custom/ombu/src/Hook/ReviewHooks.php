@@ -38,6 +38,14 @@ final class ReviewHooks {
     if ($review->bundle() !== 'review' || !($listing = $review->getCommentedEntity()) instanceof ProductInterface) {
       return;
     }
+    if ($review->hasParentComment()) {
+      // The seller's answer: never counted, whatever it carries.
+      $review->set('field_reviewer_kind', 'seller');
+      $review->set('field_rating', NULL);
+      $review->set('field_tx_hash', NULL);
+      $review->set('field_wallet', NULL);
+      return;
+    }
     $tx = strtolower(trim((string) $review->get('field_tx_hash')->value));
     if (!$review->isNew() && $tx === strtolower((string) $review->original?->get('field_tx_hash')->value)) {
       return;

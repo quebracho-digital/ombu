@@ -36,6 +36,16 @@ final class VerifiedPurchaseValidator extends ConstraintValidator implements Con
     if (!$listing instanceof ProductInterface) {
       return;
     }
+    // A reply is the seller's answer, not a review: no purchase, no rating.
+    if ($review->hasParentComment()) {
+      if (!$this->verifier->sells($listing, (int) $review->getOwnerId())) {
+        $this->context->addViolation('Only the listing\'s seller replies to reviews; to review it, buy it.');
+      }
+      return;
+    }
+    if ($review->isNew() && $review->get('field_rating')->isEmpty()) {
+      $this->context->addViolation('Rate it from 1 to 5.');
+    }
     $tx = (string) $items->value;
     // Already checked when it was written: the chain does not change.
     if (!$review->isNew() && $tx === (string) $review->original?->get('field_tx_hash')->value) {

@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_videos
+  module:
+    - file
+id: commerce_product.listing.field_videos
+field_name: field_videos
+entity_type: commerce_product
+bundle: listing
+label: Videos
+description: 'A demo. MP4 or WebM, up to 50 MB.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:file'
+  handler_settings: {  }
+  file_directory: 'listings/[date:custom:Y]-[date:custom:m]'
+  file_extensions: 'mp4 webm'
+  max_filesize: '50 MB'
+  description_field: true
+field_type: file
+

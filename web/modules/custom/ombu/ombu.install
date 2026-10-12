@@ -16,7 +16,9 @@ function ombu_install(): void {
   }
   // Everyone browses; signed-in people review.
   user_role_grant_permissions('anonymous', ['view commerce_product', 'access comments']);
-  user_role_grant_permissions('authenticated', ['view commerce_product', 'access comments', 'post comments', 'skip comment approval']);
+  // Sellers edit their listings: Commerce builds that form only for those
+  // who can see a store.
+  user_role_grant_permissions('authenticated', ['view commerce_product', 'access comments', 'post comments', 'skip comment approval', 'view commerce_store']);
   _ombu_llms_txt();
 }
 
@@ -169,4 +171,27 @@ function ombu_update_10006(): void {
 function ombu_update_10007(): void {
   \Drupal::service('module_installer')->install(['wallet_auth']);
   _ombu_config('install', ['field.field.comment.review.field_tx_hash', 'field.field.comment.review.field_reviewer_kind', 'core.entity_form_display.comment.review.default'], TRUE);
+}
+
+/**
+ * Sellers: their note, images, videos and files; replies to reviews.
+ */
+function ombu_update_10008(): void {
+  $fields = ['images', 'field_videos', 'field_files', 'field_seller_note'];
+  _ombu_config('install', [
+    ...array_map(fn($f) => "field.storage.commerce_product.$f", $fields),
+    ...array_map(fn($f) => "field.field.commerce_product.listing.$f", $fields),
+  ]);
+  _ombu_config('install', ['field.storage.comment.field_reviewer_kind', 'field.field.comment.review.field_rating', 'field.field.commerce_product.listing.field_reviews'], TRUE);
+  user_role_grant_permissions('authenticated', ['view commerce_store']);
+  // The displays may have changed on the site: add the new fields only.
+  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  $repository = \Drupal::service('entity_display.repository');
+  foreach (['form' => $repository->getFormDisplay('commerce_product', 'listing'), 'view' => $repository->getViewDisplay('commerce_product', 'listing')] as $kind => $display) {
+    $record = $source->read("core.entity_{$kind}_display.commerce_product.listing.default");
+    foreach ($fields as $field) {
+      $display->setComponent($field, $record['content'][$field]);
+    }
+    $display->save();
+  }
 }

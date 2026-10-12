@@ -8,21 +8,38 @@ dependencies:
     - field.field.commerce_product.listing.field_category
     - field.field.commerce_product.listing.field_docs_url
     - field.field.commerce_product.listing.field_endpoint
+    - field.field.commerce_product.listing.field_files
     - field.field.commerce_product.listing.field_http_method
     - field.field.commerce_product.listing.field_input_schema
     - field.field.commerce_product.listing.field_network
+    - field.field.commerce_product.listing.field_openapi
     - field.field.commerce_product.listing.field_output_schema
     - field.field.commerce_product.listing.field_pay_to
     - field.field.commerce_product.listing.field_provider
+    - field.field.commerce_product.listing.field_provider_term
+    - field.field.commerce_product.listing.field_rails
+    - field.field.commerce_product.listing.field_retired
     - field.field.commerce_product.listing.field_reviews
+    - field.field.commerce_product.listing.field_seller_key
+    - field.field.commerce_product.listing.field_seller_note
+    - field.field.commerce_product.listing.field_service
+    - field.field.commerce_product.listing.field_siwx
     - field.field.commerce_product.listing.field_source
+    - field.field.commerce_product.listing.field_source_hash
     - field.field.commerce_product.listing.field_source_updated
     - field.field.commerce_product.listing.field_tags
     - field.field.commerce_product.listing.field_verified
+    - field.field.commerce_product.listing.field_videos
+    - field.field.commerce_product.listing.field_x402_price
+    - field.field.commerce_product.listing.images
+    - image.style.thumbnail
   module:
     - comment
     - commerce
+    - file
+    - image
     - path
+    - text
 id: commerce_product.listing.default
 targetEntityType: commerce_product
 bundle: listing
@@ -75,6 +92,13 @@ content:
     settings:
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  field_files:
+    type: file_generic
+    weight: 5
+    region: content
+    settings:
+      progress_indicator: throbber
     third_party_settings: {  }
   field_http_method:
     type: string_textfield
@@ -130,6 +154,14 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_seller_note:
+    type: text_textarea
+    weight: 2
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
   field_source:
     type: options_select
     weight: 22
@@ -152,6 +184,21 @@ content:
     region: content
     settings:
       display_label: true
+    third_party_settings: {  }
+  field_videos:
+    type: file_generic
+    weight: 4
+    region: content
+    settings:
+      progress_indicator: throbber
+    third_party_settings: {  }
+  images:
+    type: image_image
+    weight: 3
+    region: content
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
     third_party_settings: {  }
   path:
     type: path
@@ -195,5 +242,15 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_openapi: true
+  field_provider_term: true
+  field_rails: true
+  field_retired: true
+  field_seller_key: true
+  field_service: true
+  field_siwx: true
+  field_source_hash: true
   field_source_updated: true
+  field_x402_price: true
   variations: true
+

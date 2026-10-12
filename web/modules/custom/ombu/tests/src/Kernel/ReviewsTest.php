@@ -36,7 +36,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'wallet_auth',
+    'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'wallet_auth',
   ];
 
   /**
@@ -131,6 +131,51 @@ final class ReviewsTest extends CommerceKernelTestBase {
     // review is kept, but the average ignores it.
     $this->review($this->paid(self::BUYER, self::OTHER), 1)->save();
     $this->assertSame(['average' => 5.0, 'count' => 1], ombu_rating($this->listing));
+  }
+
+  public function testTheSellerEditsOnlyTheirFieldsOfTheirListing(): void {
+    $seller = $this->seller();
+    $this->assertTrue($this->listing->access('update', $seller));
+    $this->assertFalse($this->listing->access('update', $this->createUser(['view commerce_product'])));
+    foreach (['images', 'field_videos', 'field_files', 'field_seller_note'] as $field) {
+      $this->assertTrue($this->listing->get($field)->access('edit', $seller), $field);
+    }
+    foreach (['title', 'field_pay_to', 'field_accepts', 'body', 'status'] as $field) {
+      $this->assertFalse($this->listing->get($field)->access('edit', $seller), $field);
+    }
+  }
+
+  public function testOnlyTheSellerRepliesAndAReplyIsNotCounted(): void {
+    $review = $this->review($this->paid(self::BUYER, self::SELLER), 2);
+    $review->save();
+    $reply = fn($uid) => Comment::create([
+      'comment_type' => 'review',
+      'entity_type' => 'commerce_product',
+      'entity_id' => $this->listing->id(),
+      'field_name' => 'field_reviews',
+      'pid' => $review->id(),
+      'uid' => $uid,
+      'comment_body' => 'Fixed in the new version: try again.',
+    ]);
+    $messages = array_map(fn($v) => (string) $v->getMessage(), iterator_to_array($reply($this->buyer->id())->validate()));
+    $this->assertContains('Only the listing\'s seller replies to reviews; to review it, buy it.', $messages);
+
+    $seller = $this->seller();
+    $this->setCurrentUser($seller);
+    $answer = $reply($seller->id());
+    $this->assertCount(0, $answer->validate());
+    $answer->save();
+    $this->assertSame('seller', $answer->get('field_reviewer_kind')->value);
+    $this->assertSame(['average' => 2.0, 'count' => 1], ombu_rating($this->listing));
+  }
+
+  /**
+   * The account that signs in with the wallet the listing pays.
+   */
+  private function seller(): User {
+    $seller = $this->createUser(['post comments', 'skip comment approval', 'view commerce_product']);
+    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => self::SELLER, 'uid' => $seller->id(), 'created' => time()])->execute();
+    return $seller;
   }
 
   /**

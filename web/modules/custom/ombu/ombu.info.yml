@@ -9,6 +9,8 @@ dependencies:
   - commerce:commerce_cart
   - commerce:commerce_product
   - drupal:comment
+  - drupal:file
+  - drupal:image
   - drupal:options
   - drupal:path
   - drupal:taxonomy

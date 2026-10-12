@@ -26,7 +26,7 @@ final class CatalogueTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'views',
+    'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views',
     'search_api', 'search_api_db', 'facets', 'better_exposed_filters', 'facets_exposed_filters',
   ];
 

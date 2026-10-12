@@ -78,8 +78,7 @@ final class ReviewVerifier {
     if ($used->range(0, 1)->execute()->fetchField()) {
       throw new ReviewRefusedException('That purchase already backs a review.');
     }
-    $wallets = $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['address'])
-      ->condition('uid', $uid)->condition('namespace', 'eip155')->execute()->fetchCol();
+    $wallets = $this->wallets($uid);
     if (!$wallets) {
       throw new ReviewRefusedException('Sign in with the wallet that paid: reviews need a purchase from your wallet.');
     }
@@ -111,6 +110,26 @@ final class ReviewVerifier {
       throw new ReviewRefusedException('That transaction pays no USDC from your wallets to this listing\'s seller.');
     }
     throw new ReviewRefusedException('No such transaction on ' . implode(', ', array_map([Chains::class, 'name'], array_keys($checkable))) . '.');
+  }
+
+  /**
+   * Whether this account is the listing's seller: it signs in with a wallet
+   * the listing pays. No one assigns sellers; the wallet proves it.
+   */
+  public function sells(ProductInterface $listing, int $uid): bool {
+    if (!$uid || $listing->bundle() !== 'listing') {
+      return FALSE;
+    }
+    $paid = array_column(array_merge(...array_values($this->payees($listing)) ?: [[]]), 1);
+    return (bool) array_intersect($paid, $this->wallets($uid));
+  }
+
+  /**
+   * An account's wallets, lowercase.
+   */
+  private function wallets(int $uid): array {
+    return $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['address'])
+      ->condition('uid', $uid)->condition('namespace', 'eip155')->execute()->fetchCol();
   }
 
   /**

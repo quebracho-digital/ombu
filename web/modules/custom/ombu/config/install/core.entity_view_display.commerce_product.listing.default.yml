@@ -9,6 +9,7 @@ dependencies:
     - field.field.commerce_product.listing.field_category
     - field.field.commerce_product.listing.field_docs_url
     - field.field.commerce_product.listing.field_endpoint
+    - field.field.commerce_product.listing.field_files
     - field.field.commerce_product.listing.field_http_method
     - field.field.commerce_product.listing.field_input_schema
     - field.field.commerce_product.listing.field_network
@@ -20,16 +21,26 @@ dependencies:
     - field.field.commerce_product.listing.field_rails
     - field.field.commerce_product.listing.field_retired
     - field.field.commerce_product.listing.field_reviews
+    - field.field.commerce_product.listing.field_seller_key
+    - field.field.commerce_product.listing.field_seller_note
+    - field.field.commerce_product.listing.field_service
+    - field.field.commerce_product.listing.field_siwx
     - field.field.commerce_product.listing.field_source
     - field.field.commerce_product.listing.field_source_hash
     - field.field.commerce_product.listing.field_source_updated
-    - field.field.commerce_product.listing.field_siwx
     - field.field.commerce_product.listing.field_tags
     - field.field.commerce_product.listing.field_verified
+    - field.field.commerce_product.listing.field_videos
+    - field.field.commerce_product.listing.field_x402_price
+    - field.field.commerce_product.listing.images
+    - image.style.large
   module:
     - comment
     - commerce_product
+    - file
+    - image
     - options
+    - text
 id: commerce_product.listing.default
 targetEntityType: commerce_product
 bundle: listing
@@ -67,6 +78,14 @@ content:
       link_rel: canonical
     third_party_settings: {  }
     weight: 8
+    region: content
+  field_files:
+    type: file_default
+    label: above
+    settings:
+      use_description_as_link_text: true
+    third_party_settings: {  }
+    weight: 7
     region: content
   field_http_method:
     type: string
@@ -117,6 +136,22 @@ content:
     third_party_settings: {  }
     weight: 6
     region: content
+  field_reviews:
+    type: comment_default
+    label: above
+    settings:
+      view_mode: default
+      pager_id: 0
+    third_party_settings: {  }
+    weight: 12
+    region: content
+  field_seller_note:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 5
+    region: content
   field_siwx:
     type: boolean
     label: hidden
@@ -126,15 +161,6 @@ content:
       format_custom_true: 'Asks the buyer to sign in (SIWX) before paying'
     third_party_settings: {  }
     weight: 7
-    region: content
-  field_reviews:
-    type: comment_default
-    label: above
-    settings:
-      view_mode: default
-      pager_id: 0
-    third_party_settings: {  }
-    weight: 12
     region: content
   field_tags:
     type: entity_reference_label
@@ -154,6 +180,34 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
+  field_videos:
+    type: file_video
+    label: hidden
+    settings:
+      controls: true
+      autoplay: false
+      loop: false
+      multiple_file_display_type: tags
+      muted: false
+      playsinline: false
+      width: 640
+      height: 360
+      poster: ''
+      poster_image_style: ''
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  images:
+    type: image
+    label: hidden
+    settings:
+      image_link: file
+      image_style: large
+      image_loading:
+        attribute: lazy
+    third_party_settings: {  }
+    weight: -20
+    region: content
   title:
     type: string
     label: hidden
@@ -172,15 +226,19 @@ content:
     weight: 2
     region: content
 hidden:
-  field_openapi: true
-  field_provider: true
-  field_retired: true
-  field_source_hash: true
   created: true
   field_accepts: true
+  field_openapi: true
   field_output_schema: true
+  field_provider: true
+  field_retired: true
+  field_seller_key: true
+  field_service: true
   field_source: true
+  field_source_hash: true
   field_source_updated: true
+  field_x402_price: true
   search_api_excerpt: true
   stores: true
   uid: true
+

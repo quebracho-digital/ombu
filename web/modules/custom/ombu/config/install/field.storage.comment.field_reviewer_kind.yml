@@ -16,6 +16,9 @@ settings:
     -
       value: agent
       label: Agent
+    -
+      value: seller
+      label: Seller
   allowed_values_function: ''
 module: options
 locked: false

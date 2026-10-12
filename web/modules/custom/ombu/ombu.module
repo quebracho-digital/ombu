@@ -47,6 +47,13 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
   if ($product->bundle() !== 'listing') {
     return;
   }
+  // The title is the page's h1, and each card's h2 on /market, so screen
+  // readers can jump between them.
+  if (isset($build['title']) && ($tag = ['full' => 'h1', 'teaser' => 'h2'][$view_mode] ?? NULL)) {
+    $build['title']['#prefix'] = "<$tag class=\"listing-title\">";
+    $build['title']['#suffix'] = "</$tag>";
+  }
+
   $rating = ombu_rating($product);
   $build['rating'] = [
     '#markup' => $rating
@@ -121,19 +128,5 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
 function ombu_views_pre_render(\Drupal\views\ViewExecutable $view): void {
   if ($view->id() === 'market') {
     $view->element['#attached']['library'][] = 'ombu/market';
-  }
-}
-
-/**
- * Implements hook_preprocess_HOOK() for commerce_product.
- *
- * A listing's title is the page's h1, and each card's h2 on /market, so
- * screen readers can jump between them.
- */
-function ombu_preprocess_commerce_product(array &$variables): void {
-  $tag = ['full' => 'h1', 'teaser' => 'h2'][$variables['elements']['#view_mode']] ?? NULL;
-  if ($tag && isset($variables['product']['title']) && $variables['elements']['#commerce_product']->bundle() === 'listing') {
-    $variables['product']['title']['#prefix'] = "<$tag class=\"listing-title\">";
-    $variables['product']['title']['#suffix'] = "</$tag>";
   }
 }

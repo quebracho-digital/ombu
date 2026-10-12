@@ -52,7 +52,7 @@ display:
           expose_sort_order: false
           bef:
             general:
-              autosubmit: true
+              autosubmit: false
               autosubmit_exclude_textfield: true
               autosubmit_hide: false
               allow_secondary: false

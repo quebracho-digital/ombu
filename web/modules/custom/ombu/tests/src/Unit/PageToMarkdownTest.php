@@ -23,8 +23,19 @@ final class PageToMarkdownTest extends UnitTestCase {
     $this->assertSame("# Hello\n\nOne **bold** line.", $page['markdown']);
   }
 
+  public function testTheLinksAroundTheContentAreKeptApart(): void {
+    $html = '<header><a href="/">Home</a></header><main><a href="/in-content">Inside</a></main>'
+      . '<footer><a href="/legal/terms">Terms of use</a> <a href="//cdn.example.com/privacy">Privacy</a>'
+      . '<a href="mailto:a@example.com">Mail</a><a href="#top">Top</a><a href="/legal/terms">Terms again</a></footer>';
+    $this->assertSame([
+      ['text' => 'Home', 'url' => 'https://example.com/'],
+      ['text' => 'Terms of use', 'url' => 'https://example.com/legal/terms'],
+      ['text' => 'Privacy', 'url' => 'https://cdn.example.com/privacy'],
+    ], Sellers::pageToMarkdown($html, 'https://example.com/es/home')['links']);
+  }
+
   public function testAPageWithoutTitle(): void {
-    $this->assertSame(['title' => NULL, 'markdown' => 'Just text.'], Sellers::pageToMarkdown('<p>Just text.</p>'));
+    $this->assertSame(['title' => NULL, 'markdown' => 'Just text.', 'links' => []], Sellers::pageToMarkdown('<p>Just text.</p>'));
   }
 
   public function testAFactCheckSaysWhenTheModelJudgedAlone(): void {

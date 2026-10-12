@@ -20,6 +20,15 @@ const MODEL = process.env.LLM_MODEL ?? "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL"
 const MAX_TURNS = 12;
 // What a tool answer may put in the model's context.
 const MAX_RESULT = 8000;
+// A page's markdown is cut, never its links: they lead to the terms.
+const clip = (body) => {
+  try {
+    const page = JSON.parse(body);
+    if (typeof page.markdown === "string") return JSON.stringify({ ...page, markdown: page.markdown.slice(0, MAX_RESULT) });
+  }
+  catch {}
+  return body.slice(0, MAX_RESULT);
+};
 const budget = BigInt(Math.round(Number(budgetArg) * 1e6));
 const usdc = (atomic) => (Number(atomic) / 1e6).toString();
 const log = (...a) => console.error(...a);
@@ -52,7 +61,17 @@ const tools = [
       required: ["verdict", "reasons"],
       properties: {
         verdict: { type: "string", enum: ["hire", "reject", "ask_human"] },
-        reasons: { type: "array", items: { type: "string" }, description: "Each reason with the evidence it rests on." },
+        reasons: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["reason", "purchase"],
+            properties: {
+              reason: { type: "string" },
+              purchase: { type: "integer", description: "The number of the purchase this reason rests on; 0 if none." },
+            },
+          },
+        },
       },
     },
   },
@@ -85,13 +104,13 @@ async function run(name, args) {
       },
     });
     if (paid.receipt?.success) {
-      spent.push({ service: service.op.summary, amount: paid.req.amount, tx: paid.receipt.transaction });
+      spent.push({ service: service.op.summary, input: args, amount: paid.req.amount, tx: paid.receipt.transaction });
       log(`  paid ${usdc(paid.req.amount)} USDC, tx ${paid.receipt.transaction}`);
     }
     else {
       log(`  HTTP ${paid.status}, not charged`);
     }
-    return { status: paid.status, charged: Boolean(paid.receipt?.success), budget_left_usdc: usdc(left()), result: paid.body.slice(0, MAX_RESULT) };
+    return { status: paid.status, charged: Boolean(paid.receipt?.success), ...(paid.receipt?.success ? { purchase: spent.length } : {}), budget_left_usdc: usdc(left()), result: clip(paid.body) };
   }
   catch (e) {
     log(`  refused: ${e.message}`);
@@ -104,20 +123,20 @@ const messages = [
     role: "system",
     content: `You are a procurement agent for a small business. You answer the task with a decision: hire, reject, or ask_human.
 You can buy evidence from a market. Every purchase spends real USDC from a budget of ${usdc(budget)} USDC: buy only what can change the decision.
-For a vendor, its terms of service and privacy policy are the usual evidence: pass their real URLs (the vendor's own site) to the terms analysis. Fact-check a vendor's claims only when the decision depends on them.
-Never invent findings: every reason must rest on what a tool returned. If evidence is missing or the budget runs out, say so and ask_human.
+For a vendor, its terms of service and privacy policy are the usual evidence: pass their real URLs to the terms analysis. Do not guess URLs: buy the vendor's home page as markdown and follow its links (usually in the footer). Fact-check a vendor's claims only when the decision depends on them.
+Never invent findings: every reason must rest on what a purchase returned, and cites that purchase's number. What you know without buying does not count. If evidence is missing or the budget runs out, say so and ask_human.
 Finish by calling decide.`,
   },
   { role: "user", content: task },
 ];
 
 // One chat turn; the router may be busy swapping models: two more tries.
-async function chat() {
+async function chat(last) {
   for (let attempt = 1; ; attempt++) {
     const response = await fetch(`${LLM_URL}/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(LLM_KEY ? { Authorization: `Bearer ${LLM_KEY}` } : {}) },
-      body: JSON.stringify({ model: MODEL, messages, tools, temperature: 0, chat_template_kwargs: { enable_thinking: false } }),
+      body: JSON.stringify({ model: MODEL, messages, tools: last ? tools.filter((t) => t.function.name === "decide") : tools, tool_choice: last ? "required" : "auto", temperature: 0, chat_template_kwargs: { enable_thinking: false } }),
     });
     if (response.ok) return (await response.json()).choices[0].message;
     const error = `LLM: HTTP ${response.status} ${(await response.text()).slice(0, 300)}`;
@@ -130,7 +149,8 @@ async function chat() {
 let decision;
 try {
   for (let turn = 0; turn < MAX_TURNS && !decision; turn++) {
-    const message = await chat();
+    // The last turn can only decide.
+    const message = await chat(turn === MAX_TURNS - 1);
     messages.push(message);
     if (!message.tool_calls?.length) {
       messages.push({ role: "user", content: "Call a tool: buy evidence, or decide." });
@@ -154,16 +174,21 @@ try {
 }
 catch (e) {
   // What was spent is reported anyway.
-  decision = { verdict: "ask_human", reasons: [`The run stopped: ${e.message}`] };
+  decision = { verdict: "ask_human", reasons: [{ reason: `The run stopped: ${e.message}`, purchase: 0 }] };
 }
 
 // The report: the verdict is the model's, the money is ours.
 const report = {
   task,
   verdict: decision?.verdict ?? "ask_human",
-  reasons: decision?.reasons ?? [`No decision within ${MAX_TURNS} turns.`],
+  // A reason that cites no purchase is the model's own knowledge: flagged.
+  reasons: (decision?.reasons ?? [{ reason: `No decision within ${MAX_TURNS} turns.`, purchase: 0 }]).map((r) => {
+    r = typeof r === "string" ? { reason: r, purchase: 0 } : r;
+    const n = Number(r.purchase ?? 0);
+    return n >= 1 && n <= spent.length ? r : { ...r, unsupported: true };
+  }),
   budget_usdc: usdc(budget),
   spent_usdc: usdc(budget - left()),
-  purchases: spent.map((s) => ({ ...s, amount: usdc(s.amount), tx: `https://testnet.arcscan.app/tx/${s.tx}` })),
+  purchases: spent.map((s, i) => ({ number: i + 1, ...s, amount: usdc(s.amount), tx: `https://testnet.arcscan.app/tx/${s.tx}` })),
 };
 console.log(JSON.stringify(report, null, 2));

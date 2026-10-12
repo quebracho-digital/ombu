@@ -88,15 +88,19 @@ class Sellers {
     if (!$this->fetcher) {
       return new JsonResponse(['error' => 'Not available right now.'], 503);
     }
-    return new JsonResponse(['url' => $input['url']] + self::pageToMarkdown($this->fetcher->fetch($input['url'])));
+    return new JsonResponse(['url' => $input['url']] + self::pageToMarkdown($this->fetcher->fetch($input['url']), $input['url']));
   }
 
   /**
-   * A page's title, and its content as markdown without what surrounds it.
+   * A page's title, its content as markdown, and the links around it.
    *
-   * @return array{title: ?string, markdown: string}
+   * The navigation is dropped from the markdown but its links are kept
+   * apart: a site's terms and privacy policy are usually only linked from
+   * its footer. Absolute URLs, at most 100.
+   *
+   * @return array{title: ?string, markdown: string, links: list<array{text: string, url: string}>}
    */
-  public static function pageToMarkdown(string $html): array {
+  public static function pageToMarkdown(string $html, string $base = ''): array {
     $title = preg_match('~<title[^>]*>(.*?)</title>~is', $html, $m) ? trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES | ENT_HTML5)) : NULL;
     $converter = new HtmlConverter([
       'strip_tags' => TRUE,
@@ -104,7 +108,36 @@ class Sellers {
       'hard_break' => TRUE,
       'header_style' => 'atx',
     ]);
-    return ['title' => $title ?: NULL, 'markdown' => trim($converter->convert($html))];
+    return ['title' => $title ?: NULL, 'markdown' => trim($converter->convert($html)), 'links' => self::navigationLinks($html, $base)];
+  }
+
+  /**
+   * The links in a page's nav, header and footer, made absolute.
+   *
+   * @return list<array{text: string, url: string}>
+   */
+  private static function navigationLinks(string $html, string $base): array {
+    $document = new \DOMDocument();
+    if (!@$document->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOERROR | LIBXML_NONET)) {
+      return [];
+    }
+    $origin = preg_match('~^https?://[^/]+~i', $base, $m) ? $m[0] : '';
+    $links = [];
+    foreach ((new \DOMXPath($document))->query('//nav//a[@href] | //header//a[@href] | //footer//a[@href]') as $a) {
+      $href = trim($a->getAttribute('href'));
+      // ponytail: page-relative hrefs ("terms.html") are skipped, sites link root-relative.
+      $url = match (TRUE) {
+        (bool) preg_match('~^https?://~i', $href) => $href,
+        str_starts_with($href, '//') => 'https:' . $href,
+        str_starts_with($href, '/') && $origin !== '' => $origin . $href,
+        default => NULL,
+      };
+      $text = trim(preg_replace('/\s+/u', ' ', $a->textContent));
+      if ($url !== NULL && !isset($links[$url])) {
+        $links[$url] = ['text' => $text, 'url' => $url];
+      }
+    }
+    return array_slice(array_values($links), 0, 100);
   }
 
   /**

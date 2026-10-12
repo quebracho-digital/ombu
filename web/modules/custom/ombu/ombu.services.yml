@@ -29,3 +29,7 @@ services:
     class: Drupal\ombu\EventSubscriber\AgentLinkSubscriber
     tags:
       - { name: event_subscriber }
+  ombu.wallet_only_route_subscriber:
+    class: Drupal\ombu\EventSubscriber\WalletOnlyRouteSubscriber
+    tags:
+      - { name: event_subscriber }

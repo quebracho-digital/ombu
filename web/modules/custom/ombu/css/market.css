@@ -1,11 +1,12 @@
 .view-market {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem 2rem;
   align-items: start;
 }
 @media (min-width: 992px) {
   .view-market {
-    grid-template-columns: 17rem 1fr;
+    grid-template-columns: 17rem minmax(0, 1fr);
   }
   .view-market > .view-filters {
     grid-row: 1 / span 3;

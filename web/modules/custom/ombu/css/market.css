@@ -77,6 +77,8 @@
   align-items: flex-start !important;
   gap: .375rem;
   height: 100%;
+  padding: 0 !important;
+  border: 0 !important;
   font-size: .875rem;
 }
 .view-market .teaser-belgrade__title {

@@ -97,8 +97,25 @@
     transition: box-shadow .15s;
   }
 }
+/* The seller's image on top of the card, when there is one; never
+   Belgrade's "View" overlay. */
+.view-market .teaser-belgrade__image:not(:has(img)),
+.view-market .teaser-belgrade__hover {
+  display: none !important;
+}
 .view-market .teaser-belgrade__image {
-  display: none;
+  margin: -1rem -1.125rem 1rem;
+  border-radius: .75rem .75rem 0 0;
+  overflow: hidden;
+  background: var(--bs-tertiary-bg, #f8f9fa) !important;
+}
+.view-market .teaser-belgrade__image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  opacity: 1 !important;
 }
 .view-market .teaser-belgrade__info {
   display: flex;

@@ -195,3 +195,10 @@ function ombu_update_10008(): void {
     $display->save();
   }
 }
+
+/**
+ * Listing cards on /market show the seller's first image, when there is one.
+ */
+function ombu_update_10009(): void {
+  _ombu_config('install', ['core.entity_view_display.commerce_product.listing.teaser'], TRUE);
+}

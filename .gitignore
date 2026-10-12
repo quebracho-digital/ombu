@@ -18,3 +18,4 @@
 /.ddev/traefik/
 /web/sites/simpletest/
 /web/modules/custom/ai_provider_universal
+/web/modules/custom/wallet_auth

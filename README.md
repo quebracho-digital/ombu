@@ -16,7 +16,7 @@ status: [ROADMAP.md](ROADMAP.md).
   import, `/market` and `/market.json`), the seed script and the plan.
 - **[`x402_pay`](https://github.com/quebracho-digital/x402_pay)**: x402
   payments on Arc and the Drupal Commerce gateway.
-- **`wallet_auth`** (coming): sign in with one or more wallets, on one or
+- **[`wallet_auth`](https://github.com/quebracho-digital/wallet_auth)**: sign in with one or more wallets, on one or
   more chains.
 - **[`ai_provider_universal`](https://github.com/leofishman/ai_provider_universal)**:
   the terms analyzer and the fact-checker, two of the sellers, and the
@@ -77,6 +77,7 @@ before and after.
 
 ```sh
 git clone https://github.com/quebracho-digital/x402_pay ../x402_pay
+git clone https://github.com/quebracho-digital/wallet_auth ../wallet_auth
 git clone https://github.com/leofishman/ai_provider_universal ../ai_provider_universal
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
 #   SELLER_KEY_PING=0x…  SELLER_KEY_TERMS=0x…  SELLER_KEY_FACTCHECK=0x…

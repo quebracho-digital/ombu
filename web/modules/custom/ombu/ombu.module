@@ -85,6 +85,9 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
 
   if ($view_mode === 'full') {
     $build['#attached']['library'][] = 'ombu/listing';
+    // Belgrade keeps a column for images; without them the details take
+    // the page's width.
+    $build['#attributes']['class'][] = $product->hasField('images') && !$product->get('images')->isEmpty() ? 'listing--images' : 'listing--no-images';
     // Schemas readable: indented, monospaced, escaped.
     foreach (['field_input_schema', 'field_output_schema'] as $field) {
       $json = json_decode((string) ($build[$field][0]['#context']['value'] ?? ''), TRUE);

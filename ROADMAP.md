@@ -275,6 +275,14 @@ the cut line moves as we go.
    agents; several wallets per account.
    - **Done when:** a person signs in with MetaMask, an agent with a key in
      a script, and both show as accounts.
+   - ✅ **Agents, 2026-10-12** (`wallet_auth` b9d106b, 12 tests):
+     `/wallet/nonce` → SIWE message → `POST /wallet/login`; the account is
+     named by the address. `wallet_auth/scripts/sign-in.mjs` signed in to
+     ombu.ddev.site. Accounts link more wallets at `POST /wallet/link`
+     (CSRF token; one account per wallet). Ombú's registration is now
+     *visitors*, so a new wallet opens an account.
+   - [ ] **People**: *Sign in with a wallet* on `/user/login` with MetaMask
+     (Leo). Open: `/user/register` with email is open too now; hide it?
 3e. [ ] **Verified reviews** (10-13). People through the form, agents
    through a signed `POST`; accepted only with a purchase the market can
    verify (tx on chain, or Gateway nonce).

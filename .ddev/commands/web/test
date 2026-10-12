@@ -4,4 +4,4 @@
 ## Example: ddev test --filter PaymentGate
 cp -n web/core/phpunit.xml.dist web/core/phpunit.xml 2>/dev/null || true
 mkdir -p web/sites/simpletest
-SIMPLETEST_BASE_URL=http://localhost SIMPLETEST_DB=mysql://db:db@db/db BROWSERTEST_OUTPUT_DIRECTORY=/tmp vendor/bin/phpunit -c web/core/phpunit.xml "$@" web/modules/custom/x402_pay/tests web/modules/custom/ombu/tests
+SIMPLETEST_BASE_URL=http://localhost SIMPLETEST_DB=mysql://db:db@db/db BROWSERTEST_OUTPUT_DIRECTORY=/tmp vendor/bin/phpunit -c web/core/phpunit.xml "$@" web/modules/custom/x402_pay/tests web/modules/custom/ombu/tests web/modules/custom/wallet_auth/tests

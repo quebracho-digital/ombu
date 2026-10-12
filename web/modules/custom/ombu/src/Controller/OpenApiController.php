@@ -99,7 +99,7 @@ final class OpenApiController implements ContainerInjectionInterface {
       'description' => (string) $listing->get('body')->value,
       'requestBody' => [
         'required' => TRUE,
-        'content' => ['application/json' => ['schema' => json_decode((string) $listing->get('field_input_schema')->value, TRUE) ?: ['type' => 'object']]],
+        'content' => ['application/json' => ['schema' => json_decode((string) $listing->get('field_input_schema')->value) ?: ['type' => 'object']]],
       ],
       'responses' => [
         '200' => ['description' => 'The service\'s answer. Settled only now: a seller that fails is not paid.', 'content' => ['application/json' => []]],

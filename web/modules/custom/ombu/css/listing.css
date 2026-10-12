@@ -73,3 +73,14 @@ article:has(h1.listing-title) .listing-rating {
 article:has(h1.listing-title) .field--comment:not(:has(*)) {
   display: none;
 }
+
+/* Links inside text are told apart by more than colour (WCAG 1.4.1). */
+article:has(h1.listing-title) p a,
+article:has(h1.listing-title) .field--comment a {
+  text-decoration: underline;
+}
+/* Belgrade's comment template leaves an empty permalink beside the
+   visible one: a nameless stop for screen readers. */
+article:has(h1.listing-title) a.permalink:empty {
+  display: none;
+}

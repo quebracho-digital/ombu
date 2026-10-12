@@ -162,3 +162,11 @@ function ombu_update_10006(): void {
   \Drupal::service('module_installer')->install(['better_exposed_filters']);
   _ombu_config('optional', ['views.view.market'], TRUE);
 }
+
+/**
+ * Verified reviews: the purchase's tx hash on the form, checked on chain.
+ */
+function ombu_update_10007(): void {
+  \Drupal::service('module_installer')->install(['wallet_auth']);
+  _ombu_config('install', ['field.field.comment.review.field_tx_hash', 'field.field.comment.review.field_reviewer_kind', 'core.entity_form_display.comment.review.default'], TRUE);
+}

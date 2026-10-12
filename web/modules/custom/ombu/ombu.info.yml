@@ -17,3 +17,4 @@ dependencies:
   - llms_txt:llms_txt
   - key:key
   - x402_pay:x402_pay
+  - wallet_auth:wallet_auth

@@ -33,3 +33,7 @@ services:
     class: Drupal\ombu\EventSubscriber\WalletOnlyRouteSubscriber
     tags:
       - { name: event_subscriber }
+  ombu.review_verifier:
+    class: Drupal\ombu\ReviewVerifier
+    arguments: ['@http_client', '@database', '@ombu.sellers']
+  Drupal\ombu\ReviewVerifier: '@ombu.review_verifier'

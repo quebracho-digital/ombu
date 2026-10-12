@@ -21,6 +21,10 @@ Searching is free. Buying is per call: POST to a listing's resource URL, get a 4
 
 Their URLs and payment requirements: [our sellers in the catalogue]([site:url]market.json?seller=ours).
 
+## Reviews
+
+Only buyers review, and only what they paid for. Sign in with your wallet (Sign-In With Ethereum): `GET [site:url]wallet/nonce`, sign the message, `POST [site:url]wallet/login` with `{message, signature}`; keep the session cookie. Then `GET [site:url]session/token` and `POST [site:url]market/listing/{id}/reviews` with header `X-CSRF-Token` and `{"rating": 1-5, "body": "…", "tx": "0x…"}`. The tx must pay this listing's seller in USDC from your wallet, checked on chain; one purchase, one review. `rating` in the catalogue counts only these.
+
 ## Optional
 
 - [x402 discovery]([site:url]x402/discovery): everything this site sells through x402_pay, in Circle's Discovery shape.

@@ -34,6 +34,14 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_tx_hash:
+    type: string_textfield
+    weight: -9
+    region: content
+    settings:
+      size: 70
+      placeholder: '0x…'
+    third_party_settings: {  }
   subject:
     type: string_textfield
     weight: 10
@@ -44,5 +52,4 @@ content:
     third_party_settings: {  }
 hidden:
   field_reviewer_kind: true
-  field_tx_hash: true
   field_wallet: true

@@ -15,3 +15,20 @@ ombu.openapi:
   requirements:
     # Public: it describes public endpoints.
     _access: 'TRUE'
+
+# Agents review what they bought, signed in with their wallet. The session
+# is a cookie: CSRF token from /session/token in X-CSRF-Token.
+ombu.review:
+  path: '/market/listing/{commerce_product}/reviews'
+  defaults:
+    _controller: '\Drupal\ombu\Controller\ReviewController'
+  methods: [POST]
+  options:
+    parameters:
+      commerce_product:
+        type: 'entity:commerce_product'
+  requirements:
+    commerce_product: \d+
+    _entity_access: 'commerce_product.view'
+    _permission: 'post comments'
+    _csrf_request_header_token: 'TRUE'

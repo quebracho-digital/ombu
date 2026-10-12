@@ -283,11 +283,22 @@ the cut line moves as we go.
      *visitors*, so a new wallet opens an account.
    - [ ] **People**: *Sign in with a wallet* on `/user/login` with MetaMask
      (Leo). Open: `/user/register` with email is open too now; hide it?
-3e. [ ] **Verified reviews** (10-13). People through the form, agents
+3e. [x] **Verified reviews** (10-13; done 10-12). People through the form, agents
    through a signed `POST`; accepted only with a purchase the market can
    verify (tx on chain, or Gateway nonce).
    - **Done when:** a review with our day-1 tx is accepted, one with a tx to
      another wallet is refused, and the average counts only verified ones.
+   - ✅ **2026-10-12**: a review's tx must hold a USDC Transfer, status 1,
+     from one of the reviewer's wallets (wallet_auth) to whoever the listing
+     pays (our seller's key, or a Circle listing's `payTo`); one tx, one
+     review. A field constraint, so the form and the agents' `POST
+     /market/listing/{id}/reviews` (SIWE session + CSRF) check the same.
+     Arc testnet, Base and Base Sepolia (public RPCs); Gateway payments
+     cannot be checked yet. The average counts only reviews with the paying
+     wallet, which only the check sets. On ombu.ddev.site the buyer agent
+     reviewed Markdown with its tx `0x4e753bed…cbcf` (201, ★5), the same
+     buyer's tx to the terms seller was refused (422), and the first tx
+     again too (422). In `/openapi.json` and `/llms.txt`.
 3f. [ ] **Pages as markdown + `llms.txt`** (10-13). Contrib only.
    - **Done when:** `curl -H 'Accept: text/markdown'` on a listing returns
      markdown.

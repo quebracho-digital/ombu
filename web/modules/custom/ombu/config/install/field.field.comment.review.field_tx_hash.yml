@@ -9,7 +9,7 @@ field_name: field_tx_hash
 entity_type: comment
 bundle: review
 label: 'Purchase tx hash'
-description: ''
+description: 'The transaction that paid for it, from a wallet you signed in with. Only reviews of a purchase count.'
 required: false
 translatable: true
 default_value: {  }

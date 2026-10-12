@@ -31,7 +31,7 @@ final class OpenApiController implements ContainerInjectionInterface {
    */
   public function __invoke(): JsonResponse {
     $base = rtrim(Url::fromRoute('<front>', [], ['absolute' => TRUE])->toString(), '/');
-    $paths = ['/market.json' => ['get' => $this->search()]];
+    $paths = ['/market.json' => ['get' => $this->search()], '/market/listing/{id}/reviews' => ['post' => $this->review()]];
     foreach ($this->ours() as $listing) {
       if ($operation = $this->sale($listing)) {
         $paths["/x402/commerce_product/{$listing->id()}/full"] = ['post' => $operation];
@@ -82,6 +82,34 @@ final class OpenApiController implements ContainerInjectionInterface {
           'description' => 'items (Circle Discovery items), pagination, facets (per parameter: value, label, count, selected, url) and links.html (the same search for people).',
           'content' => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['items', 'pagination', 'facets']]]],
         ],
+      ],
+    ];
+  }
+
+  /**
+   * Reviewing a purchase: signed in with the wallet that paid.
+   */
+  private function review(): array {
+    return [
+      'summary' => 'Review a listing you bought',
+      'description' => 'Sign in first with your wallet (Sign-In With Ethereum: GET /wallet/nonce, POST /wallet/login with {message, signature}) and keep the session cookie; send the token from GET /session/token as X-CSRF-Token. tx must pay this listing\'s seller in USDC from your wallet: it is checked on chain, and backs one review only. Free.',
+      'parameters' => [['name' => 'id', 'in' => 'path', 'required' => TRUE, 'description' => 'The listing: its id in /market.json (metadata.market.url ends with it).', 'schema' => ['type' => 'integer']]],
+      'requestBody' => [
+        'required' => TRUE,
+        'content' => ['application/json' => ['schema' => [
+          'type' => 'object',
+          'required' => ['rating', 'body', 'tx'],
+          'properties' => [
+            'rating' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 5],
+            'body' => ['type' => 'string'],
+            'tx' => ['type' => 'string', 'pattern' => '^0x[0-9a-fA-F]{64}$', 'description' => 'The purchase\'s transaction hash.'],
+          ],
+        ]]],
+      ],
+      'responses' => [
+        '201' => ['description' => 'Kept: id, url, the wallet that paid, and the listing\'s rating now.'],
+        '422' => ['description' => 'errors: why the purchase does not back it.'],
+        '403' => ['description' => 'Not signed in, or no X-CSRF-Token.'],
       ],
     ];
   }

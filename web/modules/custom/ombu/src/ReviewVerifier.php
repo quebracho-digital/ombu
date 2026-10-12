@@ -31,6 +31,15 @@ final class ReviewVerifier {
   ];
 
   /**
+   * Where people see a transaction, by chain: same keys as RPC.
+   */
+  public const EXPLORER = [
+    'eip155:5042002' => 'https://testnet.arcscan.app/tx/',
+    'eip155:8453' => 'https://basescan.org/tx/',
+    'eip155:84532' => 'https://sepolia.basescan.org/tx/',
+  ];
+
+  /**
    * Keccak-256 of Transfer(address,address,uint256).
    */
   private const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
@@ -123,6 +132,15 @@ final class ReviewVerifier {
       }
     }
     return $payees;
+  }
+
+  /**
+   * The explorer page of a listing's purchase; NULL if no chain it pays on
+   * has one.
+   */
+  public function explorerUrl(ProductInterface $listing, string $tx): ?string {
+    $network = array_key_first(array_intersect_key($this->payees($listing), self::EXPLORER));
+    return $network === NULL ? NULL : self::EXPLORER[$network] . $tx;
   }
 
   /**

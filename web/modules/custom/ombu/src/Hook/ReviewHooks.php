@@ -7,7 +7,9 @@ namespace Drupal\ombu\Hook;
 use Drupal\comment\CommentInterface;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Url;
 use Drupal\ombu\ReviewRefusedException;
 use Drupal\ombu\ReviewVerifier;
 
@@ -47,6 +49,26 @@ final class ReviewHooks {
     catch (ReviewRefusedException) {
       // Saved without validation: kept, never counted.
       $review->set('field_wallet', NULL);
+    }
+  }
+
+  /**
+   * A verified purchase links to the chain, where anyone can check it.
+   */
+  #[Hook('comment_view')]
+  public function view(array &$build, CommentInterface $review, EntityViewDisplayInterface $display, string $view_mode): void {
+    $tx = (string) $review->get('field_tx_hash')->value;
+    if (!isset($build['field_tx_hash'][0]) || $tx === '' || $review->get('field_wallet')->isEmpty()) {
+      return;
+    }
+    $listing = $review->getCommentedEntity();
+    if ($listing instanceof ProductInterface && ($url = $this->verifier->explorerUrl($listing, $tx))) {
+      $build['field_tx_hash'][0] = [
+        '#type' => 'link',
+        '#title' => substr($tx, 0, 10) . '…' . substr($tx, -4),
+        '#url' => Url::fromUri($url),
+        '#attributes' => ['title' => $tx],
+      ];
     }
   }
 

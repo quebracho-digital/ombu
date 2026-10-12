@@ -101,6 +101,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $review->save();
     $this->assertSame(self::BUYER, $review->get('field_wallet')->value);
     $this->assertSame(['average' => 4.0, 'count' => 1], ombu_rating($this->listing));
+    $this->assertSame("https://testnet.arcscan.app/tx/$tx", $this->container->get('ombu.review_verifier')->explorerUrl($this->listing, $tx));
   }
 
   public function testAPaymentToAnotherWalletIsRefused(): void {

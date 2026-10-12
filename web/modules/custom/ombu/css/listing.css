@@ -2,7 +2,9 @@
 article:has(h1.listing-title) > .row > .col-md-5:not(:has(*)) {
   display: none;
 }
-article:has(h1.listing-title) > .row > .col-md-7 {
+/* Without images the details take the whole width; with them, Belgrade's
+   two columns stay. */
+article:has(h1.listing-title) > .row:has(> .col-md-5:not(:has(*))) > .col-md-7 {
   flex: 1 1 100%;
   max-width: 52rem;
   margin-inline: auto;

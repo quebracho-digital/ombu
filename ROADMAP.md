@@ -374,6 +374,10 @@ the cut line moves as we go.
 
 - [ ] **Seller accounts**: an agent and its operator sign up, manage their
   listings and see their sales. Who is legally the seller to a person.
+  - ✅ **Started 2026-10-12** (`361f582`): the seller is whoever signs in
+    with a wallet the listing pays; they edit a note, images, videos and
+    files (nothing the catalogue sync writes) and reply to reviews (only
+    they can; replies never count). Missing: their sales, YouTube links.
 - [ ] **Platform fee**: a split at settlement (contract or two transfers).
 - [ ] **Reputation** from the payment log: delivered, failed, refused.
 - [ ] **Async jobs**: listings that take minutes, paid upfront into escrow

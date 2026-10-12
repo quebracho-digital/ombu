@@ -16,7 +16,7 @@ const [task, budgetArg = "0.05", site = "https://ombu.ddev.site"] = process.argv
 if (!task) throw new Error('Usage: agent.mjs "<task>" [budget USDC] [site]');
 const LLM_URL = process.env.LLM_URL ?? "http://192.168.1.150:8080/v1";
 const LLM_KEY = process.env.LLM_API_KEY ?? process.env.LLAMA_API_KEY;
-const MODEL = process.env.LLM_MODEL ?? "unsloth/Qwen3.8-27B-GGUF:Q4_K_M";
+const MODEL = process.env.LLM_MODEL ?? "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
 const MAX_TURNS = 12;
 // What a tool answer may put in the model's context.
 const MAX_RESULT = 8000;
@@ -111,34 +111,50 @@ Finish by calling decide.`,
   { role: "user", content: task },
 ];
 
+// One chat turn; the router may be busy swapping models: two more tries.
+async function chat() {
+  for (let attempt = 1; ; attempt++) {
+    const response = await fetch(`${LLM_URL}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(LLM_KEY ? { Authorization: `Bearer ${LLM_KEY}` } : {}) },
+      body: JSON.stringify({ model: MODEL, messages, tools, temperature: 0, chat_template_kwargs: { enable_thinking: false } }),
+    });
+    if (response.ok) return (await response.json()).choices[0].message;
+    const error = `LLM: HTTP ${response.status} ${(await response.text()).slice(0, 300)}`;
+    if (attempt === 3) throw new Error(error);
+    log(`  ${error}; retrying`);
+    await new Promise((r) => setTimeout(r, 10000 * attempt));
+  }
+}
+
 let decision;
-for (let turn = 0; turn < MAX_TURNS && !decision; turn++) {
-  const response = await fetch(`${LLM_URL}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...(LLM_KEY ? { Authorization: `Bearer ${LLM_KEY}` } : {}) },
-    body: JSON.stringify({ model: MODEL, messages, tools, temperature: 0, chat_template_kwargs: { enable_thinking: false } }),
-  });
-  if (!response.ok) throw new Error(`LLM: HTTP ${response.status} ${await response.text()}`);
-  const message = (await response.json()).choices[0].message;
-  messages.push(message);
-  if (!message.tool_calls?.length) {
-    messages.push({ role: "user", content: "Call a tool: buy evidence, or decide." });
-    continue;
+try {
+  for (let turn = 0; turn < MAX_TURNS && !decision; turn++) {
+    const message = await chat();
+    messages.push(message);
+    if (!message.tool_calls?.length) {
+      messages.push({ role: "user", content: "Call a tool: buy evidence, or decide." });
+      continue;
+    }
+    for (const call of message.tool_calls) {
+      let args;
+      try {
+        args = JSON.parse(call.function.arguments || "{}");
+      }
+      catch {
+        args = {};
+      }
+      if (call.function.name === "decide") {
+        decision = args;
+        break;
+      }
+      messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(await run(call.function.name, args)) });
+    }
   }
-  for (const call of message.tool_calls) {
-    let args;
-    try {
-      args = JSON.parse(call.function.arguments || "{}");
-    }
-    catch {
-      args = {};
-    }
-    if (call.function.name === "decide") {
-      decision = args;
-      break;
-    }
-    messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(await run(call.function.name, args)) });
-  }
+}
+catch (e) {
+  // What was spent is reported anyway.
+  decision = { verdict: "ask_human", reasons: [`The run stopped: ${e.message}`] };
 }
 
 // The report: the verdict is the model's, the money is ours.

@@ -291,13 +291,29 @@ the cut line moves as we go.
 3f. [ ] **Pages as markdown + `llms.txt`** (10-13). Contrib only.
    - **Done when:** `curl -H 'Accept: text/markdown'` on a listing returns
      markdown.
-4. [ ] **Buyer agent** (10-13). Given a task ("should we hire vendor X?") and
+4. [x] **Buyer agent** (10-13; done 10-12). Given a task ("should we hire vendor X?") and
    a budget, it reads the catalogue, buys what it needs (the terms of X, a
    fact-check of X's claims), and decides *hire / reject / ask a human*,
    with reasons and the tx hashes it spent.
    - **Done when:** it has run on Quebracho's real vendors (Cloudflare,
      Brevo, Telefónica, Circle) within budget, and a run that would go over
      budget stops before paying.
+   - ✅ **2026-10-12** (`scripts/agent.mjs`, ombu `09880a2`, `2be0d1c`):
+     reads `/openapi.json`, each paid service is a tool, an LLM on
+     minisforum picks what to buy; the budget is checked before signing.
+     Each reason cites the purchase it rests on, uncited ones are flagged.
+     Budget 0.05 USDC each: Brevo *ask_human* (0.022: French law, Paris
+     courts, liability capped at 6 months), Cloudflare *hire* (0.025),
+     Telefónica *ask_human* (0.023: termination without notice for
+     "incorrect use"), Circle *hire* (0.044, with a fact-check). Brevo at
+     0.005: the 0.01 analysis refused unpaid, *ask_human*.
+     **Found by it:** fetch gives up at 300 s and a seller could settle for
+     a buyer that left (x402.mjs now waits `maxTimeoutSeconds`); the 27B
+     took 5+ min per terms page (sellers on Qwen3.6-35B-A3B, ~5x faster);
+     the markdown seller dropped the footer, where the terms are linked
+     (it now returns those links). Open: one settlement failed with
+     `valid_before` ~6 min into a 600 s window; the buyer was not charged,
+     cause unknown.
 5. [ ] **Third-party sellers** (10-14). `POST /market/listings` with name,
    price, `payTo` and endpoint, paid over x402; lands unpublished for
    approval. Posted in the Arc Discord.

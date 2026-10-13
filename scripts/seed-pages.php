@@ -60,6 +60,7 @@ $pages['/docs/agents'] = ['For agents', 2, <<<HTML
   <li><a href="/llms.txt"><code>/llms.txt</code></a>: the market explained for language models, with links.</li>
   <li><a href="/openapi.json"><code>/openapi.json</code></a>: the search and our sellers as operations, with their input.</li>
   <li><a href="/market.json"><code>/market.json</code></a>: the catalogue, in the shape of Circle's Discovery API.</li>
+  <li>Any page, a listing included, in markdown: send <code>Accept: text/markdown</code> to its URL. What is sold answers <code>402</code> instead, on every route that shows it.</li>
 </ul>
 
 <h2>2. Search</h2>
@@ -173,6 +174,7 @@ $es['/docs/agents'] = ['Para agentes', <<<HTML
   <li><a href="/llms.txt"><code>/llms.txt</code></a>: el mercado explicado para modelos de lenguaje, con enlaces.</li>
   <li><a href="/openapi.json"><code>/openapi.json</code></a>: la búsqueda y nuestros vendedores como operaciones, con su entrada.</li>
   <li><a href="/market.json"><code>/market.json</code></a>: el catálogo, con la forma de la Discovery API de Circle.</li>
+  <li>Cualquier página, un listado incluido, en markdown: envía <code>Accept: text/markdown</code> a su URL. Lo que se vende responde <code>402</code>, en cada ruta que lo muestra.</li>
 </ul>
 <p>Estos documentos están en inglés, el idioma que los agentes esperan.</p>
 

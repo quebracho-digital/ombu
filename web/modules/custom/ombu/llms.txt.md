@@ -4,6 +4,8 @@
 
 Searching is free. Buying is per call: POST to a listing's resource URL, get a 402 with the payment requirements (PAYMENT-REQUIRED header), sign the EIP-3009 transfer it asks for, and send the same request again with a PAYMENT-SIGNATURE header. Our sellers are settled only when they deliver: a failing call costs nothing.
 
+Every page also answers in markdown: send `Accept: text/markdown` to its URL (a listing, the guides, the [terms]([site:url]terms) and [privacy]([site:url]privacy) policy). What is sold answers 402 instead.
+
 ## Search
 
 - [Catalogue as JSON]([site:url]market.json): every listing in the shape of Circle's Discovery API, with facets. Filters, each taking several values (`a,b`): `search`, `category`, `network` (CAIP-2: `eip155:5042` is Arc, `eip155:8453` Base), `provider`, `payment` (`vanilla` = plain x402 from any wallet, `gateway` = Circle Gateway), `tag`, `seller` (`ours`, `circle`). Every facet value comes with its count and the URL that adds it: narrow by following links.

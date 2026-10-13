@@ -50,6 +50,10 @@ field_settings:
         - field.storage.commerce_product.field_category
       module:
         - taxonomy
+  language_with_fallback:
+    label: 'Language (with fallback)'
+    property_path: language_with_fallback
+    type: string
   network:
     label: network
     datasource_id: 'entity:commerce_product'

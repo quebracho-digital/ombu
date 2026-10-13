@@ -144,3 +144,15 @@ function ombu_views_pre_render(\Drupal\views\ViewExecutable $view): void {
 function ombu_page_attachments(array &$attachments): void {
   $attachments['#attached']['library'][] = 'ombu/brand';
 }
+
+/**
+ * Implements hook_search_api_query_alter().
+ *
+ * A listing shows once per language: its translation, or the original
+ * where it has none (Search API's "Language (with fallback)").
+ */
+function ombu_search_api_query_alter(\Drupal\search_api\Query\QueryInterface $query): void {
+  if ($query->getIndex()->id() === 'listings' && $query->getIndex()->getField('language_with_fallback')) {
+    $query->addCondition('language_with_fallback', \Drupal::languageManager()->getCurrentLanguage(\Drupal\Core\Language\LanguageInterface::TYPE_CONTENT)->getId());
+  }
+}

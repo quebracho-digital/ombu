@@ -19,8 +19,9 @@ use Drupal\ombu\ReviewVerifier;
  *
  * The seller is whoever signs in with a wallet the listing pays (our
  * seller's key, a Circle listing's payTo). They edit only what the catalogue
- * sync never writes: their note, images, videos and files. Price, payTo and
- * what Circle publishes stay as they are.
+ * sync never writes: their note, images, videos and files, and in a
+ * translation its title and description. Price, payTo and what Circle
+ * publishes stay as they are.
  */
 final class SellerHooks {
 
@@ -55,7 +56,10 @@ final class SellerHooks {
     if (!$listing instanceof ProductInterface || $listing->bundle() !== 'listing' || $account->hasPermission('administer commerce_product') || $account->hasPermission('update any listing commerce_product')) {
       return AccessResult::neutral()->cachePerPermissions();
     }
-    return AccessResult::forbiddenIf(!in_array($field->getName(), self::FIELDS, TRUE))->cachePerPermissions();
+    // In a translation the seller also words the title and description:
+    // the original stays as the catalogue sync writes it.
+    $fields = $listing->isDefaultTranslation() ? self::FIELDS : [...self::FIELDS, 'title', 'body'];
+    return AccessResult::forbiddenIf(!in_array($field->getName(), $fields, TRUE))->cachePerPermissions();
   }
 
   /**

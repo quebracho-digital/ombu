@@ -6,6 +6,7 @@ namespace Drupal\Tests\ombu\Kernel;
 
 use Drupal\comment\Entity\Comment;
 use Drupal\commerce_product\Entity\Product;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\User;
@@ -37,6 +38,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
     'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'wallet_auth',
+    'language',
   ];
 
   /**
@@ -143,6 +145,22 @@ final class ReviewsTest extends CommerceKernelTestBase {
     foreach (['title', 'field_pay_to', 'field_accepts', 'body', 'status'] as $field) {
       $this->assertFalse($this->listing->get($field)->access('edit', $seller), $field);
     }
+  }
+
+  public function testInATranslationTheSellerAlsoWordsTitleAndDescription(): void {
+    $seller = $this->seller();
+    $this->installConfig(['language']);
+    ConfigurableLanguage::createFromLangcode('es')->save();
+    $this->container->get('language_manager')->reset();
+    $translation = Product::load($this->listing->id())->addTranslation('es', ['title' => 'Markdown']);
+    foreach (['title', 'body', 'field_seller_note'] as $field) {
+      $this->assertTrue($translation->get($field)->access('edit', $seller), $field);
+    }
+    foreach (['field_pay_to', 'field_accepts', 'status'] as $field) {
+      $this->assertFalse($translation->get($field)->access('edit', $seller), $field);
+    }
+    // The original stays as the catalogue sync writes it.
+    $this->assertFalse($this->listing->get('title')->access('edit', $seller));
   }
 
   public function testOnlyTheSellerRepliesAndAReplyIsNotCounted(): void {

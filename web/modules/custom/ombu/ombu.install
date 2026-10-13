@@ -287,3 +287,26 @@ function ombu_update_10014(): void {
   $repository->getFormDisplay('commerce_product', 'listing')->removeComponent('field_markets')->save();
   _ombu_translations();
 }
+
+/**
+ * Sellers translate their listings: title, description and their note.
+ *
+ * Everything else is one value for every language, so Circle's sync keeps
+ * prices, URLs and addresses right in all of them. The market shows each
+ * listing once per language, translated or not.
+ */
+function ombu_update_10015(): void {
+  $settings = \Drupal\language\Entity\ContentLanguageSettings::loadByEntityTypeBundle('commerce_product', 'listing');
+  $settings->setLanguageAlterable(FALSE)->setThirdPartySetting('content_translation', 'untranslatable_fields_hide', TRUE)->save();
+  \Drupal::service('content_translation.manager')->setEnabled('commerce_product', 'listing', TRUE);
+  foreach (\Drupal::service('entity_field.manager')->getFieldDefinitions('commerce_product', 'listing') as $name => $definition) {
+    if ($definition instanceof \Drupal\field\FieldConfigInterface && !in_array($name, ['body', 'field_seller_note'], TRUE)) {
+      $definition->setTranslatable(FALSE)->save();
+    }
+  }
+  // Only those who may edit a listing translate it: its seller and staff.
+  user_role_grant_permissions('authenticated', ['create content translations', 'update content translations', 'translate editable entities']);
+  _ombu_config('optional', ['search_api.index.listings'], TRUE);
+  \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
+  \Drupal::service('router.builder')->setRebuildNeeded();
+}

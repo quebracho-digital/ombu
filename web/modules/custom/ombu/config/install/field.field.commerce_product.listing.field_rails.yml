@@ -13,7 +13,7 @@ bundle: listing
 label: 'Payment rail'
 description: 'Plain x402 is payable from any wallet; Circle Gateway needs a deposit at Circle.'
 required: false
-translatable: true
+translatable: false
 default_value: {  }
 default_value_callback: ''
 settings: {  }

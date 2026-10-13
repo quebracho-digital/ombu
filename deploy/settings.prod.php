@@ -17,6 +17,9 @@ $databases['default']['default'] = [
   'collation' => 'utf8mb4_general_ci',
 ];
 
+// The same salt as before the move: sessions and one-time links survive it.
+$settings['hash_salt'] = getenv('OMBU_HASH_SALT');
+
 $settings['trusted_host_patterns'] = [
   '^ombu\.quebracho\.digital$',
   '^ombu\.quebrachos\.digital$',

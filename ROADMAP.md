@@ -98,6 +98,25 @@ the cut line moves as we go.
   lacks: a seller listed there can complete and translate the listing here.
   Say it in both write-ups and the video.
 
+**Night 2026-10-13: legal, abuse reports** (local only, not deployed)
+- `scripts/seed-legal.php`: `/terms` and `/privacy` (en, es; Spanish
+  prevails), created once as page nodes and never overwritten (edit them in
+  Drupal). Refuses to run without `OMBU_LEGAL_NAME`, `OMBU_LEGAL_EMAIL`,
+  `OMBU_LEGAL_ADDRESS`. Draft, **not reviewed by a lawyer**.
+- Terms split who answers: our sellers (Quebracho) are sold by the
+  operator; Circle's listings are an index; sellers and reviewers answer
+  for what they publish. A withdrawn or dropped listing stays (retired,
+  reviews open); only a takedown removes it.
+- Core `contact`: `/contact/report` (anyone; each listing links to it with
+  its URL) and `/contact/withdrawal` (withdrawal button, our sales only,
+  refunded by hand to the paying wallet). Footer: terms, privacy, both forms.
+- A Circle listing staff delete is not imported again (state
+  `ombu.circle_blocked`, `blocked` count). Accounts: block, don't delete
+  (a blocked wallet can't sign in; a deleted one signs up again).
+- A demo notice on every page (`ListingHooks::pageTop`) until the legal
+  side is settled. `ombu.module` is gone: its hooks live in
+  `src/Hook/ListingHooks.php`, `ombu_rating()` is `Rating::of()`.
+
 **Waiting on Leo** (for mainnet)
 1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`
    in minisforum's `.ddev/.env`, then `ddev restart`.
@@ -106,6 +125,11 @@ the cut line moves as we go.
 3. Cold addresses for our sellers (`field_seller_address`).
 4. Make `ombu` (and `wallet_auth`) public on GitHub: the grant asks for a
    public repo.
+5. **Legal, before Ombú leaves demo:** operator (name, CUIT, address,
+   email) to run `seed-legal.php`; a lawyer reviews terms and privacy;
+   ask about CNV PSAV registration (our facilitator relays USDC
+   transfers), AAIP database registration, an EU representative (GDPR art.
+   27) and the withdrawal button's 24 h reference.
 
 ## Before — 2026-10-11
 
@@ -443,6 +467,13 @@ the cut line moves as we go.
 
 ## 🎯 Full marketplace
 
+- [ ] **Abuse reports and takedowns, the full version**: reports as
+  records with a state (new, reviewing, removed, dismissed) instead of
+  emails; a report link on reviews, replies and seller content too; notice
+  to the person affected, with a way to answer; takedown of a seller's
+  listings and wallets together; a public count of takedowns. Today:
+  `/contact/report` by email, staff delete by hand, deleted Circle
+  listings stay out of the import.
 - [ ] **Faster payments**, in this order (measured 10-11: settle 3.6 s and
   verify 0.6 s of a ~4.4 s purchase; ours is ~0.1 s):
   1. **Verify locally**: recover the EIP-3009 signer, check balance and

@@ -157,7 +157,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     $category = $product->get('field_category')->entity?->label();
     $provider = $product->get('field_provider_term')->entity;
     $rails = array_column($product->get('field_rails')->getValue(), 'value');
-    $rating = ombu_rating($product);
+    $rating = \Drupal\ombu\Rating::of($product);
     return [
       'resource' => $resource,
       'type' => 'http',

@@ -53,7 +53,7 @@ final class ReviewController implements ContainerInjectionInterface {
       'id' => (int) $review->id(),
       'url' => $review->toUrl('canonical', ['absolute' => TRUE])->toString(),
       'wallet' => $review->get('field_wallet')->value,
-      'rating' => ombu_rating($commerce_product),
+      'rating' => \Drupal\ombu\Rating::of($commerce_product),
     ], 201);
   }
 

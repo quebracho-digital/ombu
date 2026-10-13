@@ -98,6 +98,16 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertFalse((bool) $this->listing('/v1/forecast')->get('field_retired')->value);
   }
 
+  public function testADeletedListingIsNotImportedAgain(): void {
+    $this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]);
+    // A takedown: staff delete it.
+    $this->listing('/v1/forecast')->delete();
+
+    $counts = array_filter($this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]));
+    $this->assertSame(['unchanged' => 1, 'blocked' => 1], $counts);
+    $this->assertCount(1, Product::loadMultiple());
+  }
+
   public function testAnUnreachableSpecLeavesTheListingWithoutIt(): void {
     $this->import([$this->item('/v1/weather')], spec: NULL);
     $listing = $this->listing('/v1/weather');

@@ -23,11 +23,17 @@ use GuzzleHttp\ClientInterface;
  * itself. A listing changes when what Circle says about it changes (a hash
  * of it, not only lastUpdated). Listings Circle no longer returns are
  * retired: still published and open to reviews, never for sale, never
- * deleted.
+ * deleted. A listing staff delete (an abuse report, a legal order) stays
+ * deleted: its key is kept and the import skips it.
  */
 final class CircleCatalogImporter {
 
   public const API = 'https://api.circle.com/v2/x402/discovery/resources';
+
+  /**
+   * State: method + URL of the Circle listings taken down, never imported again.
+   */
+  public const BLOCKED = 'ombu.circle_blocked';
 
   /**
    * Bump to refresh every listing once, when the import learns a new field.
@@ -81,7 +87,7 @@ final class CircleCatalogImporter {
   }
 
   private function doImport(int $max): array {
-    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'ours' => 0, 'retired' => 0];
+    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'ours' => 0, 'blocked' => 0, 'retired' => 0];
     $this->specs = [];
     $this->onCircle = [];
     $seen = [];
@@ -94,7 +100,7 @@ final class CircleCatalogImporter {
       foreach ($page['items'] ?? [] as $item) {
         $outcome = $this->upsert($item);
         $counts[$outcome]++;
-        if ($outcome !== 'skipped' && $outcome !== 'ours') {
+        if (!in_array($outcome, ['skipped', 'ours', 'blocked'], TRUE)) {
           $seen[$this->key($item)] = TRUE;
         }
         if ($max && array_sum($counts) >= $max) {
@@ -114,6 +120,18 @@ final class CircleCatalogImporter {
     return $counts;
   }
 
+  /**
+   * Keeps a deleted Circle listing from coming back with the next import.
+   */
+  public static function block(ProductInterface $listing): void {
+    if ($listing->bundle() !== 'listing' || $listing->get('field_source')->value !== 'circle') {
+      return;
+    }
+    $state = \Drupal::state();
+    $key = strtoupper((string) $listing->get('field_http_method')->value) . ' ' . $listing->get('field_endpoint')->value;
+    $state->set(self::BLOCKED, [$key => TRUE] + $state->get(self::BLOCKED, []));
+  }
+
   private function key(array $item): string {
     return strtoupper($item['metadata']['method'] ?? 'GET') . ' ' . $item['resource'];
   }
@@ -129,6 +147,9 @@ final class CircleCatalogImporter {
     $meta = $item['metadata'] ?? [];
     $provider = $meta['provider'] ?? [];
     $method = strtoupper($meta['method'] ?? 'GET');
+    if (isset(\Drupal::state()->get(self::BLOCKED, [])[$this->key($item)])) {
+      return 'blocked';
+    }
 
     $products = $this->entityTypeManager->getStorage('commerce_product');
     $ids = $products->getQuery()->accessCheck(FALSE)

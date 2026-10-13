@@ -102,7 +102,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertCount(0, $review->validate());
     $review->save();
     $this->assertSame(self::BUYER, $review->get('field_wallet')->value);
-    $this->assertSame(['average' => 4.0, 'count' => 1], ombu_rating($this->listing));
+    $this->assertSame(['average' => 4.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
     $this->assertSame("https://testnet.arcscan.app/tx/$tx", $this->container->get('ombu.review_verifier')->explorerUrl($this->listing, $tx));
   }
 
@@ -132,7 +132,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     // Programmatic saves skip validation: the wallet stays empty and the
     // review is kept, but the average ignores it.
     $this->review($this->paid(self::BUYER, self::OTHER), 1)->save();
-    $this->assertSame(['average' => 5.0, 'count' => 1], ombu_rating($this->listing));
+    $this->assertSame(['average' => 5.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
   }
 
   public function testTheSellerEditsOnlyTheirFieldsOfTheirListing(): void {
@@ -184,7 +184,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertCount(0, $answer->validate());
     $answer->save();
     $this->assertSame('seller', $answer->get('field_reviewer_kind')->value);
-    $this->assertSame(['average' => 2.0, 'count' => 1], ombu_rating($this->listing));
+    $this->assertSame(['average' => 2.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
   }
 
   /**

@@ -9,6 +9,12 @@ Marketplace catalogue.
 Built by [Quebracho Digital](https://quebracho.digital) on Drupal. Plan and
 status: [ROADMAP.md](ROADMAP.md).
 
+**A demo, in development.** Ombú was built for a hackathon and is still
+being tested: live at [ombu.quebracho.digital](https://ombu.quebracho.digital),
+with a notice on every page until its legal side is settled. For now this
+repo is a DDEV project (the whole site); on the roadmap it becomes a
+**Drupal recipe**, so any Drupal site can apply Ombú.
+
 ## Pieces
 
 - **This repo**: the site (Drupal 11 + Commerce, DDEV), the `ombu` module
@@ -73,7 +79,27 @@ s, since settling comes after their answer.
 buys each of them on Arc testnet, printing every seller's balance on chain
 before and after.
 
+## Legal, reports, purchases
+
+- `/terms` and `/privacy` (English and Spanish; Spanish prevails), from
+  `scripts/seed-legal.php`. Drafts, not reviewed by a lawyer yet. Ombú
+  answers only for the services it sells; Circle's listings are an index,
+  and sellers and reviewers answer for what they publish.
+- `/contact/report`: anyone reports abuse; every listing links to it.
+  Staff can delete any listing, and a deleted Circle listing is not
+  imported again. A listing its provider withdraws is not deleted: it stays,
+  retired, not for sale, its reviews open.
+- `/contact/withdrawal`: the withdrawal button, for Ombú's own sales,
+  refunded by hand to the wallet that paid.
+- Messages are kept on the site (`contact_storage`,
+  `/admin/structure/contact/messages`) as well as mailed.
+- **No cart for people yet:** listings show their price but cannot be
+  bought through Commerce until its x402 gateway exists. Agents pay every
+  listing over x402.
+
 ## Run it
+
+A DDEV project while Ombú is in development; the recipe comes later.
 
 ```sh
 git clone https://github.com/quebracho-digital/x402_pay ../x402_pay
@@ -88,6 +114,9 @@ ddev drush en ombu search_api search_api_db ai_provider_universal_terms ai_provi
 ddev drush php:script ../scripts/sellers-llm.php    # the model behind two sellers
 ddev drush php:script ../scripts/seed-listings.php  # our four listings
 ddev drush ombu:import-circle && ddev drush sapi-i
+ddev drush php:script ../scripts/seed-pages.php     # the guide: how it works, for agents, for sellers
+ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
+  drush php:script ../scripts/seed-legal.php        # terms, privacy, report and withdrawal forms
 ddev test                                           # x402_pay and ombu
 ```
 

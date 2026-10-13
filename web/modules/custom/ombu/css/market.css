@@ -40,6 +40,50 @@
   margin: 1rem 0 0;
 }
 
+/* Phones: two smaller buttons a row, the main one across. */
+@media (max-width: 575.98px) {
+  .ombu-hero {
+    padding-top: 1rem;
+  }
+  .ombu-hero__actions .btn {
+    flex: 1 1 calc(50% - .5rem);
+    padding-inline: .5rem;
+    font-size: .75rem;
+  }
+  .ombu-hero__actions .btn-primary {
+    flex-basis: 100%;
+  }
+}
+
+/* The filters' toggle: phones only (market.js). */
+.ombu-filters > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .625rem 1rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ombu-filters[open] > summary {
+  margin-bottom: .75rem;
+}
+.ombu-filters > summary::-webkit-details-marker {
+  display: none;
+}
+.ombu-filters > summary::after {
+  content: "▾";
+}
+.ombu-filters[open] > summary::after {
+  content: "▴";
+}
+@media (min-width: 992px) {
+  .ombu-filters > summary {
+    display: none;
+  }
+}
+
 /* Filters: one column, each facet a collapsible list of checkboxes. */
 .view-market .views-exposed-form {
   display: flex;
@@ -207,4 +251,7 @@
 
 .view-market .pager {
   grid-column: -2;
+}
+.view-market .pager ul {
+  flex-wrap: wrap;
 }

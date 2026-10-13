@@ -26,12 +26,12 @@ $settings['trusted_host_patterns'] = [
   '^192\.168\.1\.66$',
 ];
 
-// TLS ends at Cloudflare and the tunnel speaks plain HTTP: Cloudflare's own
-// header says what the visitor used, so URLs (and x402 resources) stay https.
-if (str_contains($_SERVER['HTTP_CF_VISITOR'] ?? '', 'https')) {
-  $_SERVER['HTTPS'] = 'on';
-  $_SERVER['SERVER_PORT'] = 443;
-}
+// Cloudflare → minisforum's tunnel → here, over the LAN in plain HTTP. Trust
+// the proxy's X-Forwarded-* headers: the visitor's https (so URLs and x402
+// resources stay https) and their IP (flood limits per visitor, not one for
+// everyone). Only the tunnel's host can reach this port.
+$settings['reverse_proxy'] = TRUE;
+$settings['reverse_proxy_addresses'] = ['192.168.1.150', '192.168.1.66'];
 
 $settings['config_sync_directory'] = '../config/sync';
 $config['system.logging']['error_level'] = 'hide';

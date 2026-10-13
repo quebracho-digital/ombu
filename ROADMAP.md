@@ -70,6 +70,17 @@ the cut line moves as we go.
   `x402_pay_commerce` stub dropped) and `wallet_auth` 1.0.0-beta1. The
   release pages on drupal.org are Leo's (UI).
 
+**Night 2026-10-13: the front door** (live on minisforum)
+- `/market` filters update in place (AJAX + BEF auto-submit, now in the
+  module's view: it had lived only in one site's active config).
+- A header on `/market` (what Ombú is, *Try our sellers*, the guides), the
+  site name as the mark, and four pages with menu links from
+  `scripts/seed-pages.php`: `/how-it-works`, `/docs/agents`,
+  `/docs/sellers`, `/about`. The recipe should ship them.
+- Wallets made (keys never shown): gas `0x2cC4…f9eF` on minisforum
+  (`X402_GAS_KEY`), buyer `0xAa07…ebB1` in `x402_pay/scripts/.env.mainnet`.
+  Leo funds them from Binance on the Arc network (10-14).
+
 **Waiting on Leo** (for mainnet)
 1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`
    in minisforum's `.ddev/.env`, then `ddev restart`.

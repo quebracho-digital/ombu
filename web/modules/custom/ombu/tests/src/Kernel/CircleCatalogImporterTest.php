@@ -105,6 +105,44 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame('Example', $listing->get('field_provider_term')->entity->label());
   }
 
+  public function testAListingAddedByHandIsMarkedNeverOverwritten(): void {
+    $mine = $this->ownListing(['field_source' => 'third_party', 'field_endpoint' => 'https://api.example.com/v1/weather', 'field_http_method' => 'GET']);
+
+    $this->assertSame(['ours' => 1], array_filter($this->import([$this->item('/v1/weather')])));
+    $mine = Product::load($mine->id());
+    $this->assertSame('Mine', $mine->getTitle());
+    $this->assertSame('third_party', $mine->get('field_source')->value);
+    $this->assertSame([['value' => 'circle']], $mine->get('field_markets')->getValue());
+    $this->listing('/v1/weather');
+
+    // Gone from Circle: no longer marked.
+    $this->import([$this->item('/v1/forecast')]);
+    $this->assertTrue(Product::load($mine->id())->get('field_markets')->isEmpty());
+  }
+
+  public function testOurListingOnCircleIsRecognizedByItsUrlAndPayTo(): void {
+    $ours = $this->ownListing(['field_seller_address' => '0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57']);
+    $item = $this->item('/v1/weather');
+    $item['resource'] = "https://ombu.example/x402/commerce_product/{$ours->id()}/full";
+
+    $this->assertSame(['ours' => 1], array_filter($this->import([$item])));
+    $this->assertSame([['value' => 'circle']], Product::load($ours->id())->get('field_markets')->getValue());
+    $this->assertCount(1, Product::loadMultiple());
+
+    // Same path on another site, paid to someone else: not ours.
+    $item['accepts'][0]['payTo'] = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+    $this->assertSame(['created' => 1], array_filter($this->import([$item])));
+  }
+
+  /**
+   * A listing of ours, "Mine".
+   */
+  private function ownListing(array $values): ProductInterface {
+    $listing = Product::create($values + ['type' => 'listing', 'title' => 'Mine', 'field_source' => 'ours']);
+    $listing->save();
+    return $listing;
+  }
+
   /**
    * One Circle Discovery item of the Example provider.
    */
@@ -152,7 +190,7 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
       $this->fetches++;
       return $spec ?? throw PageFetchException::notPublic();
     });
-    $importer = new CircleCatalogImporter($client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $fetcher);
+    $importer = new CircleCatalogImporter($client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $fetcher, $this->container->get('ombu.sellers'));
     return $importer->import();
   }
 

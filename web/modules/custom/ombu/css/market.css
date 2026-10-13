@@ -242,6 +242,11 @@
   margin-top: auto;
   color: var(--bs-secondary-color, #6c757d);
 }
+.view-market .field--name-field-markets {
+  order: 0;
+  font-size: .75rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
 .view-market .field--name-field-verified:not(:empty) {
   order: 0;
   font-size: .75rem;

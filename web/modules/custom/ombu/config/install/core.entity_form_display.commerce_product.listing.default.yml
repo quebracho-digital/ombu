@@ -243,6 +243,7 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  field_markets: true
   field_openapi: true
   field_provider_term: true
   field_rails: true

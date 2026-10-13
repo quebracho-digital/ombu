@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_markets
+  module:
+    - options
+id: commerce_product.listing.field_markets
+field_name: field_markets
+entity_type: commerce_product
+bundle: listing
+label: 'Also on'
+description: 'Other markets that list this same service. Set by their importers.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

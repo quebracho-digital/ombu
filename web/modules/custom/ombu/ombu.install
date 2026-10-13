@@ -271,3 +271,19 @@ function _ombu_translations(): void {
     }
   }
 }
+
+/**
+ * Listings say which other markets list them too (Circle's, for now): its
+ * importer marks ours instead of overwriting or copying them.
+ */
+function ombu_update_10014(): void {
+  _ombu_config('install', ['field.storage.commerce_product.field_markets', 'field.field.commerce_product.listing.field_markets']);
+  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  $repository = \Drupal::service('entity_display.repository');
+  foreach (['default', 'teaser'] as $mode) {
+    $record = $source->read("core.entity_view_display.commerce_product.listing.$mode");
+    $repository->getViewDisplay('commerce_product', 'listing', $mode)->setComponent('field_markets', $record['content']['field_markets'])->save();
+  }
+  $repository->getFormDisplay('commerce_product', 'listing')->removeComponent('field_markets')->save();
+  _ombu_translations();
+}

@@ -30,6 +30,7 @@ dependencies:
     - field.field.commerce_product.listing.field_source_hash
     - field.field.commerce_product.listing.field_source_updated
     - field.field.commerce_product.listing.field_tags
+    - field.field.commerce_product.listing.field_markets
     - field.field.commerce_product.listing.field_verified
     - field.field.commerce_product.listing.field_videos
     - field.field.commerce_product.listing.field_x402_price
@@ -178,6 +179,13 @@ content:
       format: custom
       format_custom_false: ''
       format_custom_true: '✔ Verified seller'
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_markets:
+    type: list_default
+    label: inline
+    settings: {  }
     third_party_settings: {  }
     weight: 0
     region: content

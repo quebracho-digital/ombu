@@ -6,6 +6,7 @@ namespace Drupal\ombu;
 
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Price;
+use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -40,6 +41,11 @@ final class CircleCatalogImporter {
    */
   private array $specs = [];
 
+  /**
+   * Ids of our listings found on Circle in this run.
+   */
+  private array $onCircle = [];
+
   public function __construct(
     private readonly ClientInterface $httpClient,
     private readonly EntityTypeManagerInterface $entityTypeManager,
@@ -48,6 +54,8 @@ final class CircleCatalogImporter {
     // Specs come through the guarded fetch (public addresses only, 5 MB at
     // most); without it listings are imported without their OpenAPI.
     private readonly ?PageFetcher $fetcher = NULL,
+    // Recognizes our own listings when Circle lists them too.
+    private readonly ?Sellers $sellers = NULL,
   ) {}
 
   /**
@@ -73,8 +81,9 @@ final class CircleCatalogImporter {
   }
 
   private function doImport(int $max): array {
-    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'retired' => 0];
+    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'ours' => 0, 'retired' => 0];
     $this->specs = [];
+    $this->onCircle = [];
     $seen = [];
     $offset = 0;
     do {
@@ -85,7 +94,7 @@ final class CircleCatalogImporter {
       foreach ($page['items'] ?? [] as $item) {
         $outcome = $this->upsert($item);
         $counts[$outcome]++;
-        if ($outcome !== 'skipped') {
+        if ($outcome !== 'skipped' && $outcome !== 'ours') {
           $seen[$this->key($item)] = TRUE;
         }
         if ($max && array_sum($counts) >= $max) {
@@ -98,6 +107,7 @@ final class CircleCatalogImporter {
     // Only a complete run knows what disappeared.
     if (!$max) {
       $counts['retired'] = $this->retireMissing($seen);
+      $this->unmarkMissing();
       \Drupal::state()->set('ombu.circle_last', \Drupal::time()->getRequestTime());
     }
     $this->loggerFactory->get('ombu')->info('Circle catalogue import: @c', ['@c' => json_encode($counts)]);
@@ -128,6 +138,18 @@ final class CircleCatalogImporter {
       ->range(0, 1)->execute();
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = $ids ? $products->load(reset($ids)) : NULL;
+
+    // A listing of ours (or one added by hand) that Circle lists too: say
+    // so on it, never overwrite it nor copy it.
+    $ours = $product && $product->get('field_source')->value !== 'circle' ? $product : $this->ours($item['resource'], $accepts);
+    if ($ours) {
+      $this->onCircle[$ours->id()] = TRUE;
+      $markets = array_column($ours->get('field_markets')->getValue(), 'value');
+      if (!in_array('circle', $markets, TRUE)) {
+        $ours->set('field_markets', [...$markets, 'circle'])->save();
+      }
+      return 'ours';
+    }
     $updated = $item['lastUpdated'] ?? '';
     $openApiUrl = $provider['openApiUrl'] ?? NULL;
     $spec = $openApiUrl ? $this->spec($openApiUrl) : NULL;
@@ -272,6 +294,40 @@ final class CircleCatalogImporter {
       $term->save();
     }
     return $cache[$vid][$name] = (int) $term->id();
+  }
+
+  /**
+   * Our listing that a Circle resource is, or NULL.
+   *
+   * Ours are sold at /x402/commerce_product/{id}/…; the id alone could be
+   * another site's, so the listing must also pay one of the resource's
+   * payTo addresses.
+   */
+  private function ours(string $resource, array $accepts): ?ProductInterface {
+    if (!$this->sellers || !preg_match('#/x402/commerce_product/(\d+)(/|$)#', (string) parse_url($resource, PHP_URL_PATH), $m)) {
+      return NULL;
+    }
+    $listing = $this->entityTypeManager->getStorage('commerce_product')->load($m[1]);
+    if (!$listing instanceof ProductInterface || $listing->bundle() !== 'listing' || $listing->get('field_source')->value === 'circle') {
+      return NULL;
+    }
+    $payTo = strtolower((string) ($this->sellers->seller($listing)?->address() ?? $this->sellers->address($listing)));
+    return $payTo && in_array($payTo, array_map('strtolower', array_column($accepts, 'payTo')), TRUE) ? $listing : NULL;
+  }
+
+  /**
+   * Unmarks our listings that the last full run no longer found on Circle.
+   */
+  private function unmarkMissing(): void {
+    $products = $this->entityTypeManager->getStorage('commerce_product');
+    $ids = $products->getQuery()->accessCheck(FALSE)
+      ->condition('type', 'listing')
+      ->condition('field_markets', 'circle')
+      ->execute();
+    foreach ($products->loadMultiple(array_diff($ids, array_keys($this->onCircle))) as $product) {
+      $markets = array_column($product->get('field_markets')->getValue(), 'value');
+      $product->set('field_markets', array_values(array_diff($markets, ['circle'])))->save();
+    }
   }
 
   /**

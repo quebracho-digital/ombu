@@ -413,7 +413,7 @@ the cut line moves as we go.
      reviewed Markdown with its tx `0x4e753bed…cbcf` (201, ★5), the same
      buyer's tx to the terms seller was refused (422), and the first tx
      again too (422). In `/openapi.json` and `/llms.txt`.
-3f. [ ] **Pages as markdown + `llms.txt`** (10-13). `llms.txt` done; markdown
+3f. [x] **Pages as markdown + `llms.txt`** (10-13). `llms.txt` done; markdown
    moves to `x402_pay` (one gate, see 🎯 *Markdown for every page*).
    - **Done when:** `curl -H 'Accept: text/markdown'` on a listing returns
      markdown.
@@ -468,7 +468,8 @@ the cut line moves as we go.
 
 ## 🎯 Full marketplace
 
-- [ ] **Markdown for every page, through one gate** (replaces Markdownify
+- [x] **Markdown for every page, through one gate** (done 2026-10-13 in `x402_pay`;
+  replaces Markdownify
   in 3f). `x402_pay` answers `Accept: text/markdown` for any entity: 402
   when it has a price, the markdown free when it has none (or `PriceEvent`
   makes it free). Its converter is the one Markdownify uses, so nothing is
@@ -484,17 +485,17 @@ the cut line moves as we go.
   - **Done when:** a test asks a priced node for markdown by `Accept`,
     `.md` and `?_format=markdown`, with the caches warm, and gets 402 every
     time; a free node returns markdown; an unpublished one, 403.
-- [ ] **Events where others need to react** (ECA and other modules,
-  instead of patches):
-  - `x402_pay`: payment settled / not settled / failed (accounting,
-    reputation, notifications), markdown alter before delivery, refund sent
-    (the withdrawal button). Price and delivery events exist already.
-  - `ombu`: listing taken down (notify its seller, keep an audit trail),
-    listing retired (notify buyers and reviewers), listing blocked from
-    import, abuse reported (a contact_storage message), withdrawal
-    requested, review verified / refused.
-  - `wallet_auth`: wallet linked / unlinked, signed in, sign-in refused
-    (blocked account).
+- [~] **Events where others need to react** (ECA and other modules,
+  instead of patches). Only where Drupal announces nothing: entity
+  operations (a takedown = deleting a listing, a report or withdrawal = a
+  `contact_message`, retired = `field_retired` changing, a verified review =
+  a comment with `field_wallet`) are already hooks and ECA events.
+  - [x] `x402_pay`: `PaymentEvent`, every outcome in the log (settled, not
+    settled, failed).
+  - [x] `wallet_auth`: `WalletEvent` (signed in, linked, refused because
+    the account is blocked), with the address.
+  - [ ] When they exist: a refund sent (the withdrawal button, by hand
+    today), a markdown alter before delivery (if a module needs it).
 - [ ] **Terms and privacy generator for each store** (idea, 2026-10-13;
   after the hackathon): the inverse of the terms analyzer. Drupal already
   knows much of what a policy must say: enabled modules (analytics,
@@ -507,6 +508,9 @@ the cut line moves as we go.
   checks the draft (19 categories of `terms-eval/taxonomy.json`: protective
   ones present, severity "alta" flagged) and a deterministic checklist the
   mandatory legends (AAIP, withdrawal button).
+  - **A base for the store's lawyer**, not the final text: everything
+    important the lawyer needs, gathered from Drupal and the questionnaire.
+    Ombú's own general terms already protect Ombú.
   - **Liability stays with the store:** it is a drafting tool, not legal
     advice, and says so; every draft lists what it does **not** cover; the
     store confirms its answers and the draft before publishing, and the

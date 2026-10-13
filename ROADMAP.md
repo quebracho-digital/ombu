@@ -496,6 +496,21 @@ the cut line moves as we go.
     the account is blocked), with the address.
   - [ ] When they exist: a refund sent (the withdrawal button, by hand
     today), a markdown alter before delivery (if a module needs it).
+- [ ] **Discount coupons, for people and for agents** (Leo, 2026-10-13;
+  after the hackathon). The first use: Lapacho's fact-check plugin calling
+  Ombú's fact-check (the web-backed one, `ai_provider_universal_factcheck`)
+  with a coupon instead of paying full price per claim; then promotions
+  for any seller. People already have coupons through Commerce
+  (`commerce_promotion`). Agents get the same coupons over x402: a code in a
+  request header, checked by an ombu subscriber to `PriceEvent` against
+  those promotions, which lowers the price or makes it free (`PriceEvent`
+  already can). One coupon entity for both doors, no second system.
+  - **Open:** the header's name; whether a 100 % coupon still goes through
+    x402 (a zero-price settle) or skips it; limits per wallet, since an
+    agent can retry at no cost.
+  - **Done when:** an agent sending a valid code pays the discounted price
+    on Arc (the wallet's balance shows it), an expired or used-up code pays
+    full price, and a person's checkout takes the same code.
 - [ ] **Terms and privacy generator for each store** (idea, 2026-10-13;
   after the hackathon): the inverse of the terms analyzer. Drupal already
   knows much of what a policy must say: enabled modules (analytics,

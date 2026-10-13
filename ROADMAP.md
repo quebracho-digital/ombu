@@ -17,7 +17,42 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
-## Where we left off — 2026-10-11
+## Where we left off — 2026-10-13
+
+**Done today** (147 tests, uncommitted: review first)
+- **Mainnet money without keys at risk (3g, A+B)** in `x402_pay`, on the
+  branch `mainnet-wallets`. A settings form at `/admin/config/services/x402`:
+  - **B, Circle API key**: the facilitator sends `Authorization: Bearer`
+    instead of a seller proof, so a seller can be an **address alone**
+    (field setting `pay_to`, `PriceEvent::setPayTo()`, ombu's
+    `field_seller_address`): a cold wallet, no key on the site.
+  - **A, keyless + sweep**: cron (or `drush x402:sweep [--dry-run]`) moves
+    each seller key's balance, less the most its gas can cost, to a cold
+    wallet. EIP-1559 transfers signed in PHP, equal to viem byte for byte.
+    Tried on Arc testnet: markdown's 0.031 USDC swept, tx
+    `0x0e1769ec…491e`, status 1, 48,938 gas.
+  - **Arc mainnet** (`eip155:5042`) is a network now: checked on chain
+    (RPC `rpc.mainnet.arc.io`, USDC `0x3600…`, domain `USDC`/`2`, 6
+    decimals; gas is native USDC, 18 decimals).
+- **Found:** Circle's keyless mode is a **trial with an allowance per
+  `payTo` and network** (then `403 registration_required`). Mainnet needs B.
+- **Circle Agent Marketplace's intake is a Google Form** that needs a
+  Google login. Ombú lists without asking anyone: say so in the video.
+- **Domain:** `quebrachos.digital` is quebrachOS's, not the product's. Move
+  to `ombu.quebracho.digital` (and `quebracho.digital/ombu` redirecting
+  there). Blocked on Leo: the DNS record and the tunnel change (below).
+  `ombu.digital` is taken until 2026-10-16; a routine checks it 10-17.
+
+**Waiting on Leo**
+1. Circle Console: a **mainnet API key** → a Key (env var) → the x402
+   settings. Cold addresses for our sellers in `field_seller_address`.
+2. Cloudflare, zone `quebracho.digital`: CNAME `ombu` →
+   `21143d3c-eaa8-41d5-829c-879b7d992e4c.cfargotunnel.com` (proxied), a
+   redirect rule `quebracho.digital/ombu*` → `ombu.quebracho.digital`, and
+   no managed challenge for it. Then on minisforum: the ingress rule and
+   `additional_fqdns` (the session that tried was not allowed to).
+
+## Before — 2026-10-11
 
 **Done today**
 - The `x402_price` field (item 2): a node on `ombu.ddev.site` answers 402
@@ -325,6 +360,11 @@ the cut line moves as we go.
      (it now returns those links). Open: one settlement failed with
      `valid_before` ~6 min into a 600 s window; the buyer was not charged,
      cause unknown.
+3g. [~] **Mainnet, with no money at risk on the server** (10-13). A Circle
+   API key settles for sellers that are only an address (cold wallets);
+   keyless sellers are swept to a cold wallet on cron. See 2026-10-13.
+   - **Done when:** our three sellers sell on Arc mainnet to cold wallets,
+     and the listings are submitted to Circle (3b) with mainnet endpoints.
 5. [ ] **Third-party sellers** (10-14). `POST /market/listings` with name,
    price, `payTo` and endpoint, paid over x402; lands unpublished for
    approval. Posted in the Arc Discord.
@@ -365,6 +405,12 @@ the cut line moves as we go.
   - An agent that knows the price (from `/market.json`) can already send
     the payment on its first request and skip the 402: x402 allows it.
 
+- [ ] **Our own facilitator** (`x402_pay`): verify and settle on chain
+  ourselves, with no Circle account. `transferWithAuthorization` can be
+  sent by anyone, so the site needs only a gas wallet holding cents; every
+  `payTo` stays a cold wallet. The decentralised default for anyone who
+  installs `x402_pay`; Circle (A+B, 3g) becomes one option among others.
+  Builds on `Transfer` (EIP-1559 signing) and "verify locally" above.
 - [ ] **Purchases on the account, every edge case**: an anonymous buyer
   without the cookie is recognised by the wallet when they pay again (no
   double charge), and their earlier purchases attach to the account when

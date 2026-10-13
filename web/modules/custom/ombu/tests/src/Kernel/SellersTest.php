@@ -79,6 +79,13 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame(403, $response->getStatusCode(), $response->getContent());
   }
 
+  public function testAListingCanBePaidToAnAddressAlone(): void {
+    $cold = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+    $listing = $this->listing('terms', '', '0.01');
+    $listing->set('field_seller_address', $cold)->save();
+    $this->assertSame($cold, $this->required($listing)['accepts'][0]['payTo']);
+  }
+
   public function testARetiredListingIsNotForSale(): void {
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
     $listing->set('field_retired', TRUE)->save();

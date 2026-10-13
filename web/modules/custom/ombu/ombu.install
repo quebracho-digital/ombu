@@ -202,3 +202,10 @@ function ombu_update_10008(): void {
 function ombu_update_10009(): void {
   _ombu_config('install', ['core.entity_view_display.commerce_product.listing.teaser'], TRUE);
 }
+
+/**
+ * A listing can be paid to an address alone: a cold wallet, no key here.
+ */
+function ombu_update_10010(): void {
+  _ombu_config('install', ['field.storage.commerce_product.field_seller_address', 'field.field.commerce_product.listing.field_seller_address']);
+}

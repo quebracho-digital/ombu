@@ -21,6 +21,7 @@ dependencies:
     - field.field.commerce_product.listing.field_rails
     - field.field.commerce_product.listing.field_retired
     - field.field.commerce_product.listing.field_reviews
+    - field.field.commerce_product.listing.field_seller_address
     - field.field.commerce_product.listing.field_seller_key
     - field.field.commerce_product.listing.field_seller_note
     - field.field.commerce_product.listing.field_service
@@ -232,6 +233,7 @@ hidden:
   field_output_schema: true
   field_provider: true
   field_retired: true
+  field_seller_address: true
   field_seller_key: true
   field_service: true
   field_source: true

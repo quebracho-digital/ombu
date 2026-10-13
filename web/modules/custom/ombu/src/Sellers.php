@@ -48,6 +48,16 @@ class Sellers {
     }
   }
 
+  /**
+   * The listing's seller address when it has no key here; NULL if none.
+   *
+   * Selling to it needs a Circle API key (see x402_pay's settings).
+   */
+  public function address(ProductInterface $listing): ?string {
+    $address = trim((string) $listing->get('field_seller_address')->value);
+    return preg_match('/^0x[0-9a-fA-F]{40}$/', $address) ? $address : NULL;
+  }
+
   public function deliver(string $service, ProductInterface $listing, Request $request): Response {
     $input = json_decode($request->getContent(), TRUE);
     $input = is_array($input) ? $input : [];

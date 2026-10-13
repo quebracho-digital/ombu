@@ -43,14 +43,24 @@ the cut line moves as we go.
   there). Blocked on Leo: the DNS record and the tunnel change (below).
   `ombu.digital` is taken until 2026-10-16; a routine checks it 10-17.
 
+**Later on 2026-10-13** (deployed to minisforum over ssh, not GitHub)
+- `ombu.quebracho.digital` serves the site (CNAME, redirect, tunnel
+  ingress, `additional_fqdns`). No managed challenge got in the way.
+- Circle keys live in `.ddev/.env` (`CIRCLE_API_KEY_MAINNET`/`_TESTNET`),
+  Key provider `env`. Never the `config` provider: it lands in exports.
+- **Leak closed:** config sync was `sites/default/files/sync`, served to
+  the internet (DDEV's nginx ignores `.htaccess`). Now `../config/sync`,
+  git-ignored. The keys were never exported.
+- x402 on minisforum: `api_key` mode with the **testnet** key; a testnet
+  purchase settled (tx `0x1ddc8dfc…cf1f`).
+
 **Waiting on Leo**
-1. Circle Console: a **mainnet API key** → a Key (env var) → the x402
-   settings. Cold addresses for our sellers in `field_seller_address`.
-2. Cloudflare, zone `quebracho.digital`: CNAME `ombu` →
-   `21143d3c-eaa8-41d5-829c-879b7d992e4c.cfargotunnel.com` (proxied), a
-   redirect rule `quebracho.digital/ombu*` → `ombu.quebracho.digital`, and
-   no managed challenge for it. Then on minisforum: the ingress rule and
-   `additional_fqdns` (the session that tried was not allowed to).
+1. The **mainnet** Circle key answers `403 forbidden` on `/verify` for
+   every network (the testnet key works, even on `eip155:5042`). Check its
+   permissions/entitlement for the x402 facilitator in Circle Console.
+   One key serves every network today: mainnet listings will need a key
+   per network (small change in `CircleFacilitator`).
+2. Cold addresses for our sellers in `field_seller_address`.
 
 ## Before — 2026-10-11
 

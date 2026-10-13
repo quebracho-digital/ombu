@@ -505,9 +505,15 @@ the cut line moves as we go.
   request header, checked by an ombu subscriber to `PriceEvent` against
   those promotions, which lowers the price or makes it free (`PriceEvent`
   already can). One coupon entity for both doors, no second system.
+  - **Limits, with what Drupal has (Leo, 2026-10-13):** how often a coupon
+    can be used, in total and per customer, is `commerce_promotion`'s own
+    usage limits, set per promotion in its UI; a wallet counts as the
+    customer through `wallet_auth`'s account. Abuse (an agent retrying
+    codes for free) is core's Flood API, the throttle behind failed logins
+    and the contact form: failed codes per wallet and per IP, thresholds in
+    config; the contrib *Flood Control* module shows and clears them.
   - **Open:** the header's name; whether a 100 % coupon still goes through
-    x402 (a zero-price settle) or skips it; limits per wallet, since an
-    agent can retry at no cost.
+    x402 (a zero-price settle) or skips it.
   - **Done when:** an agent sending a valid code pays the discounted price
     on Arc (the wallet's balance shows it), an expired or used-up code pays
     full price, and a person's checkout takes the same code.

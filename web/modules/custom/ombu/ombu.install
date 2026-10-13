@@ -310,3 +310,10 @@ function ombu_update_10015(): void {
   \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')?->reindex();
   \Drupal::service('router.builder')->setRebuildNeeded();
 }
+
+/**
+ * /llms.txt says every page answers in markdown (x402_pay's gate).
+ */
+function ombu_update_10016(): void {
+  _ombu_llms_txt();
+}

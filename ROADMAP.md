@@ -56,7 +56,7 @@ the cut line moves as we go.
 
 **Evening 2026-10-13: our own facilitator** (`x402_pay` a6ef428)
 - **Arc Microgrants** (dorahacks.io/hackathon/arc-microgrants): closes
-  **2026-10-15 09:29 IST = 10-14 ~01:00 ART**, rolling review, needs a
+  **2026-10-15 09:29 IST = 10-15 00:59 ART**, rolling review, needs a
   project *live on Arc mainnet* and a public repo. 500 USDC.
 - Circle's LIVE key answers 403 everywhere, so `ChainFacilitator` settles
   the networks chosen in the settings itself: eth_call to verify, the
@@ -66,6 +66,9 @@ the cut line moves as we go.
   custody of their sales).
 - `ReviewVerifier` and `buy.mjs` know Arc mainnet (explorer.arc.io).
 - minisforum: Key `gas_wallet` reads env `X402_GAS_KEY` (not set yet).
+- **Betas tagged:** `x402_pay` 1.0.0-beta1 (new branch `1.0.x`, the empty
+  `x402_pay_commerce` stub dropped) and `wallet_auth` 1.0.0-beta1. The
+  release pages on drupal.org are Leo's (UI).
 
 **Waiting on Leo** (for mainnet)
 1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`

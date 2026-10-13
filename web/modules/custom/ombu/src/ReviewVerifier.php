@@ -25,6 +25,7 @@ final class ReviewVerifier {
    * Public RPCs of the chains whose payments can be checked.
    */
   public const RPC = [
+    'eip155:5042' => 'https://rpc.mainnet.arc.io',
     'eip155:5042002' => 'https://rpc.testnet.arc.network',
     'eip155:8453' => 'https://mainnet.base.org',
     'eip155:84532' => 'https://sepolia.base.org',
@@ -34,6 +35,7 @@ final class ReviewVerifier {
    * Where people see a transaction, by chain: same keys as RPC.
    */
   public const EXPLORER = [
+    'eip155:5042' => 'https://explorer.arc.io/tx/',
     'eip155:5042002' => 'https://testnet.arcscan.app/tx/',
     'eip155:8453' => 'https://basescan.org/tx/',
     'eip155:84532' => 'https://sepolia.basescan.org/tx/',

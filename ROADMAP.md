@@ -54,13 +54,27 @@ the cut line moves as we go.
 - x402 on minisforum: `api_key` mode with the **testnet** key; a testnet
   purchase settled (tx `0x1ddc8dfc…cf1f`).
 
-**Waiting on Leo**
-1. The **mainnet** Circle key answers `403 forbidden` on `/verify` for
-   every network (the testnet key works, even on `eip155:5042`). Check its
-   permissions/entitlement for the x402 facilitator in Circle Console.
-   One key serves every network today: mainnet listings will need a key
-   per network (small change in `CircleFacilitator`).
-2. Cold addresses for our sellers in `field_seller_address`.
+**Evening 2026-10-13: our own facilitator** (`x402_pay` a6ef428)
+- **Arc Microgrants** (dorahacks.io/hackathon/arc-microgrants): closes
+  **2026-10-15 09:29 IST = 10-14 ~01:00 ART**, rolling review, needs a
+  project *live on Arc mainnet* and a public repo. 500 USDC.
+- Circle's LIVE key answers 403 everywhere, so `ChainFacilitator` settles
+  the networks chosen in the settings itself: eth_call to verify, the
+  buyer's `transferWithAuthorization` sent from a gas wallet to settle.
+  Testnet: tx `0x35aefea9…c8a3`, 87,165 gas (~0.0017 USDC on mainnet).
+- Fee: none for now (decided: free; a fee paid by sellers later, never
+  custody of their sales).
+- `ReviewVerifier` and `buy.mjs` know Arc mainnet (explorer.arc.io).
+- minisforum: Key `gas_wallet` reads env `X402_GAS_KEY` (not set yet).
+
+**Waiting on Leo** (for mainnet)
+1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`
+   in minisforum's `.ddev/.env`, then `ddev restart`.
+2. A buyer wallet with ~1 USDC: `BUYER_PRIVATE_KEY` for a mainnet run of
+   `buy.mjs` (a separate .env, so the testnet buyer stays).
+3. Cold addresses for our sellers (`field_seller_address`).
+4. Make `ombu` (and `wallet_auth`) public on GitHub: the grant asks for a
+   public repo.
 
 ## Before — 2026-10-11
 

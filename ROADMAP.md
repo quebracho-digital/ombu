@@ -81,6 +81,23 @@ the cut line moves as we go.
   (`X402_GAS_KEY`), buyer `0xAa07…ebB1` in `x402_pay/scripts/.env.mainnet`.
   Leo funds them from Binance on the Arc network (10-14).
 
+**Late 2026-10-13: languages and markets** (live on minisforum)
+- Phones: filters fold under one toggle; no sideways scroll.
+- **Spanish** next to English (default, no prefix; `/es`), switcher in the
+  top bar; market, guide and menu translated; core/contrib strings from
+  localize.drupal.org, ours in `translations/es.po`.
+- **Sellers translate their listings** (title, description, note) signed
+  in with the wallet the listing pays, Circle's listings included; the rest
+  is shared, so the sync keeps it right. The index has Search API's
+  language-with-fallback: one card per listing per language.
+- **Markets:** Circle's importer never overwrites or copies a listing that
+  is not Circle's; it adds `circle` to `field_markets` ("Also on…").
+  Built for more importers (Solana's or others, after the hackathon): each
+  adds its own value, the badge lists them all.
+- **For the submissions:** multilingual is a feature Circle's marketplace
+  lacks: a seller listed there can complete and translate the listing here.
+  Say it in both write-ups and the video.
+
 **Waiting on Leo** (for mainnet)
 1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`
    in minisforum's `.ddev/.env`, then `ddev restart`.

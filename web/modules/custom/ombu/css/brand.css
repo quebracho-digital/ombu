@@ -6,3 +6,19 @@
   color: inherit;
   text-decoration: none;
 }
+
+/* The language switcher: one line in the top bar, the current one bold. */
+.block-language-blocklanguage-interface {
+  margin-inline: 1rem;
+}
+.block-language-blocklanguage-interface ul {
+  display: flex;
+  gap: .75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.block-language-blocklanguage-interface a.is-active {
+  font-weight: 700;
+  text-decoration: underline;
+}

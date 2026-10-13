@@ -223,3 +223,51 @@ function ombu_update_10011(): void {
 function ombu_update_10012(): void {
   _ombu_config('optional', ['views.view.market'], TRUE);
 }
+
+/**
+ * Spanish next to English (the default, no prefix): /es, a language
+ * switcher in the top bar, the market's labels and strings in Spanish.
+ *
+ * Interface translations come after: drush locale:check && drush locale:update
+ * (core and contrib from localize.drupal.org, ours from translations/es.po).
+ */
+function ombu_update_10013(): void {
+  \Drupal::service('module_installer')->install(['language', 'locale', 'content_translation', 'config_translation']);
+  if (!\Drupal\language\Entity\ConfigurableLanguage::load('es')) {
+    \Drupal\language\Entity\ConfigurableLanguage::createFromLangcode('es')->save();
+  }
+  \Drupal::configFactory()->getEditable('language.negotiation')
+    ->set('url.source', 'path_prefix')
+    ->set('url.prefixes', ['en' => '', 'es' => 'es'])
+    ->save();
+  // ponytail: the top bar is Belgrade's region; another theme places it by hand.
+  $theme = \Drupal::config('system.theme')->get('default');
+  if (!\Drupal\block\Entity\Block::load("{$theme}_language")) {
+    \Drupal\block\Entity\Block::create([
+      'id' => "{$theme}_language",
+      'theme' => $theme,
+      'region' => 'top_bar',
+      'weight' => -10,
+      'plugin' => 'language_block:language_interface',
+      'settings' => ['id' => 'language_block:language_interface', 'label' => 'Language', 'label_display' => '0', 'provider' => 'language'],
+    ])->save();
+  }
+  _ombu_translations();
+}
+
+/**
+ * Writes the module's config translations (config/install/language/*) over
+ * the site's: the installer only adds the missing ones.
+ */
+function _ombu_translations(): void {
+  $dir = \Drupal::service('extension.list.module')->getPath('ombu') . '/config/install/language';
+  $languages = \Drupal::languageManager();
+  foreach (array_keys($languages->getLanguages()) as $langcode) {
+    if (is_dir("$dir/$langcode")) {
+      $source = new \Drupal\Core\Config\FileStorage("$dir/$langcode");
+      foreach ($source->listAll() as $name) {
+        $languages->getLanguageConfigOverride($langcode, $name)->setData($source->read($name))->save();
+      }
+    }
+  }
+}

@@ -20,3 +20,6 @@ dependencies:
   - key:key
   - x402_pay:x402_pay
   - wallet_auth:wallet_auth
+# Its Spanish strings ship with it: translations/es.po.
+'interface translation project': ombu
+'interface translation server pattern': modules/custom/ombu/translations/%language.po

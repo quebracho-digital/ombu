@@ -1,0 +1,42 @@
+# Spanish translation of Ombú (and, until localize.drupal.org has them,
+# the visible strings of wallet_auth).
+msgid ""
+msgstr ""
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "No reviews yet"
+msgstr "Sin reseñas todavía"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Filters (@count)"
+msgstr "Filtros (@count)"
+
+msgid "<a href=\":login\">Log in with your wallet</a> to post a review"
+msgstr "<a href=\":login\">Inicia sesión con tu billetera</a> para dejar una reseña"
+
+msgid "Retired: its provider no longer offers this. Reviews stay open."
+msgstr "Retirado: su proveedor ya no lo ofrece. Las reseñas siguen abiertas."
+
+msgid "API: @method @path"
+msgstr "API: @method @path"
+
+msgid "Sign in with a wallet"
+msgstr "Iniciar sesión con una billetera"
+
+msgid "Link a wallet"
+msgstr "Vincular una billetera"
+
+msgid "Wallets"
+msgstr "Billeteras"
+
+msgid "No wallet signs in to this account."
+msgstr "Ninguna billetera inicia sesión en esta cuenta."
+
+msgid "No wallet in this browser: install MetaMask."
+msgstr "No hay billetera en este navegador: instala MetaMask."

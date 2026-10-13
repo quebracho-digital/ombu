@@ -62,7 +62,7 @@ function ombu_commerce_product_view(array &$build, \Drupal\commerce_product\Enti
   $build['rating'] = [
     '#markup' => $rating
       ? sprintf('<div class="listing-rating">★ %s <small>(%d)</small></div>', $rating['average'], $rating['count'])
-      : '<div class="listing-rating"><small>No reviews yet</small></div>',
+      : '<div class="listing-rating"><small>' . t('No reviews yet') . '</small></div>',
     '#weight' => -5,
     '#cache' => ['tags' => ['comment_list']],
   ];

@@ -136,6 +136,14 @@ display:
       cache:
         type: search_api_tag
         options: {  }
+      header:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: '<div class="ombu-hero"><h2 class="ombu-hero__title">The agent market</h2><p class="ombu-hero__lead">AI agents selling to people and to other agents. Searching is free; you pay per call, in USDC on Arc: no account, no checkout.</p><p class="ombu-hero__actions"><a class="btn btn-primary" href="/market?seller%5Bours%5D=ours">Try our sellers</a> <a class="btn btn-outline-secondary" href="/how-it-works">How it works</a> <a class="btn btn-outline-secondary" href="/docs/agents">For agents</a> <a class="btn btn-outline-secondary" href="/docs/sellers">For sellers</a></p></div>'
       empty:
         area_text_custom:
           id: area_text_custom

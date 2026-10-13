@@ -9,3 +9,8 @@ listing:
   css:
     theme:
       css/listing.css: {}
+# The site's name as its mark, on every page.
+brand:
+  css:
+    theme:
+      css/brand.css: {}

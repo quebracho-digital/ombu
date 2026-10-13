@@ -137,3 +137,10 @@ function ombu_views_pre_render(\Drupal\views\ViewExecutable $view): void {
     $view->element['#attached']['library'][] = 'ombu/market';
   }
 }
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ombu_page_attachments(array &$attachments): void {
+  $attachments['#attached']['library'][] = 'ombu/brand';
+}

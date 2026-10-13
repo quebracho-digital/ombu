@@ -216,3 +216,10 @@ function ombu_update_10010(): void {
 function ombu_update_10011(): void {
   _ombu_config('optional', ['views.view.market'], TRUE);
 }
+
+/**
+ * /market opens with what Ombú is and where to start.
+ */
+function ombu_update_10012(): void {
+  _ombu_config('optional', ['views.view.market'], TRUE);
+}

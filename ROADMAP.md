@@ -117,6 +117,19 @@ the cut line moves as we go.
   side is settled. `ombu.module` is gone: its hooks live in
   `src/Hook/ListingHooks.php`, `ombu_rating()` is `Rating::of()`.
 
+**Night 2026-10-13: production on SER5** (live)
+- minisforum's iGPU shares RAM bandwidth with everything: a dense model
+  (Lapacho's fact-check on Qwen3.8-27B) stalled Ombú's DB and PHP. Ombú
+  moved to SER5 with `deploy/` (Docker Compose, no DDEV), on
+  `192.168.1.66:8097`; minisforum's tunnel forwards `ombu.quebracho.digital`
+  there over the LAN. The LLM stays on minisforum (sellers call it by LAN).
+- Drush on prod: `cd /data/docker/ombu/src/ombu/deploy && docker compose exec
+  -T web drush …`; deploy = `git push ssh://ser5/data/docker/ombu/src/<repo>`
+  (`updateInstead`). Secrets in `deploy/.env`; the gas wallet goes there.
+- Cron only on SER5. minisforum's DDEV stays in maintenance mode, as the
+  rollback (restore `~/.cloudflared/config.yml.bak-2026-10-13-ser5`).
+- The DB is in SER5's nightly backup (`servicios.toml`, `[ombu]`).
+
 **Waiting on Leo** (for mainnet)
 1. A gas wallet with 1–2 USDC on Arc mainnet: its key as `X402_GAS_KEY`
    in minisforum's `.ddev/.env`, then `ddev restart`.

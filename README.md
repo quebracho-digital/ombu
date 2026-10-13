@@ -107,6 +107,9 @@ before and after.
 ## Run it
 
 A DDEV project while Ombú is in development; the recipe comes later.
+Production (SER5 since 2026-10-13) needs no DDEV: `deploy/compose.yaml`
+(PHP 8.3 + Apache, MariaDB 11.8) with the sibling repos next to this one and
+the secrets in `deploy/.env`; `settings.prod.php` reads them.
 
 ```sh
 git clone https://github.com/quebracho-digital/x402_pay ../x402_pay

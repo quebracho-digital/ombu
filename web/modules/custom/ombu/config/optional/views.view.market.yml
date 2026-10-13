@@ -23,6 +23,7 @@ display:
     position: 0
     display_options:
       title: Market
+      use_ajax: true
       fields:
         search_api_rendered_item:
           id: search_api_rendered_item
@@ -52,7 +53,7 @@ display:
           expose_sort_order: false
           bef:
             general:
-              autosubmit: false
+              autosubmit: true
               autosubmit_exclude_textfield: true
               autosubmit_hide: false
               allow_secondary: false

@@ -209,3 +209,10 @@ function ombu_update_10009(): void {
 function ombu_update_10010(): void {
   _ombu_config('install', ['field.storage.commerce_product.field_seller_address', 'field.field.commerce_product.listing.field_seller_address']);
 }
+
+/**
+ * /market filters without reloading the page: each change updates the list.
+ */
+function ombu_update_10011(): void {
+  _ombu_config('optional', ['views.view.market'], TRUE);
+}

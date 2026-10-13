@@ -413,7 +413,8 @@ the cut line moves as we go.
      reviewed Markdown with its tx `0x4e753bed…cbcf` (201, ★5), the same
      buyer's tx to the terms seller was refused (422), and the first tx
      again too (422). In `/openapi.json` and `/llms.txt`.
-3f. [ ] **Pages as markdown + `llms.txt`** (10-13). Contrib only.
+3f. [ ] **Pages as markdown + `llms.txt`** (10-13). `llms.txt` done; markdown
+   moves to `x402_pay` (one gate, see 🎯 *Markdown for every page*).
    - **Done when:** `curl -H 'Accept: text/markdown'` on a listing returns
      markdown.
 4. [x] **Buyer agent** (10-13; done 10-12). Given a task ("should we hire vendor X?") and
@@ -466,6 +467,53 @@ the cut line moves as we go.
    business, and the submission says so.
 
 ## 🎯 Full marketplace
+
+- [ ] **Markdown for every page, through one gate** (replaces Markdownify
+  in 3f). `x402_pay` answers `Accept: text/markdown` for any entity: 402
+  when it has a price, the markdown free when it has none (or `PriceEvent`
+  makes it free). Its converter is the one Markdownify uses, so nothing is
+  added. **Coexisting:** the gate decides by *entity*, not by route or
+  format: any route that carries a priced entity (canonical, `.md`,
+  `?_format=`, JSON:API, REST) goes through it, so another module serving
+  markdown or JSON cannot hand out what agents pay for. If another module
+  is installed, it may format; only `x402_pay` decides who pays. **Access:**
+  the gate runs after routing's access check (priority 30 < 32), so what
+  someone cannot see is never offered for sale, and paying grants nothing
+  beyond what view access allows. Responses vary by `Accept`
+  (`Vary: Accept`, never in the page cache), Cloudflare included.
+  - **Done when:** a test asks a priced node for markdown by `Accept`,
+    `.md` and `?_format=markdown`, with the caches warm, and gets 402 every
+    time; a free node returns markdown; an unpublished one, 403.
+- [ ] **Events where others need to react** (ECA and other modules,
+  instead of patches):
+  - `x402_pay`: payment settled / not settled / failed (accounting,
+    reputation, notifications), markdown alter before delivery, refund sent
+    (the withdrawal button). Price and delivery events exist already.
+  - `ombu`: listing taken down (notify its seller, keep an audit trail),
+    listing retired (notify buyers and reviewers), listing blocked from
+    import, abuse reported (a contact_storage message), withdrawal
+    requested, review verified / refused.
+  - `wallet_auth`: wallet linked / unlinked, signed in, sign-in refused
+    (blocked account).
+- [ ] **Terms and privacy generator for each store** (idea, 2026-10-13;
+  after the hackathon): the inverse of the terms analyzer. Drupal already
+  knows much of what a policy must say: enabled modules (analytics,
+  contact storage, payment gateways = processors), the fields on users,
+  profiles and orders (what data is collected), the store's name, address,
+  currencies and countries, cookies set. A questionnaire fills the rest
+  (who sells, consumers, EU users, retention). Clauses come from a library
+  written or reviewed by a lawyer, per jurisdiction (AR, EU, general); the
+  model only chooses and adapts them, never invents law. The analyzer
+  checks the draft (19 categories of `terms-eval/taxonomy.json`: protective
+  ones present, severity "alta" flagged) and a deterministic checklist the
+  mandatory legends (AAIP, withdrawal button).
+  - **Liability stays with the store:** it is a drafting tool, not legal
+    advice, and says so; every draft lists what it does **not** cover; the
+    store confirms its answers and the draft before publishing, and the
+    answers are kept with the version published. Ombú's terms say each
+    store's terms are the store's. Ask a lawyer whether it touches the
+    practice of law in Argentina, and about insurance.
+  - Not trained on `terms-eval` (an evaluation set, never for training).
 
 - [ ] **Abuse reports and takedowns, the full version**: reports as
   records with a state (new, reviewing, removed, dismissed) instead of

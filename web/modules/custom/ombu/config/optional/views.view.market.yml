@@ -337,7 +337,7 @@ display:
       menu:
         type: normal
         title: Market
-        weight: -10
+        weight: -49
         menu_name: main
     cache_metadata:
       max-age: -1

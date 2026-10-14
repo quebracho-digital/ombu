@@ -22,3 +22,9 @@
   font-weight: 700;
   text-decoration: underline;
 }
+
+/* Belgrade renders the uploaded logo at its natural size: cap it. */
+.site-logo img {
+  height: 48px;
+  width: auto;
+}

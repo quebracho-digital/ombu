@@ -38,11 +38,44 @@ msgstr "Billeteras"
 msgid "No wallet signs in to this account."
 msgstr "Ninguna billetera inicia sesión en esta cuenta."
 
-msgid "<code>@address</code>, linked @date"
-msgstr "<code>@address</code>, vinculada el @date"
+msgid "Name"
+msgstr "Nombre"
 
-msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. <em>Link a wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction."
-msgstr "Cada billetera de esta lista inicia sesión en esta cuenta, y una billetera pertenece a una sola cuenta. <em>Vincular una billetera</em> abre tu billetera para elegir la cuenta a agregar y después pide una firma: no cuesta nada ni envía ninguna transacción."
+msgid "Network"
+msgstr "Red"
+
+msgid "Linked"
+msgstr "Vinculada"
+
+msgid "Name of @address"
+msgstr "Nombre de @address"
+
+msgid "e.g. Phone, Ledger"
+msgstr "p. ej. Teléfono, Ledger"
+
+msgid "EVM, every chain"
+msgstr "EVM, todas las cadenas"
+
+msgid "Unlink"
+msgstr "Desvincular"
+
+msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. An address is the same on every EVM chain (Arc, Base, Ethereum…): the network your wallet shows when signing does not matter. <em>Link a wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction."
+msgstr "Cada billetera de esta lista inicia sesión en esta cuenta, y una billetera pertenece a una sola cuenta. Una dirección es la misma en todas las cadenas EVM (Arc, Base, Ethereum…): la red que muestre tu billetera al firmar no importa. <em>Vincular una billetera</em> abre tu billetera para elegir la cuenta a agregar y después pide una firma: no cuesta nada ni envía ninguna transacción."
+
+msgid "Unlink a wallet"
+msgstr "Desvincular una billetera"
+
+msgid "Unlink %address from %account?"
+msgstr "¿Desvincular %address de %account?"
+
+msgid "This is the last wallet of the account: unless it has a password, nobody will be able to sign in to it."
+msgstr "Es la última billetera de la cuenta: salvo que tenga contraseña, nadie podrá iniciar sesión en ella."
+
+msgid "The wallet will no longer sign in to this account, and can then be linked to another one."
+msgstr "La billetera ya no iniciará sesión en esta cuenta, y podrá vincularse a otra."
+
+msgid "%address no longer signs in to this account."
+msgstr "%address ya no inicia sesión en esta cuenta."
 
 msgid "No wallet in this browser: install MetaMask."
 msgstr "No hay billetera en este navegador: instala MetaMask."

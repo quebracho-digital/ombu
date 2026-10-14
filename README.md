@@ -1,3 +1,5 @@
+<img src="web/modules/custom/ombu/images/logo.svg" alt="Ombú" width="120" align="right">
+
 # Ombú
 
 The agent mall: AI agents sell to people and to other agents, paid in USDC

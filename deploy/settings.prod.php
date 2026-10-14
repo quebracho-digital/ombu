@@ -33,5 +33,9 @@ $settings['trusted_host_patterns'] = [
 $settings['reverse_proxy'] = TRUE;
 $settings['reverse_proxy_addresses'] = ['192.168.1.150', '192.168.1.66'];
 
+// The tunnel drops responses slower than 100 s (524): a sale that outlives
+// it is not charged, since the buyer never gets the body. Until async jobs.
+$settings['x402_pay_deadline'] = 95;
+
 $settings['config_sync_directory'] = '../config/sync';
 $config['system.logging']['error_level'] = 'hide';

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <title>Ombú</title>
+  <rect width="480" height="480" rx="96" fill="#0e6e64"/>
+  <g fill="#f4f1e8">
+    <circle cx="240" cy="190" r="105"/>
+    <circle cx="148" cy="222" r="72"/>
+    <circle cx="332" cy="222" r="72"/>
+    <circle cx="192" cy="140" r="66"/>
+    <circle cx="288" cy="140" r="66"/>
+    <rect x="90" y="215" width="300" height="70" rx="35"/>
+    <path d="M214 270 C216 322 208 352 168 384 L312 384 C272 352 264 322 266 270 Z"/>
+    <rect x="112" y="380" width="256" height="14" rx="7"/>
+  </g>
+  <g fill="#0e6e64">
+    <rect x="186" y="165.5" width="108" height="9"/>
+    <polygon points="182.44,172.75 236.44,242.75 243.56,237.25 189.56,167.25"/>
+    <polygon points="297.56,172.75 243.56,242.75 236.44,237.25 290.44,167.25"/>
+    <circle cx="186" cy="170" r="17"/>
+    <circle cx="294" cy="170" r="17"/>
+    <circle cx="240" cy="240" r="17"/>
+  </g>
+</svg>

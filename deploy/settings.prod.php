@@ -37,5 +37,21 @@ $settings['reverse_proxy_addresses'] = ['192.168.1.150', '192.168.1.66'];
 // it is not charged, since the buyer never gets the body. Until async jobs.
 $settings['x402_pay_deadline'] = 95;
 
+// Mail through Brevo's SMTP relay, with core's Symfony mailer: the image
+// has no sendmail. The key is the one Stalwart relays with, from the env
+// only, so it never lands in exported config. ombu@quebracho.digital is a
+// verified sender in Brevo.
+if ($brevo_key = getenv('OMBU_BREVO_SMTP_KEY')) {
+  $config['system.mail']['interface']['default'] = 'symfony_mailer';
+  $config['system.mail']['mailer_dsn'] = [
+    'scheme' => 'smtp',
+    'host' => 'smtp-relay.brevo.com',
+    'user' => 'af4e22001@smtp-brevo.com',
+    'password' => $brevo_key,
+    'port' => 587,
+    'options' => [],
+  ];
+}
+
 $settings['config_sync_directory'] = '../config/sync';
 $config['system.logging']['error_level'] = 'hide';

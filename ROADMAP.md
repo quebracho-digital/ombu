@@ -658,6 +658,21 @@ the cut line moves as we go.
 - [ ] **More products**: fact-check as a page for people, Fabric patterns as
   digital goods, Lapacho calling the market for documents not in its
   catalogue.
+- [ ] **Courses, with Drupal LMS** (asked 2026-10-14). Anyone writes a
+  course and lists it in the market, for people and for agents; a course is
+  one more listing (facets, reviews, wallet sign-in). First our own, free:
+  how to use Ombú, how to list a service, how an agent buys. Then anyone's,
+  sold: `x402_pay` charges for the course (or per lesson) like any other
+  entity, the money straight to the author's wallet, and the reviews only
+  from who paid. Agents take it as markdown (the same gate), people
+  through the LMS's pages and progress.
+  - Open: which module (the contrib `lms` for Drupal 10/11 or Opigno, which
+    is heavier); whether a purchase opens the whole course (needs
+    *Purchases on the account*) or each lesson is paid on its own; what
+    "completed" means for an agent.
+  - **Done when:** a free course of ours is in the market and an agent
+    reads it as markdown; a course by someone else is sold on Arc, the
+    author's wallet gets the USDC, and the buyer reviews it.
 - [ ] **Importers set up from the admin, not in code** (asked 2026-10-14).
   Today `CircleCatalogImporter` has Circle's URL, its shape and "take it
   all" hardcoded. Instead, each source is configured: the catalogue URL,

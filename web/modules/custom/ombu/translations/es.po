@@ -79,3 +79,12 @@ msgstr "Pagadas en USDC en @chain; cada venta enlaza a su transacción."
 
 msgid "All settled by Ombú from <a href=\":url\">@address</a>."
 msgstr "Todas liquidadas por Ombú desde <a href=\":url\">@address</a>."
+
+msgid "Sign in with your wallet. New here? The same button creates your account: no email, no password."
+msgstr "Entrá con tu billetera. ¿Primera vez? El mismo botón crea tu cuenta: sin email ni contraseña."
+
+msgid "Your wallet asks you to sign a message. Nothing is paid or moved."
+msgstr "Tu billetera te pide firmar un mensaje. No se paga ni se mueve nada."
+
+msgid "or with a username and password"
+msgstr "o con usuario y contraseña"

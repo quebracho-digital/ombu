@@ -29,3 +29,8 @@ sales:
   dependencies:
     - core/drupal
     - core/once
+# The login page: the wallet first (UserHooks).
+login:
+  css:
+    theme:
+      css/login.css: {}

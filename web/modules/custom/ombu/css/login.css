@@ -1,0 +1,85 @@
+/* The login page (UserHooks): the wallet first, the password for staff.
+   Belgrade's card stays; its sides narrow, and without the sign-up band
+   it needs its own bottom padding. */
+.user-authenticate__main:has(.ombu-login) {
+  --ombu-brand: #0e6e64;
+  --ombu-brand-dark: #0a5750;
+  max-width: 30rem;
+  padding: 2.5rem 2.5rem 2rem;
+}
+@media (max-width: 575.98px) {
+  .user-authenticate__main:has(.ombu-login) {
+    padding: 1.5rem 1.25rem;
+  }
+}
+.ombu-login__lead {
+  margin: 0 0 1.5rem;
+  text-align: center;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.ombu-login .ombu-login__wallet {
+  width: 100%;
+  padding: .875rem 1rem;
+  border: 0;
+  border-radius: .5rem;
+  background: var(--ombu-brand);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.ombu-login .ombu-login__wallet:hover,
+.ombu-login .ombu-login__wallet:focus-visible {
+  background: var(--ombu-brand-dark);
+  color: #fff;
+}
+.ombu-login .ombu-login__wallet:focus-visible,
+.ombu-login .ombu-login__password:focus-visible {
+  outline: 3px solid var(--ombu-brand);
+  outline-offset: 2px;
+}
+.ombu-login__hint {
+  margin: .5rem 0 0;
+  text-align: center;
+  font-size: .8125rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+/* "or with a username and password", between two rules. */
+.ombu-login__or {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 2rem 0 1.25rem;
+  font-size: .8125rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.ombu-login__or::before,
+.ombu-login__or::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+/* The password route: there, but second. */
+.ombu-login .ombu-login__password {
+  width: 100%;
+  border: 1px solid var(--ombu-brand);
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--ombu-brand);
+}
+.ombu-login .ombu-login__password:hover {
+  background: var(--ombu-brand);
+  color: #fff;
+}
+.ombu-login .forgot-password-link {
+  display: block;
+  margin-top: .75rem;
+  text-align: center;
+  font-size: .8125rem;
+  font-style: normal;
+  color: var(--ombu-brand);
+}
+.user-authenticate__main:has(.ombu-login) .page-title.underline::before {
+  background-color: var(--ombu-brand);
+}

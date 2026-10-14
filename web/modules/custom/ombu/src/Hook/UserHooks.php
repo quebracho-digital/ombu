@@ -17,6 +17,16 @@ final class UserHooks {
   use StringTranslationTrait;
 
   /**
+   * The account pages in Ombú's colours (css/login.css).
+   */
+  #[Hook('form_alter')]
+  public function accountForms(array &$form, FormStateInterface $form_state, string $form_id): void {
+    if (in_array($form_id, ['user_login_form', 'user_pass', 'user_register_form'], TRUE)) {
+      $form['#attached']['library'][] = 'ombu/login';
+    }
+  }
+
+  /**
    * Wallet sign-in on top; it also creates the account (wallet_auth).
    *
    * Last: wallet_auth adds its button after us otherwise.
@@ -24,7 +34,6 @@ final class UserHooks {
   #[Hook('form_user_login_form_alter', order: Order::Last)]
   public function loginForm(array &$form, FormStateInterface $form_state): void {
     $form['#attributes']['class'][] = 'ombu-login';
-    $form['#attached']['library'][] = 'ombu/login';
     $form['lead'] = [
       '#markup' => '<p class="ombu-login__lead">' . $this->t('Sign in with your wallet. New here? The same button creates your account: no email, no password.') . '</p>',
       '#weight' => -100,

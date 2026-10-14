@@ -88,3 +88,6 @@ msgstr "Tu billetera te pide firmar un mensaje. No se paga ni se mueve nada."
 
 msgid "or with a username and password"
 msgstr "o con usuario y contraseña"
+
+msgid "Remember your password?"
+msgstr "¿Te acordaste de la contraseña?"

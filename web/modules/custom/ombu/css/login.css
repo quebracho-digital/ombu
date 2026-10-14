@@ -1,17 +1,57 @@
-/* The login page (UserHooks): the wallet first, the password for staff.
-   Belgrade's card stays; its sides narrow, and without the sign-up band
-   it needs its own bottom padding. */
-.user-authenticate__main:has(.ombu-login) {
+/* The account pages (UserHooks): login, forgotten password, sign-up.
+   Belgrade's card stays, narrower, in Ombú's colours; its purple band at
+   the bottom becomes a quiet line with a link (the login has none: the
+   wallet button creates accounts). */
+.user-authenticate__main {
   --ombu-brand: #0e6e64;
   --ombu-brand-dark: #0a5750;
-  max-width: 30rem;
-  padding: 2.5rem 2.5rem 2rem;
+  --user-authenticate-max-width: 30rem;
+  --user-authenticate-padding-x: 2.5rem;
+  --user-authenticate-padding-y: 2.5rem;
+  --user-authenticate-footer-margin-top: 1.5rem;
+  --user-authenticate-footer-background-color: transparent;
+  --user-authenticate-footer-color: var(--bs-secondary-color, #6c757d);
+  --user-authenticate-footer-text-font-size: .875rem;
+}
+/* div.: Belgrade's sheet loads after ours and zeroes the bottom. */
+div.user-authenticate__main {
+  padding-bottom: 2rem;
 }
 @media (max-width: 575.98px) {
-  .user-authenticate__main:has(.ombu-login) {
-    padding: 1.5rem 1.25rem;
+  .user-authenticate__main {
+    --user-authenticate-padding-x: 1.25rem;
+    --user-authenticate-padding-y: 1.5rem;
   }
 }
+.user-authenticate__footer {
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+  padding-bottom: 0 !important;
+}
+.user-authenticate__footer p {
+  margin-bottom: .75rem;
+}
+.user-authenticate__main .page-title.underline::before {
+  background-color: var(--ombu-brand);
+}
+.user-authenticate__main .btn-primary {
+  border-color: var(--ombu-brand);
+  background-color: var(--ombu-brand);
+}
+.user-authenticate__main .btn-primary:hover,
+.user-authenticate__main .btn-primary:focus-visible {
+  border-color: var(--ombu-brand-dark);
+  background-color: var(--ombu-brand-dark);
+}
+.user-authenticate__footer .btn-outline-white {
+  border-color: var(--ombu-brand);
+  color: var(--ombu-brand);
+}
+.user-authenticate__footer .btn-outline-white:hover,
+.user-authenticate__footer .btn-outline-white:focus-visible {
+  background-color: var(--ombu-brand);
+  color: #fff;
+}
+
 .ombu-login__lead {
   margin: 0 0 1.5rem;
   text-align: center;
@@ -79,7 +119,4 @@
   font-size: .8125rem;
   font-style: normal;
   color: var(--ombu-brand);
-}
-.user-authenticate__main:has(.ombu-login) .page-title.underline::before {
-  background-color: var(--ombu-brand);
 }

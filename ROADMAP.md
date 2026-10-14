@@ -17,7 +17,33 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
-## Where we left off — 2026-10-13
+## Where we left off — 2026-10-14
+
+**Live on Arc mainnet** (`bb27d98`, deployed to SER5)
+- Our four listings charge on **Arc mainnet** (`eip155:5042`), paid to
+  Leo's cold wallet `0x5b6A…73Bb` (`field_seller_address`). A cold address
+  now wins over a seller key (`Sellers::payTo()`); the key only signs ping.
+- Our facilitator settles mainnet (`own_networks: [eip155:5042]`, gas from
+  Key `gas_wallet` = `0x2cC4…f9eF`, env `X402_GAS_KEY` in SER5's
+  `deploy/.env`). Testnet still goes through Circle's API key.
+- **First mainnet sales:** ping bought twice by `buy.mjs`
+  (`.env.mainnet`, buyer `0xAa07…ebB1`), ~3 s each, settle ~1.7 s:
+  tx `0x0d1109d4…f658` and `0x527ca946…24fa` on explorer.arc.io.
+- **Gas is 0.0047 USDC a sale** (116,653 gas), not the 0.0017 estimated on
+  testnet: ping's 0.0001 loses money on every sale. 1.97 USDC left, ~420
+  sales. Seller fee (later) must cover it; ping could cost 0.01.
+- Reviews: stars over the same field, plain-text form (no subject, no
+  editor), a card in the column; the report link above the reviews
+  (`0876306`).
+- Repo public at github.com/quebracho-digital/ombu (pushed by Leo).
+
+**Waiting on Leo**
+1. Submit to **Arc Microgrants** (DoraHacks) before **10-15 00:59 ART**,
+   with the two mainnet tx above and the repo.
+2. `wallet_auth` public on GitHub, if the grant should see it.
+3. Legal, before Ombú leaves demo (see 10-13, item 5).
+
+## Before — 2026-10-13
 
 **Done today** (147 tests, uncommitted: review first)
 - **Mainnet money without keys at risk (3g, A+B)** in `x402_pay`, on the
@@ -598,6 +624,24 @@ the cut line moves as we go.
     they can; replies never count). Missing: their sales, YouTube links.
 - [ ] **Platform fee**: a split at settlement (contract or two transfers).
 - [ ] **Reputation** from the payment log: delivered, failed, refused.
+- [ ] **An API for other apps** (asked 2026-10-14): mobile apps and other
+  websites build on Ombú, doing whatever a person does on the site. Not for
+  agents: they already read the markdown and `/market.json`. Core's JSON:API
+  gives the reads (listings, reviews, categories, translations) almost for
+  free, and `x402_pay`'s gate already covers it, so priced content is still
+  paid for. Missing: search with the market's filters (Search API's
+  endpoint), the writes (review, report, withdrawal, the seller's note,
+  images, translations and replies) with the same rules as the forms, a
+  sign-in for apps (the wallet's, ending in a token: `simple_oauth` or
+  similar), and CORS for other websites.
+  - **Done when:** every form on the site has its call, documented, and a
+    test makes each one as an app would, signed in with a wallet.
+- [ ] **Recommendations on a listing's page** (asked 2026-10-14): listings
+  related to the one being seen, chosen by what they do, not only by
+  category or tag: embeddings of title, description and schemas (the AI
+  module's AI Search: a Search API backend on a vector database), plus what buyers of this
+  one also bought, from the payment log, once there are sales. The same
+  list for agents, in the listing's markdown and its endpoint.
 - [ ] **Async jobs**: listings that take minutes, paid upfront into escrow
   and released on delivery; refunds and disputes.
 - [ ] **Paying from Drupal**: site agents buy within hard rules (caps per

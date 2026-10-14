@@ -21,7 +21,7 @@ default_value_callback: ''
 settings:
   enabled: true
   amount: '0.01'
-  network: 'eip155:5042002'
+  network: 'eip155:5042'
   key_id: ''
   allow_override: true
   view_mode: full

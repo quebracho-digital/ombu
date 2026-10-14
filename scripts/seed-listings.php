@@ -7,6 +7,8 @@
  *
  * Each listing has its own seller wallet: a key `seller_<sku>` read from the
  * environment variable SELLER_KEY_<SKU> (in the git-ignored .ddev/.env).
+ * Sales go to OMBU_SELLER_ADDRESS when set (a cold wallet; the key then
+ * only signs ping), else to that key. The network is the price field's.
  * Price, payTo and the agent door come from x402_pay, never typed here.
  *
  * Run: ddev drush php:script ../scripts/seed-listings.php
@@ -63,12 +65,14 @@ foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
     'field_http_method' => 'POST',
     'field_service' => $sku,
     'field_seller_key' => "seller_$sku",
+    'field_seller_address' => getenv('OMBU_SELLER_ADDRESS') ?: NULL,
     'field_x402_price' => ['enabled' => 1, 'amount' => $price],
     // Derived by x402_pay for our listings (see /market.json).
     'field_pay_to' => NULL,
     'field_accepts' => NULL,
     'field_endpoint' => NULL,
-    'field_network' => ['eip155:5042002'],
+    // Where the price is charged: mainnet on the site, testnet in dev.
+    'field_network' => [$p->get('field_x402_price')->getFieldDefinition()->getSetting('network')],
     'field_source' => 'ours',
     'field_verified' => TRUE,
     'field_category' => $term('listing_category', \Drupal\ombu\CircleCatalogImporter::categoryLabel($cat)),

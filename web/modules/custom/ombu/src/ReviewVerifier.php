@@ -140,10 +140,10 @@ final class ReviewVerifier {
   public function payees(ProductInterface $listing): array {
     $payees = [];
     if ($listing->get('field_source')->value === 'ours') {
-      $seller = $this->sellers->seller($listing);
+      $payTo = $this->sellers->payTo($listing);
       $network = (string) $listing->get('field_x402_price')->getFieldDefinition()->getSetting('network');
-      if ($seller && isset(Networks::ALL[$network])) {
-        $payees[$network][] = [strtolower(Networks::ALL[$network]['asset']), strtolower($seller->address())];
+      if ($payTo && isset(Networks::ALL[$network])) {
+        $payees[$network][] = [strtolower(Networks::ALL[$network]['asset']), strtolower($payTo)];
       }
       return $payees;
     }

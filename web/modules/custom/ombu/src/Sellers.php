@@ -58,6 +58,15 @@ class Sellers {
     return preg_match('/^0x[0-9a-fA-F]{40}$/', $address) ? $address : NULL;
   }
 
+  /**
+   * Who the listing's sales pay: its cold address first, else its key's.
+   *
+   * The key stays for what it signs (ping), not for the money.
+   */
+  public function payTo(ProductInterface $listing): ?string {
+    return $this->address($listing) ?? $this->seller($listing)?->address();
+  }
+
   public function deliver(string $service, ProductInterface $listing, Request $request): Response {
     $input = json_decode($request->getContent(), TRUE);
     $input = is_array($input) ? $input : [];

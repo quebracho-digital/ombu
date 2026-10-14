@@ -332,7 +332,7 @@ final class CircleCatalogImporter {
     if (!$listing instanceof ProductInterface || $listing->bundle() !== 'listing' || $listing->get('field_source')->value === 'circle') {
       return NULL;
     }
-    $payTo = strtolower((string) ($this->sellers->seller($listing)?->address() ?? $this->sellers->address($listing)));
+    $payTo = strtolower((string) $this->sellers->payTo($listing));
     return $payTo && in_array($payTo, array_map('strtolower', array_column($accepts, 'payTo')), TRUE) ? $listing : NULL;
   }
 

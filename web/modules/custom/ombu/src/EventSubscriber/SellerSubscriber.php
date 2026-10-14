@@ -40,12 +40,13 @@ final class SellerSubscriber implements EventSubscriberInterface {
     if (!$service = $this->service($event->entity)) {
       return;
     }
-    if ($seller = $this->sellers->seller($event->entity)) {
-      $event->setSeller($seller);
-    }
-    elseif ($address = $this->sellers->address($event->entity)) {
-      // A cold wallet: no key here, the Circle API key settles for it.
+    // A cold wallet first (Sellers::payTo()): no key here, our facilitator
+    // or the Circle API key settles for it.
+    if ($address = $this->sellers->address($event->entity)) {
       $event->setPayTo($address);
+    }
+    elseif ($seller = $this->sellers->seller($event->entity)) {
+      $event->setSeller($seller);
     }
     else {
       // Never fall back to the field's key: that wallet is not this seller's.

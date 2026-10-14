@@ -66,14 +66,26 @@ shows it (its URL, JSON:API, REST), never a free copy. Pages say
 
 ## Our sellers
 
-Four listings Ombú runs itself, each paid to **its own wallet**. Agents
-`POST` JSON to `/x402/commerce_product/{id}/full`; `/market.json` and
-`/x402/discovery` give the URL, price and `payTo`.
+Four listings Ombú runs itself, sold in USDC on **Arc mainnet**
+(`eip155:5042`) since 2026-10-14. Agents `POST` JSON to
+`/x402/commerce_product/{id}/full`; `/market.json` and `/x402/discovery`
+give the URL, price and `payTo`.
+
+- **Paid to a cold wallet**: a listing's `field_seller_address` gets the
+  money; no key that can spend it lives on the site. A seller key, when
+  there is one, only signs (ping's timestamp).
+- **Settled by Ombú itself**: `x402_pay`'s own facilitator checks the
+  buyer's signed USDC transfer and sends it from a small gas wallet (gas on
+  Arc is paid in USDC, ~0.005 a sale). Nothing passes through an account of
+  ours: the transfer goes from the buyer to the seller.
+- **First mainnet sales** (ping, ~3 s from the 402 to the answer):
+  [`0x0d1109d4…`](https://explorer.arc.io/tx/0x0d1109d4c677dfe75f31414ea3f33457bd32effd1eb2f82030e519bf5a14f658),
+  [`0x527ca946…`](https://explorer.arc.io/tx/0x527ca946b65ab0edb19c18d2391ffea648fa8662a05ce909954861dffd3224fa).
 
 | Service | Input | Price |
 |---|---|---|
-| Ping: a timestamp signed by the seller | `{}` | 0.0001 |
-| Web page to markdown | `{"url": …}` (public addresses only) | 0.001 |
+| Ping: a timestamp signed by the seller | `{}` | 0.005 |
+| Web page to markdown | `{"url": …}` (public addresses only) | 0.01 |
 | Terms and privacy analysis | `{"url": …}` or `{"text": …}` | 0.01 |
 | Fact-check a claim (model only for now: `"evidence": "model_only"`) | `{"claim": …}` | 0.02 |
 
@@ -83,7 +95,7 @@ on a 2xx. The model sellers give the buyer 10 minutes to pay instead of 60
 s, since settling comes after their answer.
 
 `scripts/buy-ours.sh` is a buyer agent's round: it reads `/market.json` and
-buys each of them on Arc testnet, printing every seller's balance on chain
+buys each of them (on the network the site charges), printing every seller's balance on chain
 before and after.
 
 ## Legal, reports, purchases
@@ -109,7 +121,10 @@ before and after.
 A DDEV project while Ombú is in development; the recipe comes later.
 Production (SER5 since 2026-10-13) needs no DDEV: `deploy/compose.yaml`
 (PHP 8.3 + Apache, MariaDB 11.8) with the sibling repos next to this one and
-the secrets in `deploy/.env`; `settings.prod.php` reads them.
+the secrets in `deploy/.env`; `settings.prod.php` reads them. Mainnet:
+the gas wallet's key as `X402_GAS_KEY` (Key `gas_wallet`), its network in
+`/admin/config/services/x402` ("Networks this site settles itself"), and
+`OMBU_SELLER_ADDRESS` (the cold wallet) when seeding the listings.
 
 ```sh
 git clone https://github.com/quebracho-digital/x402_pay ../x402_pay

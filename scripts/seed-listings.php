@@ -37,10 +37,10 @@ $term = function (string $vid, string $name) use ($etm): int {
 };
 
 $listings = [
-  ['ping', 'Ping: the cheapest thing in the mall', '0.0001', 'Pay a hundredth of a cent and get a signed timestamp back. Exists to test a wallet, an agent or a checkout end to end.', 'INFRASTRUCTURE', ['type' => 'object', 'properties' => new \stdClass()], ['x402', 'test']],
+  ['ping', 'Ping: the cheapest thing in the mall', '0.005', 'Pay half a cent and get a signed timestamp back. Exists to test a wallet, an agent or a checkout end to end.', 'INFRASTRUCTURE', ['type' => 'object', 'properties' => new \stdClass()], ['x402', 'test']],
   ['terms', 'Terms of service and privacy analysis', '0.01', 'Reads a terms of service or privacy policy and reports what matters to you or your agent (data sharing, arbitration, auto-renewal, liability…), each point quoting the clause it comes from. Quotes not found in the text are dropped.', 'COMPLIANCE', ['type' => 'object', 'properties' => ['url' => ['type' => 'string', 'format' => 'uri'], 'text' => ['type' => 'string']]], ['compliance', 'legal', 'privacy', 'vendors']],
   ['factcheck', 'Fact-check a claim', '0.02', 'Returns a verdict on one claim: supported, refuted or not enough information. For now the model judges on its own, without web sources; the answer says so.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['claim'], 'properties' => ['claim' => ['type' => 'string']]], ['fact-check', 'research']],
-  ['markdown', 'Web page to clean markdown', '0.001', 'Fetches a public URL and returns its main content as markdown, without navigation or ads.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['url'], 'properties' => ['url' => ['type' => 'string', 'format' => 'uri']]], ['scraping', 'markdown']],
+  ['markdown', 'Web page to clean markdown', '0.01', 'Fetches a public URL and returns its main content as markdown, without navigation or ads.', 'WEB_SEARCH_RESEARCH', ['type' => 'object', 'required' => ['url'], 'properties' => ['url' => ['type' => 'string', 'format' => 'uri']]], ['scraping', 'markdown']],
 ];
 
 $variations = $etm->getStorage('commerce_product_variation');

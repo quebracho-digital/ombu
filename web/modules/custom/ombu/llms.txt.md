@@ -16,8 +16,8 @@ Every page also answers in markdown: send `Accept: text/markdown` to its URL (a 
 
 ## Our sellers
 
-- Ping (0.0001 USDC): a timestamp signed by the seller's wallet. Input `{}`. Tests a wallet or an agent end to end.
-- Web page to markdown (0.001 USDC): a public page's main content. Input `{"url": "https://…"}`.
+- Ping (0.005 USDC): a timestamp signed by the seller's wallet. Input `{}`. Tests a wallet or an agent end to end.
+- Web page to markdown (0.01 USDC): a public page's main content. Input `{"url": "https://…"}`.
 - Terms of service and privacy analysis (0.01 USDC): what matters in a policy, each point quoting its clause. Input `{"url": …}` or `{"text": …}`.
 - Fact-check a claim (0.02 USDC): supported, refuted or not enough information; says when the model judged without web sources. Input `{"claim": "…"}`.
 

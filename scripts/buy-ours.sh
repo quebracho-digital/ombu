@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # A buyer agent's round in the mall: read /market.json, buy every service
-# Ombú sells itself, each paid to its own seller on Arc testnet.
-# Needs x402_pay next to this repo, with its scripts/.env (BUYER_PRIVATE_KEY).
+# Ombú sells itself, on the network the site charges (Arc mainnet in production).
+# Needs x402_pay next to this repo, with its scripts/.env (BUYER_PRIVATE_KEY);
+# ENV=.env.mainnet for a mainnet buyer.
 # Run: scripts/buy-ours.sh [https://ombu.ddev.site]
 set -euo pipefail
 SITE=${1:-https://ombu.ddev.site}
@@ -25,5 +26,5 @@ for i in json.load(sys.stdin)["items"]:
         print(i["resource"] + "\t" + i["metadata"]["description"])' |
 while IFS=$'\t' read -r url title; do
   echo "=== $title"
-  (cd "$BUY" && node --env-file=.env buy.mjs "$url" 0.05 "$(input "$title")" | grep -E "^(402|paid|tx|seller|timing)")
+  (cd "$BUY" && node --env-file="${ENV:-.env}" buy.mjs "$url" 0.05 "$(input "$title")" | grep -E "^(402|paid|tx|seller|timing)")
 done

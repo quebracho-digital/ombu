@@ -76,3 +76,6 @@ msgstr "Todavía no hay ventas: sé el primero."
 
 msgid "Paid in USDC on @chain; each sale links to its transaction."
 msgstr "Pagadas en USDC en @chain; cada venta enlaza a su transacción."
+
+msgid "All settled by Ombú from <a href=\":url\">@address</a>."
+msgstr "Todas liquidadas por Ombú desde <a href=\":url\">@address</a>."

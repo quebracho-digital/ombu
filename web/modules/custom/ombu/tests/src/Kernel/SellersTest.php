@@ -128,6 +128,12 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertStringContainsString('0.0001 USDC', $html);
     $this->assertSame('1.5', Sales::usdc('1500000'));
     $this->assertSame('0', Sales::usdc('0'));
+    $this->assertStringNotContainsString('settled by', $html, 'Circle settles: no gas wallet of ours to show.');
+
+    // Settled by our own facilitator: its gas wallet, linked.
+    $this->config('x402_pay.settings')->set('facilitator.own_networks', ['eip155:5042'])->set('facilitator.own_key_id', 'seller_ping')->save();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation(Sales::build($ping));
+    $this->assertStringContainsString('/address/' . (new Signer(self::PING_KEY))->address(), $html);
   }
 
   public function testMarkdownWithoutAUrlIsNotCharged(): void {

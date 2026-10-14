@@ -7,6 +7,7 @@ namespace Drupal\ombu;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\x402_pay\Signer;
 
 /**
  * The market's sales on chain, from x402_pay's log: proof it trades.
@@ -47,7 +48,7 @@ final class Sales {
     $rows = $query->fields('l', ['created', 'resource', 'amount', 'transaction'])
       ->orderBy('id', 'DESC')->range(0, $limit)->execute()->fetchAll();
 
-    $cache = ['tags' => [self::TAG, 'commerce_product_list']];
+    $cache = ['tags' => [self::TAG, 'commerce_product_list', 'config:x402_pay.settings']];
     if ($listing && !$rows) {
       return ['#cache' => $cache];
     }
@@ -99,8 +100,33 @@ final class Sales {
       '#items' => $items,
       '#empty' => t('No sales yet: be the first.'),
     ];
-    $build['note'] = ['#markup' => '<p class="ombu-sales__note"><small>' . t('Paid in USDC on @chain; each sale links to its transaction.', ['@chain' => Chains::name($network)]) . '</small></p>'];
+    $note = t('Paid in USDC on @chain; each sale links to its transaction.', ['@chain' => Chains::name($network)]);
+    if ($explorer && ($settler = self::settler($network))) {
+      // Who sent them on chain: anyone can check a sale went through Ombú.
+      $note .= ' ' . t('All settled by Ombú from <a href=":url">@address</a>.', [
+        ':url' => str_replace('/tx/', '/address/', $explorer) . $settler,
+        '@address' => substr($settler, 0, 6) . '…' . substr($settler, -4),
+      ]);
+    }
+    $build['note'] = ['#markup' => '<p class="ombu-sales__note"><small>' . $note . '</small></p>'];
     return $build;
+  }
+
+  /**
+   * The gas wallet that sends our sales on chain; NULL when Circle does.
+   */
+  private static function settler(string $network): ?string {
+    $settings = \Drupal::config('x402_pay.settings')->get('facilitator') ?? [];
+    if (!in_array($network, $settings['own_networks'] ?? [], TRUE)) {
+      return NULL;
+    }
+    $key = \Drupal::service('key.repository')->getKey((string) ($settings['own_key_id'] ?? ''));
+    try {
+      return $key ? (new Signer(trim((string) $key->getKeyValue())))->address() : NULL;
+    }
+    catch (\InvalidArgumentException) {
+      return NULL;
+    }
   }
 
   /**

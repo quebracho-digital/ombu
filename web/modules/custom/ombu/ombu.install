@@ -317,3 +317,10 @@ function ombu_update_10015(): void {
 function ombu_update_10016(): void {
   _ombu_llms_txt();
 }
+
+/**
+ * /llms.txt with the prices that cover mainnet gas.
+ */
+function ombu_update_10017(): void {
+  _ombu_llms_txt();
+}

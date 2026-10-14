@@ -14,6 +14,7 @@ use Drupal\Core\Url;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Rating;
+use Drupal\ombu\Sales;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
 
@@ -99,9 +100,12 @@ final class ListingHooks {
           . $this->t('<a href=":report">Report this listing</a>', [':report' => $report->toString()])
           . '</small></p>',
         // Above the reviews (12), not under their form.
-        '#weight' => 11,
+        '#weight' => 11.8,
       ];
       $build['#attached']['library'][] = 'ombu/listing';
+      // Its own sales: after the details (schemas, 11), above the legal
+      // line and the reviews (12).
+      $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
       // Belgrade keeps a column for images; without them the details take
       // the page's width.
       $build['#attributes']['class'][] = $product->hasField('images') && !$product->get('images')->isEmpty() ? 'listing--images' : 'listing--no-images';
@@ -160,6 +164,7 @@ final class ListingHooks {
   public function viewsPreRender(ViewExecutable $view): void {
     if ($view->id() === 'market') {
       $view->element['#attached']['library'][] = 'ombu/market';
+      $view->attachment_before[] = Sales::build();
     }
   }
 

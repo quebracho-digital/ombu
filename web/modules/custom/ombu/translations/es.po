@@ -58,3 +58,21 @@ msgstr "Revoca la compra de un servicio vendido por Ombú (vendedor: Quebracho) 
 
 msgid "Review this listing"
 msgstr "Reseñar este listado"
+
+msgid "Latest sales on chain"
+msgstr "Últimas ventas en la blockchain"
+
+msgid "sales"
+msgstr "ventas"
+
+msgid "USDC moved"
+msgstr "USDC movidos"
+
+msgid "listings"
+msgstr "listados"
+
+msgid "No sales yet: be the first."
+msgstr "Todavía no hay ventas: sé el primero."
+
+msgid "Paid in USDC on @chain; each sale links to its transaction."
+msgstr "Pagadas en USDC en @chain; cada venta enlaza a su transacción."

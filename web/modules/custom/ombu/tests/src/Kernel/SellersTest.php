@@ -7,6 +7,7 @@ namespace Drupal\Tests\ombu\Kernel;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\key\Entity\Key;
+use Drupal\ombu\Sales;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\x402_pay\CircleFacilitator;
@@ -115,6 +116,18 @@ final class SellersTest extends CommerceKernelTestBase {
     // Signatures are deterministic (RFC 6979): signing again must match.
     $this->assertSame($seller->sign(Eip712::keccak($pong['time'])), $pong['signature']);
     $this->assertSame('settled', $this->logged());
+  }
+
+  public function testASettledSaleShowsWithItsTransaction(): void {
+    $ping = $this->listing('ping', 'seller_ping', '0.0001');
+    $this->buy($ping, []);
+    $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), []);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation(Sales::build($ping));
+    $this->assertStringContainsString('/tx/0x' . str_repeat('ab', 32), $html);
+    $this->assertSame(1, substr_count($html, '<time'), 'Only its own sale, not the unsettled one.');
+    $this->assertStringContainsString('0.0001 USDC', $html);
+    $this->assertSame('1.5', Sales::usdc('1500000'));
+    $this->assertSame('0', Sales::usdc('0'));
   }
 
   public function testMarkdownWithoutAUrlIsNotCharged(): void {

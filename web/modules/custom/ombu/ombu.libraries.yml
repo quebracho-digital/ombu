@@ -19,3 +19,13 @@ brand:
   css:
     theme:
       css/brand.css: {}
+# The latest sales on chain: relative times in the visitor's language.
+sales:
+  css:
+    theme:
+      css/sales.css: {}
+  js:
+    js/sales.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

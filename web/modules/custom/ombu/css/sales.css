@@ -1,0 +1,50 @@
+/* The latest sales on chain: totals, then one line per sale. */
+.ombu-sales {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .5rem;
+}
+.ombu-sales__title {
+  margin: 0 0 .75rem;
+  font-size: 1.125rem;
+}
+.ombu-sales ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ombu-sales__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 2rem;
+  margin-bottom: .75rem !important;
+}
+.ombu-sales__stats strong {
+  font-size: 1.5rem;
+  color: var(--bs-success, #198754);
+}
+.ombu-sales__list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  padding: .375rem 0;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+  font-size: .9375rem;
+}
+.ombu-sales__list time {
+  min-width: 7rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.ombu-sales__amount {
+  font-weight: 600;
+}
+.ombu-sales__tx {
+  margin-left: auto;
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: .8125rem;
+}
+.ombu-sales__note {
+  margin: .5rem 0 0;
+  color: var(--bs-secondary-color, #6c757d);
+}

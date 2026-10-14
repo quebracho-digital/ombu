@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Drupal\ombu\EventSubscriber;
 
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\ombu\Sales;
 use Drupal\ombu\Sellers;
 use Drupal\x402_pay\Event\DeliveryEvent;
+use Drupal\x402_pay\Event\PaymentEvent;
 use Drupal\x402_pay\Event\PriceEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -28,7 +31,17 @@ final class SellerSubscriber implements EventSubscriberInterface {
     return [
       PriceEvent::class => 'onPrice',
       DeliveryEvent::class => 'onDelivery',
+      PaymentEvent::class => 'onPayment',
     ];
+  }
+
+  /**
+   * A settled sale shows at once in the latest sales (Sales).
+   */
+  public function onPayment(PaymentEvent $event): void {
+    if ($event->status() === 'settled') {
+      Cache::invalidateTags([Sales::TAG]);
+    }
   }
 
   public function onPrice(PriceEvent $event): void {

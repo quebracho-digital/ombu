@@ -130,3 +130,6 @@ msgstr "o con usuario y contraseña"
 
 msgid "Remember your password?"
 msgstr "¿Te acordaste de la contraseña?"
+
+msgid "To remove a wallet, write to <a href=\":support\">support</a>. Your listings: <a href=\":listings\">My listings</a>."
+msgstr "Para sacar una billetera, escribe a <a href=\":support\">soporte</a>. Tus listados: <a href=\":listings\">Mis listados</a>."

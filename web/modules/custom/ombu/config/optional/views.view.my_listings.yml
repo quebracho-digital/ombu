@@ -1,0 +1,164 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_source
+    - system.menu.account
+    - user.role.authenticated
+  module:
+    - commerce
+    - commerce_product
+    - options
+    - user
+id: my_listings
+label: 'My listings'
+module: views
+description: 'The listings the current account sells: they pay one of its wallets.'
+tag: ''
+base_table: commerce_product_field_data
+base_field: product_id
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    position: 0
+    display_options:
+      title: 'My listings'
+      fields:
+        title:
+          id: title
+          table: commerce_product_field_data
+          field: title
+          entity_type: commerce_product
+          entity_field: title
+          plugin_id: field
+          label: Listing
+          settings:
+            link_to_entity: true
+        field_source:
+          id: field_source
+          table: commerce_product__field_source
+          field: field_source
+          plugin_id: field
+          label: Source
+        changed:
+          id: changed
+          table: commerce_product_field_data
+          field: changed
+          entity_type: commerce_product
+          entity_field: changed
+          plugin_id: field
+          label: Updated
+          type: timestamp
+          settings:
+            date_format: short
+        operations:
+          id: operations
+          table: commerce_product
+          field: operations
+          entity_type: commerce_product
+          plugin_id: entity_operations
+          label: ''
+      pager:
+        type: full
+        options:
+          items_per_page: 50
+      access:
+        type: role
+        options:
+          role:
+            authenticated: authenticated
+      cache:
+        type: tag
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: 'No listing pays a wallet of yours yet. Sign in with, or link, the wallet your listing is paid to: see <a href="/docs/sellers">For sellers</a>.'
+      sorts:
+        title:
+          id: title
+          table: commerce_product_field_data
+          field: title
+          entity_type: commerce_product
+          entity_field: title
+          plugin_id: standard
+          order: ASC
+      arguments:
+        product_id:
+          id: product_id
+          table: commerce_product_field_data
+          field: product_id
+          entity_type: commerce_product
+          entity_field: product_id
+          plugin_id: numeric
+          default_action: default
+          default_argument_type: ombu_seller_listings
+          break_phrase: true
+      filters:
+        type:
+          id: type
+          table: commerce_product_field_data
+          field: type
+          entity_type: commerce_product
+          entity_field: type
+          plugin_id: commerce_entity_bundle
+          value:
+            listing: listing
+      style:
+        type: table
+      row:
+        type: fields
+      query:
+        type: views_query
+      header:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          content: "The listings that pay one of your wallets. Edit one to add a note, images, videos and files, or to translate it; Circle's data stays in sync."
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user
+        - user.roles
+      tags:
+        - commerce_product_list
+        - 'config:field.storage.commerce_product.field_source'
+  page_1:
+    id: page_1
+    display_title: Page
+    display_plugin: page
+    position: 1
+    display_options:
+      display_extenders: {  }
+      path: my-listings
+      menu:
+        type: normal
+        title: 'My listings'
+        weight: -5
+        menu_name: account
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - user
+        - user.roles
+      tags:
+        - commerce_product_list
+        - 'config:field.storage.commerce_product.field_source'
+

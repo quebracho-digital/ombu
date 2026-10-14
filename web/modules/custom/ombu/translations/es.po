@@ -55,3 +55,6 @@ msgstr "Ombú es una demo construida para una hackatón, todavía en prueba. Usa
 
 msgid "Cancel the purchase of a service sold by Ombú (seller: Quebracho) within 10 calendar days, without giving a reason. Include the transaction of the payment. We return the amount paid to the wallet that paid it. Purchases from other sellers are cancelled with them: Ombú is not their seller (<a href=\":terms\">terms</a>, section 3)."
 msgstr "Revoca la compra de un servicio vendido por Ombú (vendedor: Quebracho) dentro de los 10 días corridos, sin dar motivos. Incluye la transacción del pago. Devolvemos el monto pagado a la billetera que pagó. Las compras a otros vendedores se revocan con ellos: Ombú no es su vendedor (<a href=\":terms\">términos</a>, sección 3)."
+
+msgid "Review this listing"
+msgstr "Reseñar este listado"

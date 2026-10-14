@@ -12,6 +12,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ombu\ReviewVerifier;
 
 /**
@@ -79,9 +80,42 @@ final class SellerHooks {
    */
   #[Hook('form_comment_review_form_alter')]
   public function replyForm(array &$form, $form_state): void {
+    // Plain text, as over the API: no editor, no format to pick, no subject
+    // (core takes it from the text).
+    $form['comment_body']['widget'][0]['#allowed_formats'] = ['plain_text'];
+    $form['comment_body']['widget'][0]['#after_build'][] = [self::class, 'noFormatPicker'];
+    $form['subject']['#access'] = FALSE;
     if ($form_state->getFormObject()->getEntity()->hasParentComment()) {
       $form['field_rating']['#access'] = FALSE;
       $form['field_tx_hash']['#access'] = FALSE;
+      return;
+    }
+    // Stars, not radios (listing.css). The field stays optional for replies,
+    // so its widget offers "N/A"; a review must rate (VerifiedPurchase).
+    unset($form['field_rating']['widget']['#options']['_none']);
+    $form['field_rating']['widget']['#attributes']['class'][] = 'ombu-stars';
+    // Instead of the theme's "Add new comment", hidden by fieldPreprocess().
+    $form['heading'] = [
+      '#markup' => '<h2 class="review-heading">' . new TranslatableMarkup('Review this listing') . '</h2>',
+      '#weight' => -100,
+    ];
+  }
+
+  /**
+   * The format's select and help, gone: there is only one.
+   */
+  public static function noFormatPicker(array $element): array {
+    $element['format']['#access'] = FALSE;
+    return $element;
+  }
+
+  /**
+   * A listing's reviews: the review form brings its own heading.
+   */
+  #[Hook('preprocess_field__comment')]
+  public function fieldPreprocess(array &$variables): void {
+    if ($variables['field_name'] === 'field_reviews') {
+      $variables['content_attributes']['class'][] = 'hidden';
     }
   }
 

@@ -98,7 +98,8 @@ final class ListingHooks {
           . ($third_party ? $this->t('Offered by a third party: Ombú is not its seller and does not answer for it. <a href=":terms">Terms</a>.', [':terms' => Url::fromUserInput('/terms')->toString()]) . ' ' : '')
           . $this->t('<a href=":report">Report this listing</a>', [':report' => $report->toString()])
           . '</small></p>',
-        '#weight' => 50,
+        // Above the reviews (12), not under their form.
+        '#weight' => 11,
       ];
       $build['#attached']['library'][] = 'ombu/listing';
       // Belgrade keeps a column for images; without them the details take

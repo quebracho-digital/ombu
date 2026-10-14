@@ -38,9 +38,17 @@ the cut line moves as we go.
 - Repo public at github.com/quebracho-digital/ombu (pushed by Leo).
 
 **Waiting on Leo**
-1. Submit to **Arc Microgrants** (DoraHacks) before **10-15 00:59 ART**,
-   with the two mainnet tx above and the repo.
-2. `wallet_auth` public on GitHub, if the grant should see it.
+0. 🐛 **A buyer charged without the result** (found 2026-10-14, mainnet):
+   the terms analysis of DoraHacks' Terms of Use (88k chars) took over
+   100 s; Cloudflare's tunnel answered 524 and the buyer left, but the
+   handler finished and settled anyway (log id 25, tx `0xd5ac0f5f…62fa`,
+   0.01 USDC). The privacy policy (30k chars, 56 s) went through: tx
+   `0x921346c7…af44`. Fix: don't settle when the client is gone or the
+   call outlived the proxy's limit (~95 s behind Cloudflare); long jobs
+   are async (🎯 *Async jobs*).
+1. ✅ **Arc Microgrants** (DoraHacks) submitted 2026-10-14 as "Ombu",
+   under review; editable until judging.
+2. ✅ `wallet_auth` is public on drupal.org (linked in the submission).
 3. Legal, before Ombú leaves demo (see 10-13, item 5).
 
 ## Before — 2026-10-13
@@ -650,6 +658,26 @@ the cut line moves as we go.
 - [ ] **More products**: fact-check as a page for people, Fabric patterns as
   digital goods, Lapacho calling the market for documents not in its
   catalogue.
+- [ ] **Importers set up from the admin, not in code** (asked 2026-10-14).
+  Today `CircleCatalogImporter` has Circle's URL, its shape and "take it
+  all" hardcoded. Instead, each source is configured: the catalogue URL,
+  its market value (`field_markets`), how often, and filters that pick what
+  comes in: category, tags, network, price range, provider, a regex on the
+  name or the endpoint, any field of the item. A store can import only the
+  Circle listings in its niche; Solana's or another Discovery catalogue is
+  one more source, not one more class. What stays in code: upsert by
+  endpoint + method, the hash, never touching a listing that is not the
+  source's, the blocked list.
+  - **The filters as a View**: `views_json_source` (contrib) makes a remote
+    JSON a View, so the filters are Views filters (core's string filter
+    already has a regex operator) and adding a parameter is adding a filter
+    in the UI, no code. The importer runs the View and upserts its rows.
+    Open: does `views_json_source` filter before or after paging, and on
+    2.8k items is it fast enough? Fallback: Feeds + Feeds Tamper (sources,
+    JSONPath mapping and skip rules, all config).
+  - **Done when:** two sources configured in the UI (all of Circle, and
+    Circle with only one category and a name regex) import what each
+    filter says, with no code change, and today's tests still pass.
 - [ ] **Solana** (`x402_pay_solana`, Solana wallet sign-in), then mainnet.
 - [ ] **drupal.org releases**: `x402_pay` and the terms submodule.
 

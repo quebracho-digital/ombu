@@ -7,7 +7,6 @@
 /web/sites/*/files/
 /web/sites/*/settings*.php
 /web/sites/*/services*.yml
-/web/modules/custom/x402_pay
 /web/*.php
 /web/*.txt
 /web/.*
@@ -17,6 +16,7 @@
 .env
 /.ddev/traefik/
 /web/sites/simpletest/
-/web/modules/custom/ai_provider_universal
-/web/modules/custom/wallet_auth
 /config/sync/
+# Module checkouts mounted for development (.ddev/docker-compose.dev-modules.yaml).
+/web/sites/*/modules/
+/.ddev/docker-compose.dev-modules.yaml

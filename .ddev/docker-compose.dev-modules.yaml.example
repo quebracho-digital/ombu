@@ -1,0 +1,14 @@
+# Optional, for developing Ombú's modules from their own repos. Copy to
+# docker-compose.dev-modules.yaml (git-ignored) with the repos cloned next
+# to this one, then `ddev restart`.
+#
+# Composer installs the modules in web/modules/contrib (from drupal.org).
+# These mounts put your checkouts in web/sites/default/modules instead:
+# Drupal prefers a site's own modules over contrib ones, and composer never
+# writes there, so it cannot touch your repos.
+services:
+  web:
+    volumes:
+      - ../../x402_pay:/var/www/html/web/sites/default/modules/x402_pay
+      - ../../wallet_auth:/var/www/html/web/sites/default/modules/wallet_auth
+      - ../../ai_provider_universal:/var/www/html/web/sites/default/modules/ai_provider_universal

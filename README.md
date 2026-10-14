@@ -122,16 +122,14 @@ before and after.
 
 A DDEV project while Ombú is in development; the recipe comes later.
 Production (SER5 since 2026-10-13) needs no DDEV: `deploy/compose.yaml`
-(PHP 8.3 + Apache, MariaDB 11.8) with the sibling repos next to this one and
-the secrets in `deploy/.env`; `settings.prod.php` reads them. Mainnet:
+(PHP 8.3 + Apache, MariaDB 11.8) with the secrets in `deploy/.env`;
+`settings.prod.php` reads them. The modules come from drupal.org with
+composer (`1.0.x-dev` of x402_pay, wallet_auth and ai_provider_universal). Mainnet:
 the gas wallet's key as `X402_GAS_KEY` (Key `gas_wallet`), its network in
 `/admin/config/services/x402` ("Networks this site settles itself"), and
 `OMBU_SELLER_ADDRESS` (the cold wallet) when seeding the listings.
 
 ```sh
-git clone https://github.com/quebracho-digital/x402_pay ../x402_pay
-git clone https://github.com/quebracho-digital/wallet_auth ../wallet_auth
-git clone https://github.com/leofishman/ai_provider_universal ../ai_provider_universal
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
 #   SELLER_KEY_PING=0x…  SELLER_KEY_TERMS=0x…  SELLER_KEY_FACTCHECK=0x…
 #   SELLER_KEY_MARKDOWN=0x…  LLAMA_API_KEY=…
@@ -144,7 +142,21 @@ ddev drush ombu:import-circle && ddev drush sapi-i
 ddev drush php:script ../scripts/seed-pages.php     # the guide: how it works, for agents, for sellers
 ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
   drush php:script ../scripts/seed-legal.php        # terms, privacy, report and withdrawal forms
-ddev test                                           # x402_pay and ombu
+ddev test                                           # x402_pay, wallet_auth and ombu
+```
+
+To work on the modules themselves, clone them next to this repo and copy
+`.ddev/docker-compose.dev-modules.yaml.example` to
+`.ddev/docker-compose.dev-modules.yaml`: your checkouts are mounted in
+`web/sites/default/modules`, which Drupal prefers over composer's copies in
+`web/modules/contrib`, and `ddev test` runs their tests.
+
+```sh
+git clone git@git.drupal.org:project/x402_pay.git ../x402_pay
+git clone git@git.drupal.org:project/wallet_auth.git ../wallet_auth
+git clone git@git.drupal.org:project/ai_provider_universal.git ../ai_provider_universal
+cp .ddev/docker-compose.dev-modules.yaml.example .ddev/docker-compose.dev-modules.yaml
+ddev restart
 ```
 
 ## Licence

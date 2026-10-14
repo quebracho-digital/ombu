@@ -1,5 +1,0 @@
-# The wallet_auth module lives in its own repo next to this one.
-services:
-  web:
-    volumes:
-      - ../../wallet_auth:/var/www/html/web/modules/custom/wallet_auth

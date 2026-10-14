@@ -4,4 +4,6 @@
 ## Example: ddev test --filter PaymentGate
 cp -n web/core/phpunit.xml.dist web/core/phpunit.xml 2>/dev/null || true
 mkdir -p web/sites/simpletest
-SIMPLETEST_BASE_URL=http://localhost SIMPLETEST_DB=mysql://db:db@db/db BROWSERTEST_OUTPUT_DIRECTORY=/tmp vendor/bin/phpunit -c web/core/phpunit.xml "$@" web/modules/custom/x402_pay/tests web/modules/custom/ombu/tests web/modules/custom/wallet_auth/tests
+# Each module from your checkout when it is mounted, else from composer's copy.
+dir() { [ -d "web/sites/default/modules/$1/tests" ] && echo "web/sites/default/modules/$1" || echo "web/modules/contrib/$1"; }
+SIMPLETEST_BASE_URL=http://localhost SIMPLETEST_DB=mysql://db:db@db/db BROWSERTEST_OUTPUT_DIRECTORY=/tmp vendor/bin/phpunit -c web/core/phpunit.xml "$@" "$(dir x402_pay)/tests" web/modules/custom/ombu/tests "$(dir wallet_auth)/tests"

@@ -662,17 +662,25 @@ the cut line moves as we go.
   course and lists it in the market, for people and for agents; a course is
   one more listing (facets, reviews, wallet sign-in). First our own, free:
   how to use Ombú, how to list a service, how an agent buys. Then anyone's,
-  sold: `x402_pay` charges for the course (or per lesson) like any other
-  entity, the money straight to the author's wallet, and the reviews only
-  from who paid. Agents take it as markdown (the same gate), people
-  through the LMS's pages and progress.
-  - Open: which module (the contrib `lms` for Drupal 10/11 or Opigno, which
-    is heavier); whether a purchase opens the whole course (needs
-    *Purchases on the account*) or each lesson is paid on its own; what
-    "completed" means for an agent.
-  - **Done when:** a free course of ours is in the market and an agent
-    reads it as markdown; a course by someone else is sold on Arc, the
-    author's wallet gets the USDC, and the buyer reviews it.
+  sold, the money straight to the author's wallet and the reviews only from
+  who paid. Module: the contrib `lms` (Opigno is out, decided 2026-10-14).
+  - **What is sold:** a lesson, a whole course, or a whole certification
+    (several courses). Bundles and access that lasts go through Commerce,
+    with traditional and crypto gateways (the Commerce Arc USDC gateway,
+    item 6, plus a card one); `x402_pay` stays for one lesson per call.
+  - **Certificates on chain:** whoever completes a course or a
+    certification, person or agent, gets an NFT certificate in their wallet
+    (the one they signed in with), checkable by anyone. Open: the contract
+    (soulbound or transferable), who pays the mint's gas, and what
+    "completed" means for an agent (passing the activities, as a person).
+  - **Agents and interactive lessons:** lessons as markdown work for text;
+    lessons with JavaScript or H5P don't. Open: a text version per activity
+    (H5P content is JSON, so questions and answers can be extracted), an API
+    for answering activities, or those lessons marked *people only*.
+  - **Done when:** a free course of ours is in the market, an agent takes
+    it as markdown, passes it and gets the NFT certificate in its wallet;
+    a course by someone else is sold on Arc, the author's wallet gets the
+    USDC, and the buyer reviews it.
 - [ ] **Importers set up from the admin, not in code** (asked 2026-10-14).
   Today `CircleCatalogImporter` has Circle's URL, its shape and "take it
   all" hardcoded. Instead, each source is configured: the catalogue URL,

@@ -23,8 +23,9 @@
   text-decoration: underline;
 }
 
-/* Belgrade renders the uploaded logo at its natural size: cap it. */
-.site-logo img {
+/* Belgrade renders the logo (img or inline svg) at its natural size: cap it. */
+.site-logo img,
+.site-logo svg {
   height: 48px;
   width: auto;
 }

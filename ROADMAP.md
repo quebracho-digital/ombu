@@ -630,6 +630,24 @@ the cut line moves as we go.
     with a wallet the listing pays; they edit a note, images, videos and
     files (nothing the catalogue sync writes) and reply to reviews (only
     they can; replies never count). Missing: their sales, YouTube links.
+  - ✅ **My listings, 2026-10-14**: `/my-listings`, a View of the
+    listings that pay one of the account's wallets.
+- [ ] **Unlinking wallets: the process and what it costs** (asked
+  2026-10-14). Today only support unlinks (`unlink wallets`, admin only);
+  `unlink own wallets` exists but no one has it. Before granting it, decide:
+  - What the account loses: seller rights over the listings that wallet is
+    paid to, reviews it can still write (its purchases), its past reviews
+    and replies (kept, but whose are they now?).
+  - What the wallet gets back: it can sign in again, open a new account or
+    be linked to another one, taking the listings with it. Is that a
+    transfer of the business, and who approves it?
+  - Abuse: a stolen session unlinking the owner's wallets; an account left
+    with no wallet and no password (locked out for good).
+  - Support's side: how they check who asks (sign with the wallet? with
+    another wallet of the account?), and an audit trail (`WalletEvent`
+    `unlinked` is there to log it).
+  - **Done when:** the rules are written in the FAQ and the terms, and the
+    form enforces them.
 - [ ] **Platform fee**: a split at settlement (contract or two transfers).
 - [ ] **Reputation** from the payment log: delivered, failed, refused.
 - [ ] **An API for other apps** (asked 2026-10-14): mobile apps and other

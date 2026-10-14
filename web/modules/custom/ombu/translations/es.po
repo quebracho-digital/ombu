@@ -38,6 +38,12 @@ msgstr "Billeteras"
 msgid "No wallet signs in to this account."
 msgstr "Ninguna billetera inicia sesión en esta cuenta."
 
+msgid "<code>@address</code>, linked @date"
+msgstr "<code>@address</code>, vinculada el @date"
+
+msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. <em>Link a wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction."
+msgstr "Cada billetera de esta lista inicia sesión en esta cuenta, y una billetera pertenece a una sola cuenta. <em>Vincular una billetera</em> abre tu billetera para elegir la cuenta a agregar y después pide una firma: no cuesta nada ni envía ninguna transacción."
+
 msgid "No wallet in this browser: install MetaMask."
 msgstr "No hay billetera en este navegador: instala MetaMask."
 

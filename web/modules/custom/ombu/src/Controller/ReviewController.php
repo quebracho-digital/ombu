@@ -48,7 +48,13 @@ final class ReviewController implements ContainerInjectionInterface {
     if ($errors) {
       return new JsonResponse(['errors' => $errors], 422);
     }
-    $review->save();
+    try {
+      $review->save();
+    }
+    catch (\Drupal\Core\Entity\EntityStorageException) {
+      // A parallel request saved this tx first (unique key, update 10018).
+      return new JsonResponse(['errors' => ['field_tx_hash: That purchase already backs a review.']], 422);
+    }
     return new JsonResponse([
       'id' => (int) $review->id(),
       'url' => $review->toUrl('canonical', ['absolute' => TRUE])->toString(),

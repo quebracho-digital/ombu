@@ -324,3 +324,14 @@ function ombu_update_10016(): void {
 function ombu_update_10017(): void {
   _ombu_llms_txt();
 }
+
+/**
+ * /llms.txt says Arc mainnet; one review per purchase, enforced by the database.
+ */
+function ombu_update_10018(): void {
+  _ombu_llms_txt();
+  $schema = \Drupal::database()->schema();
+  if (!$schema->indexExists('comment__field_tx_hash', 'ombu_tx_unique')) {
+    $schema->addUniqueKey('comment__field_tx_hash', 'ombu_tx_unique', ['field_tx_hash_value']);
+  }
+}

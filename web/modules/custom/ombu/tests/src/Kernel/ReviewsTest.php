@@ -114,6 +114,10 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertRefused($this->paid(self::STRANGER, self::SELLER), 'pays no USDC from your wallets to this listing');
   }
 
+  public function testLessThanThePriceIsRefused(): void {
+    $this->assertRefused($this->paid(self::BUYER, self::SELLER, amount: 1), 'less than its price');
+  }
+
   public function testAFailedOrUnknownTransactionIsRefused(): void {
     $failed = $this->paid(self::BUYER, self::SELLER, status: '0x0');
     $this->assertRefused($failed, 'failed on chain');
@@ -199,13 +203,13 @@ final class ReviewsTest extends CommerceKernelTestBase {
   /**
    * A transaction with one USDC Transfer, known to the chain.
    */
-  private function paid(string $from, string $to, string $status = '0x1'): string {
+  private function paid(string $from, string $to, string $status = '0x1', int $amount = 1000): string {
     $tx = '0x' . bin2hex(random_bytes(32));
     $topic = fn(string $address) => '0x' . str_repeat('0', 24) . substr($address, 2);
     self::$chain[$tx] = ['status' => $status, 'logs' => [[
       'address' => self::ASSET,
       'topics' => ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', $topic($from), $topic($to)],
-      'data' => '0x' . str_pad(dechex(1000), 64, '0', STR_PAD_LEFT),
+      'data' => '0x' . str_pad(dechex($amount), 64, '0', STR_PAD_LEFT),
     ]]];
     return $tx;
   }

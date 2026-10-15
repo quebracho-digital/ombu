@@ -105,13 +105,40 @@ final class ReviewVerifier {
         }
         $from = '0x' . substr($topics[1], -40);
         $to = '0x' . substr($topics[2], -40);
-        if (in_array([strtolower($log['address'] ?? ''), $to], $accepted, TRUE) && in_array($from, $wallets, TRUE)) {
+        if (in_array([strtolower($log['address'] ?? ''), $to], $accepted, TRUE) && in_array($from, $wallets, TRUE) && $this->paysFor($listing, $network, $tx, (string) ($log['data'] ?? '0x0'))) {
           return $from;
         }
       }
-      throw new ReviewRefusedException('That transaction pays no USDC from your wallets to this listing\'s seller.');
+      throw new ReviewRefusedException('That transaction pays no USDC from your wallets to this listing\'s seller, or less than its price (ours: bought through Ombú).');
     }
     throw new ReviewRefusedException('No such transaction on ' . implode(', ', array_map([Chains::class, 'name'], array_keys($checkable))) . '.');
+  }
+
+  /**
+   * Whether a transfer bought this listing, not merely paid its seller.
+   *
+   * Our sellers share one payTo, so our own sales log must show this tx
+   * settled for this listing. A Circle listing's transfer must be at least
+   * its price on that network.
+   */
+  private function paysFor(ProductInterface $listing, string $network, string $tx, string $data): bool {
+    if ($listing->get('field_source')->value === 'ours') {
+      return (bool) $this->database->select('x402_pay_log', 'l')->fields('l', ['id'])
+        ->condition('transaction', $tx)->condition('status', 'settled')
+        // Paid at the door or at the listing's canonical URL.
+        ->condition($this->database->condition('OR')
+          ->condition('resource', '%/commerce_product/' . $listing->id() . '/%', 'LIKE')
+          ->condition('resource', '%/product/' . $listing->id(), 'LIKE'))
+        ->range(0, 1)->execute()->fetchField();
+    }
+    $prices = [];
+    foreach (json_decode((string) $listing->get('field_accepts')->value, TRUE) ?: [] as $accept) {
+      if (($accept['network'] ?? NULL) === $network && isset($accept['amount'])) {
+        $prices[] = (float) $accept['amount'];
+      }
+    }
+    // ponytail: hexdec() goes float past 2^53 atomic units, fine for prices.
+    return hexdec(substr($data, 2) ?: '0') >= ($prices ? min($prices) : 1);
   }
 
   /**

@@ -106,6 +106,32 @@ final class ListingHooks {
       // Its own sales: after the details (schemas, 11), above the legal
       // line and the reviews (12).
       $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
+      // People buy it too: the agents' door, paid with their wallet.
+      $examples = [
+        'ping' => '{}',
+        'markdown' => '{"url": "https://www.arc.io"}',
+        'terms' => '{"url": "https://www.circle.com/legal/privacy-policy"}',
+        'factcheck' => '{"claim": "USDC is issued by Circle."}',
+      ];
+      $service = (string) ($product->hasField('field_service') ? $product->get('field_service')->value : '');
+      $price = $product->hasField('field_x402_price') ? $product->get('field_x402_price')->first() : NULL;
+      if (isset($examples[$service]) && $price?->get('enabled')->getValue()) {
+        $build['buy'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'form',
+          '#attributes' => [
+            'class' => ['ombu-buy'],
+            'data-ombu-buy' => Url::fromRoute('x402_pay.entity', ['entity_type' => 'commerce_product', 'entity' => $product->id(), 'view_mode' => 'full'])->toString(),
+          ],
+          'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2><label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>'],
+          'input' => ['#type' => 'html_tag', '#tag' => 'textarea', '#value' => $examples[$service], '#attributes' => ['id' => 'ombu-buy-input', 'rows' => 2, 'class' => ['form-control']]],
+          'button' => ['#type' => 'html_tag', '#tag' => 'button', '#value' => $this->t('Pay @price USDC with your wallet', ['@price' => $price->get('amount')->getValue()]), '#attributes' => ['type' => 'submit', 'class' => ['btn', 'btn-primary']]],
+          'note' => ['#markup' => '<p><small>' . $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.') . '</small></p>'],
+          'result' => ['#markup' => '<pre class="ombu-buy__result" aria-live="polite"></pre>'],
+          '#attached' => ['library' => ['ombu/buy']],
+          '#weight' => 11.4,
+        ];
+      }
       // Belgrade keeps a column for images; without them the details take
       // the page's width.
       $build['#attributes']['class'][] = $product->hasField('images') && !$product->get('images')->isEmpty() ? 'listing--images' : 'listing--no-images';

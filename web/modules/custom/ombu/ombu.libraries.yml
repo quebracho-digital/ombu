@@ -34,3 +34,10 @@ login:
   css:
     theme:
       css/login.css: {}
+# People pay a listing from the browser, signed by their wallet.
+buy:
+  js:
+    js/buy.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

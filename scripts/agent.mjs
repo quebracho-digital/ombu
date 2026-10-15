@@ -10,7 +10,8 @@
 // Env: BUYER_PRIVATE_KEY; LLM_URL (OpenAI-compatible, default minisforum's
 // router), LLM_API_KEY or LLAMA_API_KEY, LLM_MODEL.
 // For DDEV's certificate: NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
-import { pay } from "../../x402_pay/scripts/x402.mjs";
+import { pay, EXPLORER } from "../../x402_pay/scripts/x402.mjs";
+import { review } from "./review.mjs";
 
 const [task, budgetArg = "0.05", site = "https://ombu.ddev.site"] = process.argv.slice(2);
 if (!task) throw new Error('Usage: agent.mjs "<task>" [budget USDC] [site]');
@@ -45,7 +46,7 @@ for (const [path, ops] of Object.entries(spec.paths)) {
 const tools = [
   {
     name: "search_market",
-    description: "Search the market's listings (free). Returns titles, prices, networks and endpoints.",
+    description: "Search the market's listings (free). Returns titles, prices, networks, endpoints and each seller's reputation: verified (vetted by the market) and rating (average of reviews by wallets that paid, null if none) .",
     parameters: { type: "object", properties: { search: { type: "string" } }, required: ["search"] },
   },
   ...Object.entries(services).map(([name, { op }]) => ({
@@ -53,6 +54,15 @@ const tools = [
     description: `${op.summary}. Costs ${op["x-x402"].price} USDC from your budget, paid on Arc. ${op.description}`.slice(0, 1000),
     parameters: op.requestBody.content["application/json"].schema,
   })),
+  {
+    name: "review_purchase",
+    description: "Review a purchase you made (free): what you got for the money. Honest: a useless or failed result gets a low rating. Other buyers rely on it.",
+    parameters: {
+      type: "object",
+      required: ["purchase", "rating", "body"],
+      properties: { purchase: { type: "integer" }, rating: { type: "integer", minimum: 1, maximum: 5 }, body: { type: "string" } },
+    },
+  },
   {
     name: "decide",
     description: "Your final answer. Call it once, when the evidence is enough or the budget is gone.",
@@ -89,7 +99,22 @@ async function run(name, args) {
       price_usdc: i.accepts[0] ? usdc(i.accepts[0].amount) : null,
       network: i.accepts[0]?.network,
       resource: i.resource,
+      seller_website: i.metadata.provider?.website,
+      verified: i.metadata.market?.verified,
+      rating: i.metadata.market?.rating,
     }));
+  }
+  if (name === "review_purchase") {
+    const s = spent[Number(args.purchase) - 1];
+    if (!s) return { error: `No purchase ${args.purchase}.` };
+    try {
+      const r = await review(site, s.listing, s.tx, args.rating, args.body);
+      log(`  review of purchase ${args.purchase}: HTTP ${r.status}`);
+      return r;
+    }
+    catch (e) {
+      return { error: e.message };
+    }
   }
   const service = services[name];
   if (!service) return { error: `No tool ${name}.` };
@@ -104,7 +129,7 @@ async function run(name, args) {
       },
     });
     if (paid.receipt?.success) {
-      spent.push({ service: service.op.summary, input: args, amount: paid.req.amount, tx: paid.receipt.transaction });
+      spent.push({ service: service.op.summary, listing: service.url.match(/\/(\d+)\//)[1], input: args, amount: paid.req.amount, network: paid.req.network, tx: paid.receipt.transaction });
       log(`  paid ${usdc(paid.req.amount)} USDC, tx ${paid.receipt.transaction}`);
     }
     else {
@@ -124,6 +149,8 @@ const messages = [
     content: `You are a procurement agent for a small business. You answer the task with a decision: hire, reject, or ask_human.
 You can buy evidence from a market. Every purchase spends real USDC from a budget of ${usdc(budget)} USDC: buy only what can change the decision.
 For a vendor, its terms of service and privacy policy are the usual evidence: pass their real URLs to the terms analysis. Do not guess URLs: buy the vendor's home page as markdown and follow its links (usually in the footer). Fact-check a vendor's claims only when the decision depends on them.
+Before paying a seller of the market itself, look at its reputation in search_market: a seller neither verified nor rated is a risk; check its terms (from its website) before buying from it, or say why you did not.
+After using a purchase, review it with review_purchase: what it gave you and whether it was worth the price.
 Never invent findings: every reason must rest on what a purchase returned, and cites that purchase's number. What you know without buying does not count. If evidence is missing or the budget runs out, say so and ask_human.
 Finish by calling decide.`,
   },
@@ -189,6 +216,6 @@ const report = {
   }),
   budget_usdc: usdc(budget),
   spent_usdc: usdc(budget - left()),
-  purchases: spent.map((s, i) => ({ number: i + 1, ...s, amount: usdc(s.amount), tx: `https://testnet.arcscan.app/tx/${s.tx}` })),
+  purchases: spent.map((s, i) => ({ number: i + 1, ...s, amount: usdc(s.amount), tx: (EXPLORER[s.network] ?? "") + s.tx })),
 };
 console.log(JSON.stringify(report, null, 2));

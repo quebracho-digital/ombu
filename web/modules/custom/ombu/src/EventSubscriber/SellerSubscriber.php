@@ -32,7 +32,18 @@ final class SellerSubscriber implements EventSubscriberInterface {
       PriceEvent::class => 'onPrice',
       DeliveryEvent::class => 'onDelivery',
       PaymentEvent::class => 'onPayment',
+      // ai_provider_universal's ModelPreCallEvent, by name: it is optional.
+      'ai_provider_universal.model_pre_call' => 'onModelCall',
     ];
+  }
+
+  /**
+   * A long terms analysis runs on the long-documents model (Sellers::terms).
+   */
+  public function onModelCall(object $event): void {
+    if ($this->sellers->longModel) {
+      $event->setModelId($this->sellers->longModel);
+    }
   }
 
   /**

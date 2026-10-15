@@ -9,6 +9,7 @@ use Drupal\ai_provider_universal_factcheck\Service\FactChecker;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use Drupal\ai_provider_universal_terms\Service\TermsAnalyzer;
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\key\KeyRepositoryInterface;
 use Drupal\x402_pay\Eip712;
 use Drupal\x402_pay\Signer;
@@ -26,6 +27,18 @@ use Symfony\Component\HttpFoundation\Response;
  * cannot fetch, 502 when the model fails, 503 when it is not set up.
  */
 class Sellers {
+
+  /**
+   * Characters past which a terms analysis goes to the long-documents model.
+   *
+   * ponytail: a fixed size, ~45 s on the local model; measure if it misses.
+   */
+  public const LONG_TERMS = 20000;
+
+  /**
+   * The model a long terms analysis runs on, while it runs (SellerSubscriber).
+   */
+  public ?string $longModel = NULL;
 
   public function __construct(
     private readonly KeyRepositoryInterface $keys,
@@ -174,7 +187,17 @@ class Sellers {
     if (mb_strlen($text) > $this->terms->maxChars()) {
       return new JsonResponse(['error' => sprintf('Longer than %d characters.', $this->terms->maxChars())], 413);
     }
-    return new JsonResponse($this->terms->analyze($text));
+    // A long document on the local model outlives Cloudflare's 100 s: a
+    // faster remote one, set in settings.php ($settings['ombu_long_terms_model']).
+    if (mb_strlen($text) > self::LONG_TERMS) {
+      $this->longModel = Settings::get('ombu_long_terms_model');
+    }
+    try {
+      return new JsonResponse($this->terms->analyze($text));
+    }
+    finally {
+      $this->longModel = NULL;
+    }
   }
 
   /**

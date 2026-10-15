@@ -20,3 +20,4 @@
 # Module checkouts mounted for development (.ddev/docker-compose.dev-modules.yaml).
 /web/sites/*/modules/
 /.ddev/docker-compose.dev-modules.yaml
+/scripts/node_modules/

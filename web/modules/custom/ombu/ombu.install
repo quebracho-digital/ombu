@@ -342,3 +342,11 @@ function ombu_update_10018(): void {
     $schema->addUniqueKey('comment__field_tx_hash', 'ombu_tx_unique', ['field_tx_hash_value']);
   }
 }
+
+/**
+ * The sales list as a view (ombu_sales): latest, per listing, all at
+ * /market/sales.
+ */
+function ombu_update_10020(): void {
+  _ombu_config('optional', ['views.view.ombu_sales'], TRUE);
+}

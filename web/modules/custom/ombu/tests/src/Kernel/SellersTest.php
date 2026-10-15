@@ -37,7 +37,7 @@ final class SellersTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'key', 'x402_pay', 'ombu', 'file', 'image',
+    'text', 'filter', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user',
     // PageFetcher (the markdown seller's guarded fetch) lives here; its
     // config is not needed, and the model sellers stay unconfigured.
     'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
@@ -124,7 +124,7 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), []);
     $html = (string) \Drupal::service('renderer')->renderInIsolation(Sales::build($ping));
     $this->assertStringContainsString('/tx/0x' . str_repeat('ab', 32), $html);
-    $this->assertSame(1, substr_count($html, '<time'), 'Only its own sale, not the unsettled one.');
+    $this->assertSame(1, substr_count($html, ' UTC'), 'Only its own sale, not the unsettled one.');
     $this->assertStringContainsString('0.0001 USDC', $html);
     $this->assertSame('1.5', Sales::usdc('1500000'));
     $this->assertSame('0', Sales::usdc('0'));

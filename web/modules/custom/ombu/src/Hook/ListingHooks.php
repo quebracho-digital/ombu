@@ -160,6 +160,25 @@ final class ListingHooks {
     CircleCatalogImporter::block($product);
   }
 
+  /**
+   * A sale in x402's log leads to the listing it bought.
+   */
+  #[Hook('views_data_alter')]
+  public function viewsDataAlter(array &$data): void {
+    $data['x402_pay_log']['listing'] = [
+      'title' => $this->t('Listing'),
+      'help' => $this->t('The product a sale bought.'),
+      'relationship' => [
+        'id' => 'standard',
+        'base' => 'commerce_product_field_data',
+        'base field' => 'product_id',
+        'field' => 'entity_id',
+        'label' => $this->t('Listing'),
+        'extra' => [['left_field' => 'entity_type', 'value' => 'commerce_product']],
+      ],
+    ];
+  }
+
   #[Hook('views_pre_render')]
   public function viewsPreRender(ViewExecutable $view): void {
     if ($view->id() === 'market') {

@@ -1,0 +1,273 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+    - ombu
+    - x402_pay
+id: ombu_sales
+label: Sales
+module: views
+description: 'Settled x402 sales, newest first: the latest on the market, per listing, and a page with all of them.'
+tag: ''
+base_table: x402_pay_log
+base_field: id
+display:
+  default:
+    id: default
+    display_title: ''
+    display_plugin: default
+    position: 0
+    display_options:
+      title: 'Latest sales on chain'
+      fields:
+        created:
+          id: created
+          table: x402_pay_log
+          field: created
+          plugin_id: date
+          label: ''
+          alter:
+            alter_text: true
+            text: '{{ created }} UTC'
+          element_label_colon: false
+          date_format: custom
+          custom_date_format: 'Y-m-d H:i'
+          timezone: UTC
+        title:
+          id: title
+          table: commerce_product_field_data
+          field: title
+          relationship: listing
+          entity_type: commerce_product
+          entity_field: title
+          plugin_id: field
+          label: ''
+          element_label_colon: false
+          type: string
+          settings:
+            link_to_entity: true
+        amount:
+          id: amount
+          table: x402_pay_log
+          field: amount
+          plugin_id: x402_amount
+          label: ''
+          alter:
+            alter_text: true
+            text: '{{ amount }} USDC'
+          element_type: span
+          element_class: ombu-sales__amount
+          element_label_colon: false
+        transaction:
+          id: transaction
+          table: x402_pay_log
+          field: transaction
+          plugin_id: x402_transaction
+          label: ''
+          element_type: span
+          element_class: ombu-sales__tx
+          element_label_colon: false
+      pager:
+        type: some
+        options:
+          offset: 0
+          items_per_page: 5
+      access:
+        type: none
+      cache:
+        type: tag
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: 'No sales yet: be the first.'
+      sorts:
+        created:
+          id: created
+          table: x402_pay_log
+          field: created
+          plugin_id: date
+          order: DESC
+        id:
+          id: id
+          table: x402_pay_log
+          field: id
+          plugin_id: standard
+          order: DESC
+      arguments:
+        network:
+          id: network
+          table: x402_pay_log
+          field: network
+          plugin_id: string
+          default_action: default
+          default_argument_type: fixed
+          default_argument_options:
+            argument: 'eip155:5042'
+      filters:
+        status:
+          id: status
+          table: x402_pay_log
+          field: status
+          plugin_id: string
+          operator: '='
+          value: settled
+      style:
+        type: html_list
+        options:
+          row_class: ''
+          type: ul
+          wrapper_class: ''
+          class: ombu-sales__list
+      row:
+        type: fields
+        options:
+          inline:
+            created: created
+            title: title
+            amount: amount
+            transaction: transaction
+          separator: ' '
+      query:
+        type: views_query
+      relationships:
+        listing:
+          id: listing
+          table: x402_pay_log
+          field: listing
+          plugin_id: standard
+          required: false
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+      tags: {  }
+  latest:
+    id: latest
+    display_title: Latest
+    display_plugin: block
+    position: 1
+    display_options:
+      display_extenders: {  }
+      block_description: 'Latest sales'
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+      tags: {  }
+  listing:
+    id: listing
+    display_title: 'Per listing'
+    display_plugin: block
+    position: 2
+    display_options:
+      fields:
+        created:
+          id: created
+          table: x402_pay_log
+          field: created
+          plugin_id: date
+          label: ''
+          alter:
+            alter_text: true
+            text: '{{ created }} UTC'
+          element_label_colon: false
+          date_format: custom
+          custom_date_format: 'Y-m-d H:i'
+          timezone: UTC
+        amount:
+          id: amount
+          table: x402_pay_log
+          field: amount
+          plugin_id: x402_amount
+          label: ''
+          alter:
+            alter_text: true
+            text: '{{ amount }} USDC'
+          element_type: span
+          element_class: ombu-sales__amount
+          element_label_colon: false
+        transaction:
+          id: transaction
+          table: x402_pay_log
+          field: transaction
+          plugin_id: x402_transaction
+          label: ''
+          element_type: span
+          element_class: ombu-sales__tx
+          element_label_colon: false
+      arguments:
+        network:
+          id: network
+          table: x402_pay_log
+          field: network
+          plugin_id: string
+          default_action: default
+          default_argument_type: fixed
+          default_argument_options:
+            argument: 'eip155:5042'
+        entity_id:
+          id: entity_id
+          table: x402_pay_log
+          field: entity_id
+          plugin_id: string
+          default_action: default
+          default_argument_type: raw
+          default_argument_options:
+            index: 1
+            use_alias: false
+      row:
+        type: fields
+        options:
+          inline:
+            created: created
+            amount: amount
+            transaction: transaction
+          separator: ' '
+      defaults:
+        row: false
+        fields: false
+        arguments: false
+      display_extenders: {  }
+      block_description: 'Latest sales of this listing'
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - url
+      tags: {  }
+  page:
+    id: page
+    display_title: 'All sales'
+    display_plugin: page
+    position: 3
+    display_options:
+      title: 'Sales on chain'
+      pager:
+        type: full
+        options:
+          offset: 0
+          items_per_page: 50
+      defaults:
+        title: false
+        pager: false
+      display_extenders: {  }
+      path: market/sales
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+      tags: {  }
+

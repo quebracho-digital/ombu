@@ -7,6 +7,8 @@ namespace Drupal\ombu;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\views\Views;
+use Drupal\x402_pay\Networks;
 use Drupal\x402_pay\Signer;
 
 /**
@@ -27,53 +29,23 @@ final class Sales {
    *
    * The market's also shows totals: sales, USDC moved, listings.
    */
-  public static function build(?ProductInterface $listing = NULL, int $limit = 5): array {
+  public static function build(?ProductInterface $listing = NULL): array {
     $network = (string) FieldConfig::loadByName('commerce_product', 'listing', 'field_x402_price')?->getSetting('network');
-    $db = \Drupal::database();
-    $query = $db->select('x402_pay_log', 'l')
-      ->condition('status', 'settled')
-      ->condition('network', $network);
-    if ($listing) {
-      // Bought at its agent door or at its own URL (canonical charging).
-      $query->condition($query->orConditionGroup()
-        ->condition('resource', '%/commerce_product/' . $listing->id() . '/%', 'LIKE')
-        ->condition('resource', '%' . $db->escapeLike('/product/' . $listing->id()), 'LIKE'));
-    }
-    $totals = (clone $query);
-    $totals->addExpression('COUNT(*)', 'n');
-    // ponytail: USDC's 6 decimals summed in SQL; amounts are varchar, fine
-    // until one sale passes 2^53 atomic units.
-    $totals->addExpression('SUM(amount)', 'sum');
-    $totals = $totals->execute()->fetchAssoc();
-    $rows = $query->fields('l', ['created', 'resource', 'amount', 'transaction'])
-      ->orderBy('id', 'DESC')->range(0, $limit)->execute()->fetchAll();
-
     $cache = ['tags' => [self::TAG, 'commerce_product_list', 'config:x402_pay.settings']];
-    if ($listing && !$rows) {
-      return ['#cache' => $cache];
-    }
-
-    $ids = [];
-    foreach ($rows as $row) {
-      if (preg_match('#/(?:commerce_)?product/(\d+)(?:/|$)#', (string) parse_url($row->resource, PHP_URL_PATH), $m)) {
-        $ids[$row->transaction] = $m[1];
+    // The list is the ombu_sales view, so admins can change it (and place
+    // its blocks elsewhere, or link its page /market/sales).
+    $view = Views::getView('ombu_sales');
+    $args = $listing ? [$network, (string) $listing->id()] : [$network];
+    $list = $view?->buildRenderable($listing ? 'listing' : 'latest', $args);
+    if ($listing && $view) {
+      $view->setDisplay('listing');
+      $view->setArguments($args);
+      $view->execute();
+      if (!$view->result) {
+        return ['#cache' => $cache];
       }
     }
-    $products = \Drupal::entityTypeManager()->getStorage('commerce_product')->loadMultiple(array_unique($ids));
-    $repository = \Drupal::service('entity.repository');
-    $explorer = ReviewVerifier::EXPLORER[$network] ?? NULL;
-
-    $items = [];
-    foreach ($rows as $row) {
-      $product = $products[$ids[$row->transaction] ?? 0] ?? NULL;
-      $tx = (string) $row->transaction;
-      $items[] = [
-        'when' => ['#type' => 'html_tag', '#tag' => 'time', '#attributes' => ['datetime' => gmdate('c', (int) $row->created)], '#value' => gmdate('Y-m-d H:i', (int) $row->created) . ' UTC'],
-        'what' => $listing || !$product ? [] : ['#type' => 'link', '#title' => $repository->getTranslationFromContext($product)->label(), '#url' => $product->toUrl()],
-        'amount' => ['#markup' => '<span class="ombu-sales__amount">' . self::usdc((string) $row->amount) . ' USDC</span>'],
-        'tx' => $explorer && $tx ? ['#type' => 'link', '#title' => substr($tx, 0, 10) . '…', '#url' => Url::fromUri($explorer . $tx), '#attributes' => ['class' => ['ombu-sales__tx']]] : [],
-      ];
-    }
+    $explorer = Networks::ALL[$network]['explorer'] ?? NULL;
 
     $build = [
       '#type' => 'container',
@@ -83,6 +55,12 @@ final class Sales {
       'title' => ['#markup' => '<h2 class="ombu-sales__title">' . t('Latest sales on chain') . '</h2>'],
     ];
     if (!$listing) {
+      $totals = \Drupal::database()->select('x402_pay_log', 'l')->condition('status', 'settled')->condition('network', $network);
+      $totals->addExpression('COUNT(*)', 'n');
+      // ponytail: USDC's 6 decimals summed in SQL; amounts are varchar,
+      // fine until one sale passes 2^53 atomic units.
+      $totals->addExpression('SUM(amount)', 'sum');
+      $totals = $totals->execute()->fetchAssoc();
       $count = \Drupal::entityQuery('commerce_product')->accessCheck(TRUE)->condition('type', 'listing')->condition('status', 1)->count()->execute();
       $build['stats'] = [
         '#theme' => 'item_list',
@@ -94,12 +72,8 @@ final class Sales {
         ],
       ];
     }
-    $build['list'] = [
-      '#theme' => 'item_list',
-      '#attributes' => ['class' => ['ombu-sales__list']],
-      '#items' => $items,
-      '#empty' => t('No sales yet: be the first.'),
-    ];
+    $build['list'] = $list ?? [];
+    $build['all'] = $listing ? [] : ['#markup' => '<p class="ombu-sales__all"><a href="' . Url::fromRoute('view.ombu_sales.page')->toString() . '">' . t('All sales') . '</a></p>'];
     $note = t('Paid in USDC on @chain; each sale links to its transaction.', ['@chain' => Chains::name($network)]);
     if ($explorer && ($settler = self::settler($network))) {
       // Who sent them on chain: anyone can check a sale went through Ombú.

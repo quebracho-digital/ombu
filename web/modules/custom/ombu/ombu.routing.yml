@@ -32,3 +32,12 @@ ombu.review:
     _entity_access: 'commerce_product.view'
     _permission: 'post comments'
     _csrf_request_header_token: 'TRUE'
+
+# A seller lists their own x402 endpoint, for approval (SellForm).
+ombu.sell:
+  path: '/market/sell'
+  defaults:
+    _form: '\Drupal\ombu\Form\SellForm'
+    _title: 'Sell on Ombú'
+  requirements:
+    _user_is_logged_in: 'TRUE'

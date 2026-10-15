@@ -344,6 +344,13 @@ function ombu_update_10018(): void {
 }
 
 /**
+ * /llms.txt: sellers list their own endpoints at /market/sell.
+ */
+function ombu_update_10022(): void {
+  _ombu_llms_txt();
+}
+
+/**
  * /llms.txt: markdown for content pages; listings come from the catalogue.
  */
 function ombu_update_10021(): void {

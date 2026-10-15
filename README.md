@@ -98,6 +98,14 @@ Input it cannot use (400), a page it may not fetch (422), a failing model
 on a 2xx. The model sellers give the buyer 10 minutes to pay instead of 60
 s, since settling comes after their answer.
 
+**Sell here:** `/market/sell` lists a seller's own x402 endpoint. Ombú
+reads its 402 (through `SellerProbe`, the same SSRF guard as the markdown
+seller) and accepts it only if it pays one of the seller's wallets; it
+waits unpublished for approval, and buyers pay the endpoint directly. Every
+listing, Circle's included, is managed by whoever signs in with the wallet
+it pays: their note, files, videos and translations, replies to reviews,
+under My listings.
+
 **Verified reviews:** a review is accepted only with the tx of a purchase
 of *that* listing from one of the reviewer's wallets: for our sellers, a
 sale of that listing settled through Ombú (they all pay one cold wallet, so

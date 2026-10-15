@@ -1,0 +1,6 @@
+ombu.sell:
+  title: 'Sell'
+  description: 'List your own x402 service.'
+  route_name: ombu.sell
+  menu_name: account
+  weight: -4

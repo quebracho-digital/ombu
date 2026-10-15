@@ -138,8 +138,11 @@ final class CircleCatalogImporter {
 
   /**
    * Creates or updates the listing for one resource.
+   *
+   * A third party's (SellForm) arrives unpublished, for approval, and never
+   * replaces a listing that exists: its seller claims that one instead.
    */
-  private function upsert(array $item): string {
+  public function upsert(array $item, string $source = 'circle'): string {
     $accepts = array_values(array_filter($item['accepts'] ?? [], fn($a) => ($a['scheme'] ?? '') === 'exact' && isset($a['amount'], $a['payTo'])));
     if (!$accepts || empty($item['resource'])) {
       return 'skipped';
@@ -159,6 +162,11 @@ final class CircleCatalogImporter {
       ->range(0, 1)->execute();
     /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
     $product = $ids ? $products->load(reset($ids)) : NULL;
+    if ($source !== 'circle') {
+      if ($product || $this->ours($item['resource'], $accepts)) {
+        return 'exists';
+      }
+    }
 
     // A listing of ours (or one added by hand) that Circle lists too: say
     // so on it, never overwrite it nor copy it.
@@ -209,12 +217,12 @@ final class CircleCatalogImporter {
       'field_retired' => FALSE,
       'field_source_hash' => $hash,
       'field_docs_url' => $provider['docsUrl'] ?? $provider['website'] ?? NULL,
-      'field_source' => 'circle',
+      'field_source' => $source,
       'field_verified' => FALSE,
       'field_source_updated' => $updated,
       'field_category' => $this->term('listing_category', self::categoryLabel($provider['category'] ?? 'OTHER')),
       'field_tags' => array_map(fn($t) => $this->term('listing_tag', $t), array_slice($provider['tags'] ?? [], 0, 10)),
-      'status' => TRUE,
+      'status' => $source === 'circle',
     ];
 
     $outcome = $product ? 'updated' : 'created';
@@ -226,7 +234,7 @@ final class CircleCatalogImporter {
       $product->set($field, $value);
     }
     $variation = $product->getDefaultVariation() ?? $this->entityTypeManager->getStorage('commerce_product_variation')->create(['type' => 'listing']);
-    $variation->setSku('circle-' . substr(hash('sha256', $this->key($item)), 0, 16));
+    $variation->setSku($source . '-' . substr(hash('sha256', $this->key($item)), 0, 16));
     $variation->setPrice($price);
     $variation->save();
     if (!$product->hasVariation($variation)) {

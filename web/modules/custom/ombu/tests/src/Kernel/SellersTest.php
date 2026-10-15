@@ -147,6 +147,48 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame((string) $ping->id(), $argument->getArgument());
   }
 
+  public function testASellerListsTheirOwnEndpointForApproval(): void {
+    $this->installSchema('wallet_auth', ['wallet_auth_wallet']);
+    $this->installEntitySchema('taxonomy_term');
+    $wallet = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8';
+    $seller = $this->createUser();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => $wallet, 'uid' => $seller->id(), 'created' => time()])->execute();
+    $this->setCurrentUser($seller);
+    $submit = function (string $payTo, string $endpoint) {
+      $probe = new class(new \GuzzleHttp\Client(), $payTo) extends \Drupal\ombu\SellerProbe {
+
+        public function __construct($client, private string $payTo) {
+          parent::__construct($client);
+        }
+
+        public function requirements(string $url, string $method): array {
+          return [$url, [['scheme' => 'exact', 'network' => 'eip155:8453', 'asset' => '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', 'payTo' => $this->payTo, 'amount' => '20000']]];
+        }
+
+      };
+      $form = new \Drupal\ombu\Form\SellForm($probe, $this->container->get('ombu.circle_importer'), \Drupal::database());
+      $state = (new \Drupal\Core\Form\FormState())->setValues(['endpoint' => $endpoint, 'method' => 'POST', 'name' => 'Weather now', 'provider' => 'Acme', 'description' => '', 'website' => '']);
+      \Drupal::formBuilder()->submitForm($form, $state);
+      return $state->getErrors();
+    };
+
+    // Its 402 pays someone else: refused.
+    $this->assertNotEmpty($submit('0x941d7505c14102e0b40c49e3eb0be68230366e8a', 'https://acme.example/weather'));
+    $this->assertSame([], \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute());
+
+    // It pays the seller's wallet: listed, unpublished until approved.
+    $this->assertSame([], $submit(strtoupper($wallet), 'https://acme.example/weather'));
+    $ids = \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute();
+    $this->assertCount(1, $ids);
+    $listing = Product::load(reset($ids));
+    $this->assertFalse($listing->isPublished());
+    $this->assertSame('0.02', $listing->getDefaultVariation()->getPrice()->getNumber() + 0 . '');
+
+    // The same endpoint again does not make a second one.
+    $submit($wallet, 'https://acme.example/weather');
+    $this->assertCount(1, \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute());
+  }
+
   public function testMarkdownWithoutAUrlIsNotCharged(): void {
     $response = $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), ['nothing' => 'here']);
     $this->assertSame(400, $response->getStatusCode());

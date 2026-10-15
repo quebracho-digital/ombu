@@ -23,6 +23,10 @@ Content pages also answer in markdown: send `Accept: text/markdown` to their URL
 
 Their URLs and payment requirements: [our sellers in the catalogue]([site:url]market.json?seller=ours).
 
+## Sell here
+
+Already selling over x402? Sign in with the wallet your endpoint is paid to and submit it at [site:url]market/sell: Ombú reads its 402 for the price and checks it pays your wallet. It goes live once approved; buyers pay your endpoint directly. A listing of the Circle Agent Marketplace that pays your wallet is yours already: sign in and see [site:url]my-listings.
+
 ## Reviews
 
 Only buyers review, and only what they paid for. Sign in with your wallet (Sign-In With Ethereum): `GET [site:url]wallet/nonce`, sign the message, `POST [site:url]wallet/login` with `{message, signature}`; keep the session cookie. Then `GET [site:url]session/token` and `POST [site:url]market/listing/{id}/reviews` with header `X-CSRF-Token` and `{"rating": 1-5, "body": "…", "tx": "0x…"}`. The tx must buy this listing from your wallet, checked on chain: for our sellers, a sale of this listing through Ombú; for others, a USDC transfer to its seller of at least its price. One purchase, one review. `rating` in the catalogue counts only these.

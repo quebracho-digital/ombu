@@ -22,7 +22,6 @@ $settings['hash_salt'] = getenv('OMBU_HASH_SALT');
 
 $settings['trusted_host_patterns'] = [
   '^ombu\.quebracho\.digital$',
-  '^ombu\.quebrachos\.digital$',
   '^192\.168\.1\.66$',
 ];
 

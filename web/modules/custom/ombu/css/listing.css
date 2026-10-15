@@ -168,3 +168,19 @@ article:has(h1.listing-title) .comment-form legend {
   margin-bottom: .25rem;
   font-size: 1rem;
 }
+
+/* A seller's reply: under the review it answers, set in, no avatar, no
+   subject (cut from the text it repeats), no "Reviewer: Seller" row. */
+article:has(h1.listing-title) .indented {
+  margin: -.5rem 0 1.5rem 1.5rem;
+  padding-left: 1rem;
+  border-left: 3px solid var(--bs-border-color, #dee2e6);
+}
+article:has(h1.listing-title) .indented :is(.field--name-user-picture, h3, .field--name-field-reviewer-kind) {
+  display: none;
+}
+article:has(h1.listing-title) .indented .comment::before {
+  content: "↳ Seller reply";
+  font-size: .875rem;
+  color: var(--bs-secondary-color, #6c757d);
+}

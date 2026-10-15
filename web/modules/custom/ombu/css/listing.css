@@ -197,3 +197,58 @@ article:has(h1.listing-title) .ombu-buy__result {
   max-height: 24rem;
   overflow: auto;
 }
+
+/* Wide screens: the listing on the left, its reviews beside it in their
+   own card. The column's children are flat siblings, so the reviews take
+   column 2 across every row and the trailing 1fr row soaks up the slack. */
+@media (min-width: 992px) {
+  .listing--no-images > .row > .col-md-7 {
+    max-width: 80rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(30, auto) 1fr; /* ponytail: 30 > the column's children; raise if fields grow */
+    column-gap: 2.5rem;
+    align-content: start;
+  }
+  .listing--no-images > .row > .col-md-7 > * {
+    grid-column: 1;
+  }
+  .listing--no-images > .row > .col-md-7 > .field--comment {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: start;
+    margin-top: 0;
+  }
+}
+
+/* Try it and the reviews as cards, like the sales box. */
+article:has(h1.listing-title) .ombu-buy {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .5rem;
+}
+article:has(h1.listing-title) .ombu-buy textarea {
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: .875rem;
+}
+article:has(h1.listing-title) .field--comment {
+  padding: 1.25rem 1.5rem;
+  border: 2px solid var(--bs-primary-border-subtle, #9ec5fe);
+  border-radius: .75rem;
+}
+article:has(h1.listing-title) .field--comment article.comment,
+article:has(h1.listing-title) .field--comment > .comment {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .5rem;
+}
+article:has(h1.listing-title) .field--comment a[href*="explorer"] {
+  font-family: var(--bs-font-monospace, monospace);
+  font-size: .8125rem;
+}
+@media (min-width: 992px) {
+  article:has(h1.listing-title) .field--name-field-verified:not(:empty) {
+    justify-self: start;
+  }
+}

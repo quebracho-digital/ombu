@@ -33,7 +33,7 @@
         "drupal/llms_txt": "^1.1",
         "drupal/search_api": "^1.41",
         "drupal/wallet_auth": "1.0.x-dev@dev",
-        "drupal/x402_pay": "1.0.x-dev@dev",
+        "drupal/x402_pay": "1.0.x-dev#5a9244c",
         "drush/drush": "^13.8",
         "kornrunner/keccak": "^1.1",
         "kornrunner/secp256k1": "^0.4",

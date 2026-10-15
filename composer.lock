@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb802cce5bc76fb6180fa0e837b155d1",
+    "content-hash": "a2633f3a32376186dd08fd52e019dff9",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3606,7 +3606,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/x402_pay.git",
-                "reference": "d8ed1061dbdf9b54f1973e134250a06d92111515"
+                "reference": "5a9244c"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",

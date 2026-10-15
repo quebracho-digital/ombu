@@ -59,12 +59,14 @@ Agents find it without being told: every page sends `Link` headers to
 the values each filter holds right now, and our sellers as paid operations
 with their input and list price).
 
-**Every page as markdown:** send `Accept: text/markdown` to any page (a
-listing, the guide, the terms) and it answers in markdown, from
+**Pages as markdown:** send `Accept: text/markdown` to a content page (the
+guide, the terms, the privacy policy) and it answers in markdown, from
 [`x402_pay`](https://github.com/quebracho-digital/x402_pay): the same gate
 that charges what is sold, so a paid page answers 402 on every route that
 shows it (its URL, JSON:API, REST), never a free copy. Pages say
-`Vary: Accept` and announce their markdown in a `Link` header.
+`Vary: Accept` and announce their markdown in a `Link` header. A listing's
+page stays HTML (its full view is what is sold), and the market itself is
+`/market.json`: agents read listings there.
 
 ## Our sellers
 

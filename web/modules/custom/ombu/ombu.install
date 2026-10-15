@@ -344,6 +344,13 @@ function ombu_update_10018(): void {
 }
 
 /**
+ * /llms.txt: markdown for content pages; listings come from the catalogue.
+ */
+function ombu_update_10021(): void {
+  _ombu_llms_txt();
+}
+
+/**
  * The sales list as a view (ombu_sales): latest, per listing, all at
  * /market/sales.
  */

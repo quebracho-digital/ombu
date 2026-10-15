@@ -72,8 +72,10 @@ in). Draft answers and video script kept outside the repo.
   scripts and `package.json` are gone. Checked on Arc testnet, and the
   port's first run found that the budget was never enforced (an arrow fn
   captured the purchases by value): fixed, and seen refusing a purchase.
-  Still on viem: x402_pay's and wallet_auth's own test scripts (`buy.mjs`,
-  `sign-in.mjs`, `arc-pay-check.mjs`), to port in those repos.
+  x402_pay (`bda6438`) has its own `Buyer` and `drush x402:buy`, which
+  the scripts' buyer now uses; x402_pay and wallet_auth (`7976577`)
+  dropped their viem scripts, keeping viem's vectors as test fixtures. No
+  repo of ours installs anything with npm.
 - README, `/llms.txt` (updates 10021–10023) and the guides (`seed-pages.php`,
   English and Spanish) say all of the above.
 

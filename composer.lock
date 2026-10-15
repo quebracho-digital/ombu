@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f5578caddfeae6558c17daf04454f5b9",
+    "content-hash": "cb802cce5bc76fb6180fa0e837b155d1",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3606,7 +3606,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/x402_pay.git",
-                "reference": "6ba5075"
+                "reference": "6ba5075eb9ae5416c31fbfa47cbfdac163be4055"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",
@@ -3623,8 +3623,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta1+10-dev",
-                    "datestamp": "1792068102",
+                    "version": "1.0.0-beta1+11-dev",
+                    "datestamp": "1792070906",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"

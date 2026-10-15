@@ -184,3 +184,16 @@ article:has(h1.listing-title) .indented .comment::before {
   font-size: .875rem;
   color: var(--bs-secondary-color, #6c757d);
 }
+
+/* Try it: room around the button, no empty box before a result. */
+article:has(h1.listing-title) .ombu-buy textarea {
+  margin-bottom: .75rem;
+}
+article:has(h1.listing-title) .ombu-buy__result:empty {
+  display: none;
+}
+article:has(h1.listing-title) .ombu-buy__result {
+  margin-top: .75rem;
+  max-height: 24rem;
+  overflow: auto;
+}

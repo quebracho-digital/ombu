@@ -76,6 +76,10 @@ in). Draft answers and video script kept outside the repo.
   the scripts' buyer now uses; x402_pay and wallet_auth (`7976577`)
   dropped their viem scripts, keeping viem's vectors as test fixtures. No
   repo of ours installs anything with npm.
+- **Next session (10-16):** beta2 releases of `x402_pay` and `wallet_auth`
+  on drupal.org; `/market/sell` layout (CSS, keep the FormBase: webform
+  adds nothing to the 402 probe and wallet check); after the hackathon,
+  delete the demo reviews Gemini left on the terms listing.
 - README, `/llms.txt` (updates 10021–10023) and the guides (`seed-pages.php`,
   English and Spanish) say all of the above.
 

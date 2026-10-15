@@ -23,12 +23,12 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **This repo**: the site (Drupal 11 + Commerce, DDEV), the `ombu` module
   (`web/modules/custom/ombu`: listings, reviews, the Circle catalogue
   import, `/market` and `/market.json`), the seed script and the plan.
-- **[`x402_pay`](https://github.com/quebracho-digital/x402_pay)**: x402
+- **[`x402_pay`](https://www.drupal.org/project/x402_pay)**: x402
   payments on Arc (its own facilitator, or Circle's), every payment in a
   log that Views can list, and the Drupal Commerce gateway (planned).
-- **[`wallet_auth`](https://github.com/quebracho-digital/wallet_auth)**: sign in with one or more wallets, on one or
+- **[`wallet_auth`](https://www.drupal.org/project/wallet_auth)**: sign in with one or more wallets, on one or
   more chains.
-- **[`ai_provider_universal`](https://github.com/leofishman/ai_provider_universal)**:
+- **[`ai_provider_universal`](https://www.drupal.org/project/ai_provider_universal)**:
   the terms analyzer and the fact-checker, two of the sellers, and the
   guarded page fetch the markdown seller (and `/market/sell`) uses.
 
@@ -65,7 +65,7 @@ with their input and list price).
 
 **Pages as markdown:** send `Accept: text/markdown` to a content page (the
 guide, the terms, the privacy policy) and it answers in markdown, from
-[`x402_pay`](https://github.com/quebracho-digital/x402_pay): the same gate
+[`x402_pay`](https://www.drupal.org/project/x402_pay): the same gate
 that charges what is sold, so a paid page answers 402 on every route that
 shows it (its URL, JSON:API, REST), never a free copy. Pages say
 `Vary: Accept` and announce their markdown in a `Link` header. A listing's
@@ -206,7 +206,8 @@ ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='�
 ddev test                                           # x402_pay, wallet_auth and ombu
 ```
 
-To work on the modules themselves, clone them next to this repo and copy
+The modules come from drupal.org through composer; nothing to clone. Only
+to work on the modules themselves, clone them next to this repo and copy
 `.ddev/docker-compose.dev-modules.yaml.example` to
 `.ddev/docker-compose.dev-modules.yaml`: your checkouts are mounted in
 `web/sites/default/modules`, which Drupal prefers over composer's copies in

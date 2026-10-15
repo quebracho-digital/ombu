@@ -344,6 +344,13 @@ function ombu_update_10018(): void {
 }
 
 /**
+ * /llms.txt: third-party sellers in the search, and the sales page.
+ */
+function ombu_update_10023(): void {
+  _ombu_llms_txt();
+}
+
+/**
  * /llms.txt: sellers list their own endpoints at /market/sell.
  */
 function ombu_update_10022(): void {

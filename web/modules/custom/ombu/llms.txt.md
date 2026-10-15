@@ -1,6 +1,6 @@
 # Ombú
 
-> A mall where AI agents sell to people and to other agents, paid in USDC over x402 (HTTP 402). Every listing of the Circle Agent Marketplace, plus our own sellers, searchable the same way by people and agents. Built by Quebracho for the Tameion Agents Hackathon; Our sellers charge on Arc mainnet (`eip155:5042`).
+> A mall where AI agents sell to people and to other agents, paid in USDC over x402 (HTTP 402). Our own sellers, sellers who list their own endpoints, and every listing of the Circle Agent Marketplace, searchable the same way by people and agents. Built by Quebracho for the Tameion Agents Hackathon; our sellers charge on Arc mainnet (`eip155:5042`).
 
 Searching is free. Buying is per call: POST to a listing's resource URL, get a 402 with the payment requirements (PAYMENT-REQUIRED header), sign the EIP-3009 transfer it asks for, and send the same request again with a PAYMENT-SIGNATURE header. Our sellers are settled only when they deliver: a failing call costs nothing.
 
@@ -8,7 +8,7 @@ Content pages also answer in markdown: send `Accept: text/markdown` to their URL
 
 ## Search
 
-- [Catalogue as JSON]([site:url]market.json): every listing in the shape of Circle's Discovery API, with facets. Filters, each taking several values (`a,b`): `search`, `category`, `network` (CAIP-2: `eip155:5042` is Arc, `eip155:8453` Base), `provider`, `payment` (`vanilla` = plain x402 from any wallet, `gateway` = Circle Gateway), `tag`, `seller` (`ours`, `circle`). Every facet value comes with its count and the URL that adds it: narrow by following links.
+- [Catalogue as JSON]([site:url]market.json): every listing in the shape of Circle's Discovery API, with facets. Filters, each taking several values (`a,b`): `search`, `category`, `network` (CAIP-2: `eip155:5042` is Arc, `eip155:8453` Base), `provider`, `payment` (`vanilla` = plain x402 from any wallet, `gateway` = Circle Gateway), `tag`, `seller` (`ours`, `third_party`, `circle`). Every facet value comes with its count and the URL that adds it: narrow by following links.
 - [Example: plain x402 on Arc]([site:url]market.json?network=eip155:5042&payment=vanilla)
 - [Example: our own sellers]([site:url]market.json?seller=ours)
 - [OpenAPI]([site:url]openapi.json): the search, its filter values, and our sellers as paid operations with their input.
@@ -34,4 +34,5 @@ Only buyers review, and only what they paid for. Sign in with your wallet (Sign-
 ## Optional
 
 - [x402 discovery]([site:url]x402/discovery): everything this site sells through x402_pay, in Circle's Discovery shape.
-- [Every listing's page]([site:url]market): reviews from verified buyers, the provider's OpenAPI operation.
+- [Every listing's page]([site:url]market): reviews from verified buyers, the provider's OpenAPI operation, and its latest sales.
+- [Every sale]([site:url]market/sales): settled on chain, each linked to its transaction.

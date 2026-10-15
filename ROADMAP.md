@@ -44,9 +44,30 @@ in). Draft answers and video script kept outside the repo.
   looks for the tx by its hash: the 🐛 below.
 - `ombu.quebrachos.digital` dropped from trusted hosts (400); its tunnel
   route on minisforum is still there.
-- composer pins `drupal/x402_pay:1.0.x-dev#6ba5075`: back to `@dev` once
-  drupal.org's packages list it.
+- composer back on `drupal/x402_pay:1.0.x-dev@dev` (drupal.org lists
+  `6ba5075`).
 - Twig debug was on in prod (kept from fixing the logo): off.
+- ✅ **2b, people pay in the browser** (deployed): *Try it* on our listings,
+  `js/buy.js`, the agents' x402 call signed by MetaMask (switches to or
+  adds Arc). Checked by running buy.js in Node with a wallet stub on Arc
+  testnet (tx `0x73950d06…d842`). **Waiting on Leo:** one real MetaMask
+  purchase on mainnet. Not done: "reopens without paying" (a per-call
+  service has nothing to reopen).
+- ✅ **5, third-party sellers** (deployed): `/market/sell`. `SellerProbe`
+  reads the endpoint's 402 (PageFetcher's SSRF guard), it must pay one of
+  the account's wallets, the importer's `upsert()` creates it as
+  `third_party`, unpublished for approval; buyers pay the endpoint
+  directly, no relay. **Still missing for the done-when:** a listing and
+  a sale that are not ours (ask in Arc's Discord).
+- **My listings** missed listings paid to a seller key (edit worked, the
+  list did not): fixed, same source as `sells()`.
+- **Markdown**: docs promised it for any page; it is for content pages
+  (listings are what is sold; `/market` is `/market.json`). Docs fixed.
+- **Production config in the repo** (`config/sync`, no secrets: every key
+  reads the env). Backup of 2026-10-15 11:46 on SER5 and on Leo's laptop
+  (`~/backups/ombu/`).
+- README, `/llms.txt` (updates 10021–10023) and the guides (`seed-pages.php`,
+  English and Spanish) say all of the above.
 
 **Found**
 - ✅ Two settlements failed with `eth_sendRawTransaction: internal error`
@@ -436,7 +457,7 @@ in). Draft answers and video script kept outside the repo.
      URLs and a browser still sees the page; a viem script pays it on Arc
      testnet and gets the markdown; the tx is on arcscan and in the log; a
      handler failing with 502 is not settled; the View lists it.
-2b. [ ] **People pay in the browser** (10-11/12). A *Pay $0.01* button, one
+2b. [x] **People pay in the browser** (10-11/12; done 10-15, *Try it*). A *Pay $0.01* button, one
    MetaMask signature, the content shows; the purchase is recorded and
    reopens it (account or cookie). Depends on the browser-wallet day-1 check.
    - **Done when:** a person pays a node on Arc testnet with MetaMask,
@@ -529,7 +550,7 @@ in). Draft answers and video script kept outside the repo.
    keyless sellers are swept to a cold wallet on cron. See 2026-10-13.
    - **Done when:** our three sellers sell on Arc mainnet to cold wallets,
      and the listings are submitted to Circle (3b) with mainnet endpoints.
-5. [ ] **Third-party sellers** (10-14). `POST /market/listings` with name,
+5. [~] **Third-party sellers** (10-14; `/market/sell` done 10-15, no outside listing yet). `POST /market/listings` with name,
    price, `payTo` and endpoint, paid over x402; lands unpublished for
    approval. Posted in the Arc Discord.
    - **Done when:** at least one listing and one sale that are not ours.

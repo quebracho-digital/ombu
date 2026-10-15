@@ -37,7 +37,7 @@ final class SellersTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user',
+    'text', 'filter', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user', 'wallet_auth',
     // PageFetcher (the markdown seller's guarded fetch) lives here; its
     // config is not needed, and the model sellers stay unconfigured.
     'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
@@ -134,6 +134,17 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->config('x402_pay.settings')->set('facilitator.own_networks', ['eip155:5042'])->set('facilitator.own_key_id', 'seller_ping')->save();
     $html = (string) \Drupal::service('renderer')->renderInIsolation(Sales::build($ping));
     $this->assertStringContainsString('/address/' . (new Signer(self::PING_KEY))->address(), $html);
+  }
+
+  public function testMyListingsFindsAListingPaidToTheSellersKey(): void {
+    $this->installSchema('wallet_auth', ['wallet_auth_wallet']);
+    $ping = $this->listing('ping', 'seller_ping', '0.0001');
+    $this->listing('markdown', 'seller_markdown', '0.001');
+    $seller = $this->createUser();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => strtolower((new Signer(self::PING_KEY))->address()), 'uid' => $seller->id(), 'created' => time()])->execute();
+    $this->setCurrentUser($seller);
+    $argument = \Drupal::service('plugin.manager.views.argument_default')->createInstance('ombu_seller_listings');
+    $this->assertSame((string) $ping->id(), $argument->getArgument());
   }
 
   public function testMarkdownWithoutAUrlIsNotCharged(): void {

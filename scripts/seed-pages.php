@@ -3,7 +3,9 @@
 /**
  * @file
  * The guide: how the market works, for people, agents and sellers.
- * Idempotent: pages are keyed by their path; running again updates them.
+ * Idempotent: pages are keyed by their path; running again updates them,
+ * except a page edited on the site since this script wrote it, which is
+ * left alone and named (OMBU_SEED_FORCE=1 overwrites it anyway).
  *
  * Run: ddev drush php:script ../scripts/seed-pages.php
  */
@@ -257,20 +259,51 @@ if ($spanish) {
 
 $nodes = \Drupal::entityTypeManager()->getStorage('node');
 $links = \Drupal::entityTypeManager()->getStorage('menu_link_content');
+// What this script last wrote to each page, by alias and language: a page
+// that no longer matches it was edited on the site, and is left alone
+// (OMBU_SEED_FORCE=1 overwrites it anyway).
+$state = \Drupal::state();
+$seeded = $state->get('ombu.seed_pages', []);
+$force = (bool) getenv('OMBU_SEED_FORCE');
+$hash = fn($entity) => sha1($entity->label() . "\n" . $entity->get('body')->value);
+// Whether to write $title and $body over $entity (NULL: a new one).
+$writable = function ($entity, string $key, string $title, string $body) use ($seeded, $force, $hash): bool {
+  if (!$entity || $force) {
+    return TRUE;
+  }
+  $now = $hash($entity);
+  if ($now === sha1("$title\n$body")) {
+    return TRUE;
+  }
+  if (($seeded[$key] ?? NULL) === $now) {
+    return TRUE;
+  }
+  echo "$key: edited on the site, left as it is (OMBU_SEED_FORCE=1 to overwrite)\n";
+  return FALSE;
+};
 foreach ($pages as $alias => [$title, $weight, $body]) {
   $path = \Drupal::service('path_alias.repository')->lookupByAlias($alias, 'en');
-  $node = $path ? $nodes->load((int) basename($path['path'])) : $nodes->create(['type' => 'page', 'uid' => 1, 'path' => ['alias' => $alias]]);
-  $node->set('title', $title)->set('body', ['value' => $body, 'format' => 'full_html'])->setPublished()->save();
+  $node = $path ? $nodes->load((int) basename($path['path'])) : NULL;
+  if ($writable($node, "$alias:en", $title, $body)) {
+    $node ??= $nodes->create(['type' => 'page', 'uid' => 1, 'path' => ['alias' => $alias]]);
+    $node->set('title', $title)->set('body', ['value' => $body, 'format' => 'full_html'])->setPublished()->save();
+    $seeded["$alias:en"] = $hash($node);
+  }
   $uri = 'entity:node/' . $node->id();
   $found = $links->loadByProperties(['link.uri' => $uri]);
   $link = $found ? reset($found) : $links->create(['title' => $title, 'link' => ['uri' => $uri], 'menu_name' => 'main', 'weight' => $weight]);
   $link->save();
   if ($spanish && isset($es[$alias])) {
     [$es_title, $es_body] = $es[$alias];
-    $t = $node->hasTranslation('es') ? $node->getTranslation('es') : $node->addTranslation('es', ['path' => ['alias' => $alias]]);
-    $t->set('title', $es_title)->set('body', ['value' => $es_body, 'format' => 'full_html'])->setPublished()->save();
-    $lt = $link->hasTranslation('es') ? $link->getTranslation('es') : $link->addTranslation('es');
-    $lt->set('title', $es_title)->save();
+    $t = $node->hasTranslation('es') ? $node->getTranslation('es') : NULL;
+    if ($writable($t, "$alias:es", $es_title, $es_body)) {
+      $t ??= $node->addTranslation('es', ['path' => ['alias' => $alias]]);
+      $t->set('title', $es_title)->set('body', ['value' => $es_body, 'format' => 'full_html'])->setPublished()->save();
+      $seeded["$alias:es"] = $hash($t);
+      $lt = $link->hasTranslation('es') ? $link->getTranslation('es') : $link->addTranslation('es');
+      $lt->set('title', $es_title)->save();
+    }
   }
   echo "$alias → node/{$node->id()}\n";
 }
+$state->set('ombu.seed_pages', $seeded);

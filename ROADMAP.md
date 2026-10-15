@@ -66,11 +66,14 @@ in). Draft answers and video script kept outside the repo.
 - **Production config in the repo** (`config/sync`, no secrets: every key
   reads the env). Backup of 2026-10-15 11:46 on SER5 and on Leo's laptop
   (`~/backups/ombu/`).
-- **No Node.js** (decided 10-15, README *No Node.js, on purpose*): the
-  buyer agent and the review script move to Drush scripts on x402_pay's
-  `Signer`/`Eip712`; then `scripts/package.json` goes. Until then viem is
-  pinned exactly (2.57.7). Also in x402_pay and wallet_auth: their test
-  scripts (`buy.mjs`, `sign-in.mjs`) use viem too.
+- ✅ **No Node.js** (decided and done 10-15, README *No Node.js, on purpose*,
+  quebracho_way v7): `agent.php`, `review.php`, `buy.php`, `buy-ours.php` on
+  `scripts/lib/buyer.php` (x402_pay's `Signer`/`Eip712`); the `.mjs`
+  scripts and `package.json` are gone. Checked on Arc testnet, and the
+  port's first run found that the budget was never enforced (an arrow fn
+  captured the purchases by value): fixed, and seen refusing a purchase.
+  Still on viem: x402_pay's and wallet_auth's own test scripts (`buy.mjs`,
+  `sign-in.mjs`, `arc-pay-check.mjs`), to port in those repos.
 - README, `/llms.txt` (updates 10021–10023) and the guides (`seed-pages.php`,
   English and Spanish) say all of the above.
 

@@ -77,8 +77,7 @@ $pages['/docs/agents'] = ['For agents', 2, <<<HTML
   <li>Send the same request again with the signed payment in the <code>PAYMENT-SIGNATURE</code> header (base64 JSON).</li>
   <li>The answer is the service's response, and <code>PAYMENT-RESPONSE</code> carries the transaction hash.</li>
 </ol>
-<p>A complete buyer in one file, with viem: <a href="https://github.com/quebracho-digital/x402_pay/blob/1.0.x/scripts/buy.mjs"><code>buy.mjs</code></a>.</p>
-<pre><code>node buy.mjs {$site}/node/2 0.05</code></pre>
+<p>A complete buyer, in PHP with no npm: <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/lib/buyer.php"><code>buyer.php</code></a> (pays, signs in, reviews), and our <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/agent.php">buyer agent</a> on top of it.</p>
 <p>Our sellers settle only after they answered with success: a failed call keeps your money.</p>
 
 <h2>4. Review what you bought</h2>
@@ -88,7 +87,7 @@ $pages['/docs/agents'] = ['For agents', 2, <<<HTML
   <li><code>POST /market/listing/{id}/reviews</code> with the header <code>X-CSRF-Token</code> and <code>{"rating": 1-5, "body": "…", "tx": "0x…"}</code>.</li>
 </ol>
 <p>The transaction must buy this listing from your wallet, checked on chain: for our sellers, a sale of this listing through Ombú; for the others, a USDC transfer to its seller of at least its price. One purchase, one review.</p>
-<p>A sign-in script for agents: <a href="https://github.com/quebracho-digital/wallet_auth/blob/1.0.x/scripts/sign-in.mjs"><code>sign-in.mjs</code></a>.</p>
+<p>Sign-in and review in code: the same <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/lib/buyer.php"><code>buyer.php</code></a>.</p>
 HTML];
 
 $pages['/docs/sellers'] = ['For sellers', 3, <<<HTML
@@ -192,8 +191,7 @@ $es['/docs/agents'] = ['Para agentes', <<<HTML
   <li>Repite el mismo pedido con el pago firmado en el encabezado <code>PAYMENT-SIGNATURE</code> (JSON en base64).</li>
   <li>La respuesta es la del servicio, y <code>PAYMENT-RESPONSE</code> trae el hash de la transacción.</li>
 </ol>
-<p>Un comprador completo en un archivo, con viem: <a href="https://github.com/quebracho-digital/x402_pay/blob/1.0.x/scripts/buy.mjs"><code>buy.mjs</code></a>.</p>
-<pre><code>node buy.mjs {$site}/node/2 0.05</code></pre>
+<p>Un comprador completo, en PHP y sin npm: <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/lib/buyer.php"><code>buyer.php</code></a> (paga, inicia sesión, reseña), y nuestro <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/agent.php">agente comprador</a> encima.</p>
 <p>Nuestros vendedores liquidan solo después de responder con éxito: si la llamada falla, tu dinero no se mueve.</p>
 
 <h2>4. Reseñar lo que compraste</h2>
@@ -203,7 +201,7 @@ $es['/docs/agents'] = ['Para agentes', <<<HTML
   <li><code>POST /market/listing/{id}/reviews</code> con el encabezado <code>X-CSRF-Token</code> y <code>{"rating": 1-5, "body": "…", "tx": "0x…"}</code>.</li>
 </ol>
 <p>La transacción tiene que comprar ese listado desde tu billetera, y se verifica en la cadena: para nuestros vendedores, una venta de ese listado a través de Ombú; para los demás, una transferencia en USDC a su vendedor de al menos su precio. Una compra, una reseña.</p>
-<p>Un script de inicio de sesión para agentes: <a href="https://github.com/quebracho-digital/wallet_auth/blob/1.0.x/scripts/sign-in.mjs"><code>sign-in.mjs</code></a>.</p>
+<p>Inicio de sesión y reseña desde código: el mismo <a href="https://github.com/quebracho-digital/ombu/blob/main/scripts/lib/buyer.php"><code>buyer.php</code></a>.</p>
 HTML];
 
 $es['/docs/sellers'] = ['Para vendedores', <<<HTML

@@ -127,16 +127,27 @@ sale of that listing settled through Ombú (they all pay one cold wallet, so
 paying the seller is not enough); for Circle's listings, a USDC transfer to
 its `payTo` of at least its price. One tx, one review (a unique key in the
 database). People use the form; agents sign in with their wallet and `POST`
-(`scripts/review.mjs`). A saved review stands as said: no one edits its
+(`scripts/review.php`). A saved review stands as said: no one edits its
 text, rating or tx, admins included. Abuse is handled by unpublishing or
 deleting it, both logged with who did it.
 
-**The buyer agent** (`scripts/agent.mjs "Should we hire X?" [budget]`):
+**The buyer agent** (`scripts/agent.php`, below):
 an LLM with the market's paid services as tools and a budget enforced
 before each signature. It sees each seller's reputation for free (verified,
 rating from paying wallets) and checks an unrated seller's terms before
 paying it; it decides hire / reject / ask a human, each reason citing the
 tx it paid for, and reviews what it bought.
+
+**Buying from a script**, in PHP on `x402_pay`'s signing (`scripts/lib/buyer.php`;
+the key in `scripts/.env` or `scripts/.env.mainnet`, git-ignored, as
+`BUYER_PRIVATE_KEY=0x…`):
+
+```sh
+ddev exec bash -c 'set -a; . scripts/.env.mainnet; drush php:script ../scripts/agent.php -- "Should we hire Brevo?" 0.05'
+ddev exec bash -c 'set -a; . scripts/.env; drush php:script ../scripts/buy.php -- <x402 url> ["<json input>"]'
+ddev exec bash -c 'set -a; . scripts/.env; drush php:script ../scripts/buy-ours.php -- https://ombu.ddev.site'
+ddev exec bash -c 'set -a; . scripts/.env; drush php:script ../scripts/review.php -- <listing id> <tx> <1-5> "<review>" [site]'
+```
 
 `scripts/buy-ours.sh` is a buyer agent's round: it reads `/market.json` and
 buys each of them (on the network the site charges), printing every seller's balance on chain
@@ -178,8 +189,6 @@ every key (`key` module) reads its value from the environment. The model
 catalogue (`ai_provider_universal.model.*`) changes on its own with each
 discovery.
 
-**Scripts** for agents (`agent.mjs`, `review.mjs`) are Node for now, moving
-to PHP: see *No Node.js, on purpose* below.
 
 ```sh
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
@@ -213,8 +222,10 @@ ddev restart
 
 ## No Node.js, on purpose
 
-Ombú and its modules are PHP, installed with composer. Node.js is not used,
-and the scripts that still use it are being moved to PHP.
+Ombú and its modules are PHP, installed with composer. Nothing in this repo
+runs on Node.js or is installed with npm: the site, the buyer agent, the
+review and buying scripts, and the browser's *Try it* (plain JavaScript, no
+build, no dependency).
 
 **Why.** On 2026-10-15, to let a review script sign in with a wallet, we
 added a `package.json` with [viem](https://viem.sh) (a JavaScript library
@@ -230,10 +241,17 @@ run the same `npm install`.
 **What instead.** Everything those scripts sign, `x402_pay` already signs
 in PHP (`Signer`, `Eip712`, on `kornrunner/keccak` and
 `kornrunner/secp256k1`), byte for byte equal to viem, checked by its tests.
-So the buyer agent and the review script move to Drush scripts on those
-classes: no new dependency, and the key never leaves PHP. Until then,
-`scripts/agent.mjs` and `scripts/review.mjs` are the only Node in the
-repo; if you run them, use `npm ci --ignore-scripts` with the lockfile.
+The same day the buyer agent, the review script and the buying round moved
+to Drush scripts on those classes (`scripts/lib/buyer.php`), and the
+`package.json` went: no new dependency, and the key never leaves PHP. The
+port was checked on Arc testnet: payments, a review, and the budget
+refusing a purchase it could not afford.
+
+**Not a nostalgia choice.** The blockchain world mostly runs on npm, and
+we sign the same EIP-712 payments it does, byte for byte. We just don't
+hand a wallet key to a dependency tree we did not read. The rule lives in
+Quebracho's method: nothing we build or run is installed with npm, and no
+Node process holds one of our secrets.
 
 ## Licence
 

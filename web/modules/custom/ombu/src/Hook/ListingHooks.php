@@ -64,7 +64,7 @@ final class ListingHooks {
     $rating = Rating::of($product);
     $build['rating'] = [
       '#markup' => $rating
-        ? sprintf('<div class="listing-rating">★ %s <small>(%d)</small></div>', $rating['average'], $rating['count'])
+        ? sprintf('<div class="listing-rating">%s %s <small>(%d)</small></div>', Rating::stars($rating['average']), $rating['average'], $rating['count'])
         : '<div class="listing-rating"><small>' . $this->t('No reviews yet') . '</small></div>',
       '#weight' => -5,
       '#cache' => ['tags' => ['comment_list']],

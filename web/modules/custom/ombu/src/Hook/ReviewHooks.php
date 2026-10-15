@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Url;
+use Drupal\ombu\Rating;
 use Drupal\ombu\ReviewRefusedException;
 use Drupal\ombu\ReviewVerifier;
 
@@ -20,6 +21,16 @@ use Drupal\ombu\ReviewVerifier;
 final class ReviewHooks {
 
   public function __construct(private readonly ReviewVerifier $verifier) {}
+
+  /**
+   * A review's rating as stars, not a digit.
+   */
+  #[Hook('preprocess_field__field_rating')]
+  public function preprocessRating(array &$variables): void {
+    foreach ($variables['items'] as $delta => &$item) {
+      $item['content'] = ['#markup' => Rating::stars((float) $variables['element']['#items'][$delta]->value)];
+    }
+  }
 
   /**
    * Every review's tx hash must be a purchase, by form or by API.

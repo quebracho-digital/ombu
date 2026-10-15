@@ -30,4 +30,15 @@ final class Rating {
     return $row['n'] ? ['average' => round((float) $row['avg'], 1), 'count' => (int) $row['n']] : NULL;
   }
 
+  /**
+   * A rating as five stars, filled to the nearest whole one; the number
+   * stays for screen readers.
+   */
+  public static function stars(float $rating): string {
+    $full = (int) round($rating);
+    return sprintf('<span class="ombu-stars-shown" role="img" aria-label="%s">%s</span>',
+      t('@n out of 5', ['@n' => $rating]),
+      str_repeat('★', $full) . str_repeat('☆', 5 - $full));
+  }
+
 }

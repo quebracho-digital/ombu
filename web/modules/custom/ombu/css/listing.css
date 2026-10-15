@@ -252,3 +252,9 @@ article:has(h1.listing-title) .field--comment a[href*="explorer"] {
     justify-self: start;
   }
 }
+
+/* Ratings shown as stars (Rating::stars()), in the stars' colour. */
+.ombu-stars-shown {
+  color: #f5a623;
+  letter-spacing: .05em;
+}

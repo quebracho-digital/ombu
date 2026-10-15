@@ -3,11 +3,13 @@ status: true
 dependencies:
   config:
     - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_network
     - field.storage.commerce_product.field_source
     - system.menu.account
     - user.role.authenticated
   module:
     - commerce
+    - commerce_price
     - commerce_product
     - options
     - user
@@ -37,6 +39,28 @@ display:
           label: Listing
           settings:
             link_to_entity: true
+        price__number:
+          id: price__number
+          table: commerce_product_variation_field_data
+          field: price__number
+          relationship: variations_target_id
+          entity_type: commerce_product_variation
+          entity_field: price
+          plugin_id: field
+          label: Price
+          click_sort_column: number
+          type: commerce_price_default
+          settings:
+            strip_trailing_zeroes: true
+            currency_display: symbol
+          group_column: ''
+          group_columns: {  }
+        field_network:
+          id: field_network
+          table: commerce_product__field_network
+          field: field_network
+          plugin_id: field
+          label: Network
         field_source:
           id: field_source
           table: commerce_product__field_source
@@ -116,6 +140,13 @@ display:
         type: fields
       query:
         type: views_query
+      relationships:
+        variations_target_id:
+          id: variations_target_id
+          table: commerce_product__variations
+          field: variations_target_id
+          plugin_id: standard
+          required: false
       header:
         area_text_custom:
           id: area_text_custom
@@ -135,6 +166,7 @@ display:
         - user.roles
       tags:
         - commerce_product_list
+        - 'config:field.storage.commerce_product.field_network'
         - 'config:field.storage.commerce_product.field_source'
   page_1:
     id: page_1
@@ -160,5 +192,6 @@ display:
         - user.roles
       tags:
         - commerce_product_list
+        - 'config:field.storage.commerce_product.field_network'
         - 'config:field.storage.commerce_product.field_source'
 

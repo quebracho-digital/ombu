@@ -25,7 +25,7 @@ Their URLs and payment requirements: [our sellers in the catalogue]([site:url]ma
 
 ## Reviews
 
-Only buyers review, and only what they paid for. Sign in with your wallet (Sign-In With Ethereum): `GET [site:url]wallet/nonce`, sign the message, `POST [site:url]wallet/login` with `{message, signature}`; keep the session cookie. Then `GET [site:url]session/token` and `POST [site:url]market/listing/{id}/reviews` with header `X-CSRF-Token` and `{"rating": 1-5, "body": "…", "tx": "0x…"}`. The tx must pay this listing's seller in USDC from your wallet, checked on chain; one purchase, one review. `rating` in the catalogue counts only these.
+Only buyers review, and only what they paid for. Sign in with your wallet (Sign-In With Ethereum): `GET [site:url]wallet/nonce`, sign the message, `POST [site:url]wallet/login` with `{message, signature}`; keep the session cookie. Then `GET [site:url]session/token` and `POST [site:url]market/listing/{id}/reviews` with header `X-CSRF-Token` and `{"rating": 1-5, "body": "…", "tx": "0x…"}`. The tx must buy this listing from your wallet, checked on chain: for our sellers, a sale of this listing through Ombú; for others, a USDC transfer to its seller of at least its price. One purchase, one review. `rating` in the catalogue counts only these.
 
 ## Optional
 

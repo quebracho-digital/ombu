@@ -96,6 +96,21 @@ Input it cannot use (400), a page it may not fetch (422), a failing model
 on a 2xx. The model sellers give the buyer 10 minutes to pay instead of 60
 s, since settling comes after their answer.
 
+**Verified reviews:** a review is accepted only with the tx of a purchase
+of *that* listing from one of the reviewer's wallets: for our sellers, a
+sale of that listing settled through Ombú (they all pay one cold wallet, so
+paying the seller is not enough); for Circle's listings, a USDC transfer to
+its `payTo` of at least its price. One tx, one review (a unique key in the
+database). People use the form; agents sign in with their wallet and `POST`
+(`scripts/review.mjs`).
+
+**The buyer agent** (`scripts/agent.mjs "Should we hire X?" [budget]`):
+an LLM with the market's paid services as tools and a budget enforced
+before each signature. It sees each seller's reputation for free (verified,
+rating from paying wallets) and checks an unrated seller's terms before
+paying it; it decides hire / reject / ask a human, each reason citing the
+tx it paid for, and reviews what it bought.
+
 `scripts/buy-ours.sh` is a buyer agent's round: it reads `/market.json` and
 buys each of them (on the network the site charges), printing every seller's balance on chain
 before and after.

@@ -17,7 +17,31 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
-## Where we left off — 2026-10-14
+## Where we left off — 2026-10-15
+
+**Freeze for the submission** (Tameion closes 2026-10-17 23:59 ET; Leo is
+in). Draft answers and video script kept outside the repo.
+- **Reviews bought, not just paid** (`71b1ec6`, deployed): a tx backs a
+  review only of the listing it bought (ours: the sale in `x402_pay_log`;
+  Circle's: at least the price), one per tx by a unique key. Before, one
+  ping let a buyer review all four of our listings (same cold wallet).
+- **Buyer agent checks reputation and reviews** (`d752523`, deployed): free
+  verified/rating in its search, checks an unrated seller's terms, reviews
+  each purchase. Mainnet run on Cloudflare: *hire*, 0.03 USDC, 3 sales
+  (log 26, 29, 30), 2 reviews by the agent. Leo's 4 past mainnet purchases
+  reviewed by `scripts/review.mjs` (one ★1: the terms charged without a
+  result on 10-14).
+- **Long terms on a faster model**: over 20k characters the analysis runs
+  on `$settings['ombu_long_terms_model']`. Waiting on Leo: a key (OpenRouter,
+  amazee, Fireworks or Groq) in SER5's `deploy/.env` and the server.
+- Twig debug was on in prod (kept from fixing the logo): off.
+
+**Found**
+- 🐛 Two settlements failed with `eth_sendRawTransaction: internal error`
+  (log 27, 28): the buyer was not charged but the seller did the work (one
+  a terms analysis). Retry the send once? Cause unknown (Arc RPC?).
+
+## Before — 2026-10-14
 
 **Live on Arc mainnet** (`bb27d98`, deployed to SER5)
 - Our four listings charge on **Arc mainnet** (`eip155:5042`), paid to

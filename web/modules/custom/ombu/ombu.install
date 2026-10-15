@@ -326,6 +326,13 @@ function ombu_update_10017(): void {
 }
 
 /**
+ * /llms.txt: a review needs a purchase of that very listing.
+ */
+function ombu_update_10019(): void {
+  _ombu_llms_txt();
+}
+
+/**
  * /llms.txt says Arc mainnet; one review per purchase, enforced by the database.
  */
 function ombu_update_10018(): void {

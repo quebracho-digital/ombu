@@ -114,6 +114,17 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertRefused($this->paid(self::STRANGER, self::SELLER), 'pays no USDC from your wallets to this listing');
   }
 
+  public function testASavedReviewIsNotEditableEvenByAnAdmin(): void {
+    $review = $this->review($this->paid(self::BUYER, self::SELLER), 4);
+    $this->assertTrue($review->get('comment_body')->access('edit', $this->buyer));
+    $review->save();
+    $admin = $this->createUser([], NULL, TRUE);
+    foreach (['comment_body', 'field_rating', 'field_tx_hash'] as $field) {
+      $this->assertFalse($review->get($field)->access('edit', $admin), $field);
+    }
+    $this->assertTrue($review->get('status')->access('edit', $admin));
+  }
+
   public function testLessThanThePriceIsRefused(): void {
     $this->assertRefused($this->paid(self::BUYER, self::SELLER, amount: 1), 'less than its price');
   }

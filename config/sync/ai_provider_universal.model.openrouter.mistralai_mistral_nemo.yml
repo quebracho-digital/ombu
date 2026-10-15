@@ -1,0 +1,19 @@
+uuid: 314ba2e4-d131-4f94-858b-33c935868595
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_mistral_nemo
+label: 'openrouter / mistralai/mistral-nemo'
+server_id: openrouter
+raw_model_id: mistralai/mistral-nemo
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.029
+cost_output: 0.03
+quality_tier: 1
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

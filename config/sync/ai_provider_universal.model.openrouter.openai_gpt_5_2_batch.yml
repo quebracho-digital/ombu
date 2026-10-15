@@ -1,0 +1,19 @@
+uuid: 6b210c3f-c87d-4ea3-8ee6-d9f60044646f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_5_2_batch
+label: 'openrouter / openai/gpt-5.2:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-5.2:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.875
+cost_output: 7.0
+quality_tier: 5
+context_length: 400000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: eaf556a6-a72f-4ab0-9c4b-551d4feb3e16
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mancer_weaver
+label: 'openrouter / mancer/weaver'
+server_id: openrouter
+raw_model_id: mancer/weaver
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.4
+cost_output: 0.75
+quality_tier: 3
+context_length: 8000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: ef39a85e-fe81-4fd5-8351-1b0361d60311
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.z_ai_glm_5_3
+label: 'openrouter / z-ai/glm-5.3'
+server_id: openrouter
+raw_model_id: z-ai/glm-5.3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.089
+cost_output: 4.8
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

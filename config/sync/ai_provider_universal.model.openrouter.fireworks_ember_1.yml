@@ -1,0 +1,19 @@
+uuid: 198c82e9-ad88-4fe0-bf62-b299a27bee76
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.fireworks_ember_1
+label: 'openrouter / fireworks/ember-1'
+server_id: openrouter
+raw_model_id: fireworks/ember-1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 3.0
+cost_output: 15.0
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

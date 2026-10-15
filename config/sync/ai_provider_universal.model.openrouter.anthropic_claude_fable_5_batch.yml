@@ -1,0 +1,19 @@
+uuid: 9efa28bf-b889-40be-88d4-25956ec7b786
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.anthropic_claude_fable_5_batch
+label: 'openrouter / anthropic/claude-fable-5:batch'
+server_id: openrouter
+raw_model_id: 'anthropic/claude-fable-5:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 5.0
+cost_output: 25.0
+quality_tier: 5
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

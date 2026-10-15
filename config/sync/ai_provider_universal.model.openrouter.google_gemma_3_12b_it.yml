@@ -1,0 +1,19 @@
+uuid: 71584ea5-b519-4ad0-a224-e0557c333345
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemma_3_12b_it
+label: 'openrouter / google/gemma-3-12b-it'
+server_id: openrouter
+raw_model_id: google/gemma-3-12b-it
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.15
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

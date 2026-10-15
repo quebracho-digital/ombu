@@ -1,0 +1,19 @@
+uuid: 03af2b12-8244-46e1-ae34-20755094b4be
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_voxtral_small_24b_2507
+label: 'openrouter / mistralai/voxtral-small-24b-2507'
+server_id: openrouter
+raw_model_id: mistralai/voxtral-small-24b-2507
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.3
+quality_tier: 2
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

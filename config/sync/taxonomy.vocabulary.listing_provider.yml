@@ -1,0 +1,9 @@
+uuid: dfd10bcd-e1a0-4ca0-8516-e194188c1387
+langcode: en
+status: true
+dependencies: {  }
+name: 'Listing provider'
+vid: listing_provider
+description: 'Who offers a listing: one term per provider, with its site and its OpenAPI.'
+weight: 0
+new_revision: false

@@ -1,0 +1,19 @@
+uuid: 92bf876f-6f0d-4cbd-840a-61c929b7f81d
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.undi95_remm_slerp_l2_13b
+label: 'openrouter / undi95/remm-slerp-l2-13b'
+server_id: openrouter
+raw_model_id: undi95/remm-slerp-l2-13b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.35
+cost_output: 0.65
+quality_tier: 2
+context_length: 6144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,14 @@
+_core:
+  default_config_hash: zZg0ta9qXK6Vy_BI99yOXW6PgZCfiqgv-aoHhjJsEQc
+profile: balanced
+checker_model: minisforum.unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_xl
+extractor_model: minisforum.unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_xl
+evidence_index: ''
+max_claims: 5
+detector_model: ''
+plagiarism_key: ''
+tavily_key: ''
+mbfc_key: ''
+notify_email: ''
+scan_flood_limits: {  }
+scan_flood_window: 3600

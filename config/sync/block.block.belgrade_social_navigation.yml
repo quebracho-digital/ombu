@@ -1,0 +1,27 @@
+uuid: 7352a5a6-240c-4a62-939a-9895e791010b
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.social
+  module:
+    - system
+  theme:
+    - belgrade
+_core:
+  default_config_hash: C8bviYsWTCUaEYB6A-gf_UwyUorvmYmNdNSR6phVeDI
+id: belgrade_social_navigation
+theme: belgrade
+region: navigation
+weight: 0
+provider: null
+plugin: 'system_menu_block:social'
+settings:
+  id: 'system_menu_block:social'
+  label: Social
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

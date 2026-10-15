@@ -1,0 +1,19 @@
+uuid: 1feb41f9-5f68-424b-b5e3-449068c256ed
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.anthracite_org_magnum_v4_72b
+label: 'openrouter / anthracite-org/magnum-v4-72b'
+server_id: openrouter
+raw_model_id: anthracite-org/magnum-v4-72b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.5
+cost_output: 5.0
+quality_tier: 3
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 2ab033c5-5720-47cf-9676-1049ba38a3b0
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_6_astra_pro_batch
+label: 'openrouter / openai/gpt-6-astra-pro:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-6-astra-pro:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 5.0
+cost_output: 25.0
+quality_tier: 5
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

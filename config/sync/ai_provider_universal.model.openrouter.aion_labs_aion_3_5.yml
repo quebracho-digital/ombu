@@ -1,0 +1,19 @@
+uuid: 6364a80d-dadd-4c01-bb75-d5208daf093f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.aion_labs_aion_3_5
+label: 'openrouter / aion-labs/aion-3.5'
+server_id: openrouter
+raw_model_id: aion-labs/aion-3.5
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 3.0
+cost_output: 6.0
+quality_tier: 4
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

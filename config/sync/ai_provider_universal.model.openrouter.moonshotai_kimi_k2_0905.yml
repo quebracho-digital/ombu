@@ -1,0 +1,19 @@
+uuid: dda08902-74fa-42de-98dd-e5da06fdc1a0
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.moonshotai_kimi_k2_0905
+label: 'openrouter / moonshotai/kimi-k2-0905'
+server_id: openrouter
+raw_model_id: moonshotai/kimi-k2-0905
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.6
+cost_output: 2.5
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

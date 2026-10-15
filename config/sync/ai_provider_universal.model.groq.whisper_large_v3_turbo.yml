@@ -1,0 +1,19 @@
+uuid: f74a48cf-6fd7-43dd-b57c-10496a8298bf
+langcode: en
+status: true
+dependencies: {  }
+id: groq.whisper_large_v3_turbo
+label: 'groq / whisper-large-v3-turbo'
+server_id: groq
+raw_model_id: whisper-large-v3-turbo
+detected_operation_types:
+  - speech_to_text
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: 448
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

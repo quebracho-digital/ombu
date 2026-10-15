@@ -1,0 +1,19 @@
+uuid: b22657d6-03a0-40b3-8aa1-d181ae01d472
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nvidia_nemotron_3_5_content_safety
+label: 'openrouter / nvidia/nemotron-3.5-content-safety'
+server_id: openrouter
+raw_model_id: nvidia/nemotron-3.5-content-safety
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 0.2
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

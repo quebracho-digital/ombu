@@ -1,0 +1,19 @@
+uuid: b2e387a4-75e4-4133-afbf-dd3e3bb61126
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.tencent_hy4_preview
+label: 'openrouter / tencent/hy4-preview'
+server_id: openrouter
+raw_model_id: tencent/hy4-preview
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.834
+cost_output: 2.501
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

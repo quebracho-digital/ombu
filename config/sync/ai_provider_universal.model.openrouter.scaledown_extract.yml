@@ -1,0 +1,19 @@
+uuid: 8217d6b6-24f8-4dde-8136-bfc22806aa47
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.scaledown_extract
+label: 'openrouter / scaledown/extract'
+server_id: openrouter
+raw_model_id: scaledown/extract
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.04
+cost_output: 0.0
+quality_tier: 1
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

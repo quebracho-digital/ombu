@@ -1,0 +1,19 @@
+uuid: 51b5a1cd-d96c-4337-825a-8c6c8dfa5ef8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.z_ai_glm_5_3_batch
+label: 'openrouter / z-ai/glm-5.3:batch'
+server_id: openrouter
+raw_model_id: 'z-ai/glm-5.3:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.45
+cost_output: 2.0
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

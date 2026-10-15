@@ -1,0 +1,19 @@
+uuid: 4c59d5ec-e4a9-4c95-9fa6-5c5b59927ca8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_ministral_8b_2512_batch
+label: 'openrouter / mistralai/ministral-8b-2512:batch'
+server_id: openrouter
+raw_model_id: 'mistralai/ministral-8b-2512:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.075
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

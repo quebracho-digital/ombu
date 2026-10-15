@@ -1,0 +1,19 @@
+uuid: 78812d4c-376c-418e-8dc7-f53e6f59fafe
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.xiaomi_mimo_v2_6_pro_ultraspeed
+label: 'openrouter / xiaomi/mimo-v2.6-pro-ultraspeed'
+server_id: openrouter
+raw_model_id: xiaomi/mimo-v2.6-pro-ultraspeed
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 4.35
+cost_output: 8.7
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

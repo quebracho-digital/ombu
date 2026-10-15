@@ -1,0 +1,19 @@
+uuid: f8e2c1eb-22a9-47a7-bcd9-0e6291675238
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.aion_labs_aion_3_0_mini
+label: 'openrouter / aion-labs/aion-3.0-mini'
+server_id: openrouter
+raw_model_id: aion-labs/aion-3.0-mini
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.7
+cost_output: 1.4
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

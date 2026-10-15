@@ -1,0 +1,19 @@
+uuid: 78528908-2135-42cf-a5c2-ca60ffb44a32
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.liquid_lfm_2_5_2_6b_free
+label: 'openrouter / liquid/lfm-2.5-2.6b:free'
+server_id: openrouter
+raw_model_id: 'liquid/lfm-2.5-2.6b:free'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 65536
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

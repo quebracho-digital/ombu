@@ -1,0 +1,19 @@
+uuid: 071a612a-7ab7-4af3-aa18-5db716c10a77
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_nemotron_lightning_3p5_30b_a3b
+label: 'fireworks / accounts/fireworks/models/nemotron-lightning-3p5-30b-a3b'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/nemotron-lightning-3p5-30b-a3b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 3
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

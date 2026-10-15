@@ -1,0 +1,12 @@
+uuid: caff37b6-5316-40f2-9fd7-4cb9f996b933
+langcode: en
+status: true
+dependencies: {  }
+id: support
+label: Support
+recipients:
+  - ombu@quebracho.digital
+reply: ''
+weight: -10
+message: 'We received your message and will answer at the address you gave.'
+redirect: /

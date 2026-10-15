@@ -1,0 +1,19 @@
+uuid: c3ab45ad-8900-4b70-9b88-d607f504f57f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.writer_palmyra_x5
+label: 'openrouter / writer/palmyra-x5'
+server_id: openrouter
+raw_model_id: writer/palmyra-x5
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.6
+cost_output: 6.0
+quality_tier: 4
+context_length: 1040000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 3f8aa5e7-d8f0-4b81-824d-0f792b6f6174
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.perplexity_sonar
+label: 'openrouter / perplexity/sonar'
+server_id: openrouter
+raw_model_id: perplexity/sonar
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.0
+cost_output: 1.0
+quality_tier: 3
+context_length: 127072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

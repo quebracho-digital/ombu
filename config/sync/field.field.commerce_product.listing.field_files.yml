@@ -1,0 +1,27 @@
+uuid: b9ad7982-c8b3-48d2-92fc-1e95fcfc7804
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_files
+  module:
+    - file
+id: commerce_product.listing.field_files
+field_name: field_files
+entity_type: commerce_product
+bundle: listing
+label: Files
+description: 'Docs, examples, schemas. PDF, Markdown, text, JSON, YAML, CSV or ZIP, up to 20 MB.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:file'
+  handler_settings: {  }
+  file_directory: 'listings/[date:custom:Y]-[date:custom:m]'
+  file_extensions: 'pdf md txt json yaml yml csv zip'
+  max_filesize: '20 MB'
+  description_field: true
+field_type: file

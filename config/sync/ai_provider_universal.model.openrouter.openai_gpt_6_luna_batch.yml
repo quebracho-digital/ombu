@@ -1,0 +1,19 @@
+uuid: 7b173b67-78c5-46b1-a6c0-317976021c83
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_6_luna_batch
+label: 'openrouter / openai/gpt-6-luna:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-6-luna:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.25
+quality_tier: 2
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

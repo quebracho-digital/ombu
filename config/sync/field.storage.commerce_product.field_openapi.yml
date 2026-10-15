@@ -1,0 +1,19 @@
+uuid: 174192ab-6ba7-4efd-9f67-51d9ded641ee
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+id: commerce_product.field_openapi
+field_name: field_openapi
+entity_type: commerce_product
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

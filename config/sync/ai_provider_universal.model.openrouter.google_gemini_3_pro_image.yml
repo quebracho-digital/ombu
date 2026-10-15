@@ -1,0 +1,19 @@
+uuid: 279f2005-fcf1-495a-9f56-3196b65387a8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_3_pro_image
+label: 'openrouter / google/gemini-3-pro-image'
+server_id: openrouter
+raw_model_id: google/gemini-3-pro-image
+detected_operation_types:
+  - text_to_image
+operation_types: {  }
+cost_input: 2.0
+cost_output: 12.0
+quality_tier: 5
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
+langcode: en
+uuid: 24da0565-f9ad-483e-bfd7-16115d185cf2
+name: Ombú
+mail: ombu@quebracho.digital
+slogan: ''
+page:
+  403: ''
+  404: ''
+  front: /market
+admin_compact_mode: false
+weight_select_max: 100
+default_langcode: en
+mail_notification: null

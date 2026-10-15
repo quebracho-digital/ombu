@@ -1,0 +1,19 @@
+uuid: 35ef2eb9-1be5-46cd-8e99-6ce5a69155a3
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.sao10k_l3_lunaris_8b
+label: 'openrouter / sao10k/l3-lunaris-8b'
+server_id: openrouter
+raw_model_id: sao10k/l3-lunaris-8b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.04
+cost_output: 0.05
+quality_tier: 2
+context_length: 8192
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

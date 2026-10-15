@@ -1,0 +1,19 @@
+uuid: 0272a59d-e9c5-4c3e-bc11-ae255b81203b
+langcode: en
+status: true
+dependencies: {  }
+id: groq.canopylabs_orpheus_v1_english
+label: 'groq / canopylabs/orpheus-v1-english'
+server_id: groq
+raw_model_id: canopylabs/orpheus-v1-english
+detected_operation_types:
+  - text_to_speech
+operation_types: {  }
+cost_input: 22.0
+cost_output: null
+quality_tier: null
+context_length: 4000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

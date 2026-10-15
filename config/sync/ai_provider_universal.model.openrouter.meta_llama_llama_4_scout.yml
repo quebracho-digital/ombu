@@ -1,0 +1,19 @@
+uuid: 64cfc4a3-e2bd-4f3f-a702-92fce31d9344
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_llama_llama_4_scout
+label: 'openrouter / meta-llama/llama-4-scout'
+server_id: openrouter
+raw_model_id: meta-llama/llama-4-scout
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.18
+cost_output: 0.59
+quality_tier: 3
+context_length: 1310720
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

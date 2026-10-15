@@ -1,0 +1,19 @@
+uuid: 8cf6d604-9eeb-42cb-8ef9-85dfbcc58566
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_llama_llama_4_maverick
+label: 'openrouter / meta-llama/llama-4-maverick'
+server_id: openrouter
+raw_model_id: meta-llama/llama-4-maverick
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1875
+cost_output: 0.6525
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

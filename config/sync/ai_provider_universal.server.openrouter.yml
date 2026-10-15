@@ -1,0 +1,17 @@
+uuid: 128b6a0d-8672-4b7b-bcfd-d4021a5667c2
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter
+label: openrouter
+backend: openrouter
+host_name: ''
+port: ''
+api_key: openrouter
+timeout: 90
+operation_types: {  }
+model_filter: ''
+daily_request_limit: null
+daily_token_limit: null
+alert_threshold: 80
+limit_grace: null

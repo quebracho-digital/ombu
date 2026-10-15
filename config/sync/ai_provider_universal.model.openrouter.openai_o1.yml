@@ -1,0 +1,19 @@
+uuid: 195be4f2-3c8e-409a-b0f9-e9d95b80a38c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_o1
+label: 'openrouter / openai/o1'
+server_id: openrouter
+raw_model_id: openai/o1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 15.0
+cost_output: 60.0
+quality_tier: 5
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

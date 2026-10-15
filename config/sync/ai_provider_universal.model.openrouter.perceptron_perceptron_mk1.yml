@@ -1,0 +1,19 @@
+uuid: 9dc2ed26-ba6a-4ca5-9eea-40106aa0343f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.perceptron_perceptron_mk1
+label: 'openrouter / perceptron/perceptron-mk1'
+server_id: openrouter
+raw_model_id: perceptron/perceptron-mk1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 1.5
+quality_tier: 3
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

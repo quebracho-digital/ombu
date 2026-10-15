@@ -1,0 +1,5 @@
+navigation_toggle_text: Menú
+http_error_403_title: 'Acceso denegado'
+http_error_403_message: 'No tiene permiso para visitar esta página.'
+http_error_403_primary_label: 'Iniciar sesión'
+http_error_404_title: 'Página no encontrada'

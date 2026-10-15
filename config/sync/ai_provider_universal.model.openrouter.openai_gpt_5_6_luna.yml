@@ -1,0 +1,19 @@
+uuid: dbfa7fcb-d210-4d0e-993f-a1c8cb40f4b6
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_5_6_luna
+label: 'openrouter / openai/gpt-5.6-luna'
+server_id: openrouter
+raw_model_id: openai/gpt-5.6-luna
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 1.2
+quality_tier: 5
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

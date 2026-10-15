@@ -1,0 +1,19 @@
+uuid: 6722b8de-c899-40df-b554-166343ca7870
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.deepseek_deepseek_v4_flash_latest
+label: 'openrouter / ~deepseek/deepseek-v4-flash-latest'
+server_id: openrouter
+raw_model_id: ~deepseek/deepseek-v4-flash-latest
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0144
+cost_output: 0.576
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

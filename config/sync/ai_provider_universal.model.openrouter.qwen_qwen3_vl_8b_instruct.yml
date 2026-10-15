@@ -1,0 +1,21 @@
+uuid: 4aead1bd-6f06-446f-856e-14b7fb9eb1ae
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_vl_8b_instruct
+label: 'openrouter / qwen/qwen3-vl-8b-instruct'
+server_id: openrouter
+raw_model_id: qwen/qwen3-vl-8b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.25
+cost_output: 0.75
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

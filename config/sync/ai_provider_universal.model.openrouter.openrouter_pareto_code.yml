@@ -1,0 +1,19 @@
+uuid: 3464fa10-e07f-4d8f-a6d6-dd3919f11805
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openrouter_pareto_code
+label: 'openrouter / openrouter/pareto-code'
+server_id: openrouter
+raw_model_id: openrouter/pareto-code
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: 2000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

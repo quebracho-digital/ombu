@@ -1,0 +1,19 @@
+uuid: 83bbbd7d-6c35-4e1c-ab0a-629894ce678c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_o3_mini_batch
+label: 'openrouter / openai/o3-mini:batch'
+server_id: openrouter
+raw_model_id: 'openai/o3-mini:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.55
+cost_output: 2.2
+quality_tier: 5
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

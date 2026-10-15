@@ -1,0 +1,19 @@
+uuid: 4ee98a17-9791-4936-a526-6c29c7af69ac
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_devstral_2512
+label: 'openrouter / mistralai/devstral-2512'
+server_id: openrouter
+raw_model_id: mistralai/devstral-2512
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.4
+cost_output: 2.0
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,25 @@
+uuid: 02d4b551-99f8-473a-be84-cb36e37ffb52
+langcode: en
+status: true
+dependencies: {  }
+id: groq.openai_gpt_oss_safeguard_20b
+label: 'groq / openai/gpt-oss-safeguard-20b'
+server_id: groq
+raw_model_id: openai/gpt-oss-safeguard-20b
+detected_operation_types:
+  - moderation
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.3
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features:
+  - json_mode
+  - reasoning
+  - structured_outputs
+  - tools
+sampling:
+  temperature: 1.0
+  top_p: 1.0
+extra_params: {  }

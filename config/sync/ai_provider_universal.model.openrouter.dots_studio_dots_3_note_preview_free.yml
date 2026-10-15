@@ -1,0 +1,19 @@
+uuid: 6b244ce9-cc37-4a75-bfd3-5ae5bb8e9d1e
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.dots_studio_dots_3_note_preview_free
+label: 'openrouter / dots-studio/dots-3-note-preview:free'
+server_id: openrouter
+raw_model_id: 'dots-studio/dots-3-note-preview:free'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 512000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

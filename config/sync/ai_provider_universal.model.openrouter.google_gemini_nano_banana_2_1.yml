@@ -1,0 +1,19 @@
+uuid: 6c790a85-06e5-44f1-b01b-cdd9c9c33b98
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_nano_banana_2_1
+label: 'openrouter / google/gemini-nano-banana-2.1'
+server_id: openrouter
+raw_model_id: google/gemini-nano-banana-2.1
+detected_operation_types:
+  - text_to_image
+operation_types: {  }
+cost_input: 1.5
+cost_output: 7.5
+quality_tier: 4
+context_length: 65536
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

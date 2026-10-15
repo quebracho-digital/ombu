@@ -1,0 +1,19 @@
+uuid: 962cac7c-624e-46b6-8ac6-ad52e3c214e5
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen_2_5_7b_instruct
+label: 'openrouter / qwen/qwen-2.5-7b-instruct'
+server_id: openrouter
+raw_model_id: qwen/qwen-2.5-7b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.2
+quality_tier: 2
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

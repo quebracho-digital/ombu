@@ -1,0 +1,19 @@
+uuid: 6596bdd6-c1ac-43db-a80f-8e8185ef7ea9
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_5_6_terra
+label: 'openrouter / openai/gpt-5.6-terra'
+server_id: openrouter
+raw_model_id: openai/gpt-5.6-terra
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 12.0
+quality_tier: 5
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

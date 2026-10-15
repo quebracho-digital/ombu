@@ -1,0 +1,22 @@
+uuid: 5e16872c-f6da-4b29-8df0-42bb84628dd2
+langcode: en
+status: true
+dependencies: {  }
+id: minisforum.unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_xl
+label: 'minisforum / unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL'
+server_id: minisforum
+raw_model_id: 'unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.0
+extra_params:
+  chat_template_kwargs:
+    enable_thinking: false

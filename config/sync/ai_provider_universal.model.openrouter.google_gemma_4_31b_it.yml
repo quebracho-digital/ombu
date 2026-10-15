@@ -1,0 +1,19 @@
+uuid: 22e65cf2-e38c-401b-9202-db643064a41b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemma_4_31b_it
+label: 'openrouter / google/gemma-4-31b-it'
+server_id: openrouter
+raw_model_id: google/gemma-4-31b-it
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 0.4
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

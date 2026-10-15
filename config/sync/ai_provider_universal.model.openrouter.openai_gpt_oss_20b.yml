@@ -1,0 +1,21 @@
+uuid: 2037f353-dbd3-42f3-8c3d-0cb4f8b38037
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_oss_20b
+label: 'openrouter / openai/gpt-oss-20b'
+server_id: openrouter
+raw_model_id: openai/gpt-oss-20b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.018
+cost_output: 0.09
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 1.0
+  top_p: 1.0
+extra_params: {  }

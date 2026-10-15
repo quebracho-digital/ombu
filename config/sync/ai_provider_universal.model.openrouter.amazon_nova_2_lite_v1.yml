@@ -1,0 +1,19 @@
+uuid: 697e02a4-769f-4e8c-9719-4b0be6b1f038
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.amazon_nova_2_lite_v1
+label: 'openrouter / amazon/nova-2-lite-v1'
+server_id: openrouter
+raw_model_id: amazon/nova-2-lite-v1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 2.5
+quality_tier: 3
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

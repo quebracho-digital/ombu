@@ -1,0 +1,19 @@
+uuid: 58f5157c-436f-49f3-91b2-084a3e4780bb
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.typesafe_jev_router
+label: 'openrouter / typesafe/jev-router'
+server_id: openrouter
+raw_model_id: typesafe/jev-router
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: d467ecb7-3a48-47f6-b5ef-9e82a01067b8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.ibm_granite_granite_4_0_h_micro
+label: 'openrouter / ibm-granite/granite-4.0-h-micro'
+server_id: openrouter
+raw_model_id: ibm-granite/granite-4.0-h-micro
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.017
+cost_output: 0.112
+quality_tier: 2
+context_length: 131000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

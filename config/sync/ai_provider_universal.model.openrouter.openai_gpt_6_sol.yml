@@ -1,0 +1,19 @@
+uuid: 3dc8896a-507b-40ae-91d4-855e19254df2
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_6_sol
+label: 'openrouter / openai/gpt-6-sol'
+server_id: openrouter
+raw_model_id: openai/gpt-6-sol
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 10.0
+quality_tier: 4
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

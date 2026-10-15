@@ -1,0 +1,19 @@
+uuid: 10bab016-a804-4747-a5fb-cae003f4fcc7
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_seller_address
+id: commerce_product.listing.field_seller_address
+field_name: field_seller_address
+entity_type: commerce_product
+bundle: listing
+label: 'Seller address'
+description: 'Without a seller key: the wallet paid, e.g. a cold wallet whose key is not on this site. Needs a Circle API key in the x402 settings.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

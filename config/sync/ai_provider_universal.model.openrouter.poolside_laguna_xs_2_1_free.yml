@@ -1,0 +1,19 @@
+uuid: 969efe40-bab6-4b06-ac02-9dd68a7011b5
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.poolside_laguna_xs_2_1_free
+label: 'openrouter / poolside/laguna-xs-2.1:free'
+server_id: openrouter
+raw_model_id: 'poolside/laguna-xs-2.1:free'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

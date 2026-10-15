@@ -1,0 +1,19 @@
+uuid: 138dd5fb-68c0-4067-b5ff-36ffb278e179
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.cognitivecomputations_dolphin_mistral_24b_venice_edition
+label: 'openrouter / cognitivecomputations/dolphin-mistral-24b-venice-edition'
+server_id: openrouter
+raw_model_id: cognitivecomputations/dolphin-mistral-24b-venice-edition
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 0.9
+quality_tier: 2
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

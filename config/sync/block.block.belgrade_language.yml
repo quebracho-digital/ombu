@@ -1,0 +1,20 @@
+uuid: c5e23673-2a7f-4d9c-8951-f95e7fbcb7ed
+langcode: en
+status: true
+dependencies:
+  module:
+    - language
+  theme:
+    - belgrade
+id: belgrade_language
+theme: belgrade
+region: top_bar
+weight: -10
+provider: null
+plugin: 'language_block:language_interface'
+settings:
+  id: 'language_block:language_interface'
+  label: Language
+  label_display: '0'
+  provider: language
+visibility: {  }

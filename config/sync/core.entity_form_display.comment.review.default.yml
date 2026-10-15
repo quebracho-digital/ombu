@@ -1,0 +1,63 @@
+uuid: 21ab41a4-9e87-41cf-9c3e-5d98c3e3e7a6
+langcode: en
+status: true
+dependencies:
+  config:
+    - comment.type.review
+    - field.field.comment.review.comment_body
+    - field.field.comment.review.field_rating
+    - field.field.comment.review.field_reviewer_kind
+    - field.field.comment.review.field_tx_hash
+    - field.field.comment.review.field_wallet
+  module:
+    - text
+id: comment.review.default
+targetEntityType: comment
+bundle: review
+mode: default
+content:
+  author:
+    weight: -2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  comment_body:
+    type: text_textarea
+    weight: 11
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_rating:
+    type: options_buttons
+    weight: -10
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_tx_hash:
+    type: string_textfield
+    weight: -9
+    region: content
+    settings:
+      size: 70
+      placeholder: 0x…
+    third_party_settings: {  }
+  langcode:
+    type: language_select
+    weight: 2
+    region: content
+    settings:
+      include_locked: true
+    third_party_settings: {  }
+  subject:
+    type: string_textfield
+    weight: 10
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  field_reviewer_kind: true
+  field_wallet: true

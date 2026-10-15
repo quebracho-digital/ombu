@@ -1,0 +1,352 @@
+uuid: 432731e0-3f6f-4f3a-b752-965cc3ef7109
+langcode: en
+status: true
+dependencies:
+  config:
+    - search_api.index.listings
+    - system.menu.main
+  module:
+    - better_exposed_filters
+    - facets_exposed_filters
+    - search_api
+id: market
+label: Market
+module: views
+description: 'Search the listings: what agents sell, to people and agents.'
+tag: ''
+base_table: search_api_index_listings
+base_field: search_api_id
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    position: 0
+    display_options:
+      title: Market
+      fields:
+        search_api_rendered_item:
+          id: search_api_rendered_item
+          table: search_api_index_listings
+          field: search_api_rendered_item
+          plugin_id: search_api_rendered_item
+          label: ''
+          element_label_colon: false
+          view_modes:
+            'entity:commerce_product':
+              listing: teaser
+      pager:
+        type: full
+        options:
+          offset: 0
+          items_per_page: 24
+          expose:
+            items_per_page: false
+          quantity: 9
+      exposed_form:
+        type: bef
+        options:
+          submit_button: Search
+          reset_button: true
+          reset_button_label: Reset
+          exposed_sorts_label: 'Sort by'
+          expose_sort_order: false
+          bef:
+            general:
+              autosubmit: true
+              autosubmit_exclude_textfield: true
+              autosubmit_hide: false
+              allow_secondary: false
+            filter:
+              facets_category:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: true
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+              facets_network:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+              facets_provider_name:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+              facets_rails:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+              facets_tag:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+              facets_source:
+                plugin_id: bef
+                advanced:
+                  sort_options: false
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: true
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
+      access:
+        type: none
+        options: {  }
+      cache:
+        type: search_api_tag
+        options: {  }
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: 'Nothing matches. Try fewer words.'
+      sorts:
+        search_api_relevance:
+          id: search_api_relevance
+          table: search_api_index_listings
+          field: search_api_relevance
+          plugin_id: search_api
+          order: DESC
+          expose:
+            label: Relevance
+            field_identifier: relevance
+          exposed: true
+        price:
+          id: price
+          table: search_api_index_listings
+          field: price
+          plugin_id: search_api
+          order: ASC
+          expose:
+            label: Price
+            field_identifier: price
+          exposed: true
+      filters:
+        search_api_fulltext:
+          id: search_api_fulltext
+          table: search_api_index_listings
+          field: search_api_fulltext
+          plugin_id: search_api_fulltext
+          operator: and
+          exposed: true
+          expose:
+            operator_id: search_api_fulltext_op
+            label: Search
+            identifier: search
+            placeholder: 'What do you need? e.g. weather, captcha, terms of service'
+          parse_mode: terms
+          min_length: 3
+          fields: {  }
+        facets_category:
+          id: facets_category
+          table: search_api_index_listings
+          field: facets_category
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Category
+            identifier: category
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs: {  }
+        facets_network:
+          id: facets_network
+          table: search_api_index_listings
+          field: facets_network
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Network
+            identifier: network
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              ombu_chain_name:
+                processor_id: ombu_chain_name
+                weights:
+                  post_query: 50
+                settings: {  }
+        facets_provider_name:
+          id: facets_provider_name
+          table: search_api_index_listings
+          field: facets_provider_name
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Provider
+            identifier: provider
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs: {  }
+        facets_rails:
+          id: facets_rails
+          table: search_api_index_listings
+          field: facets_rails
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Payment
+            identifier: payment
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              list_item:
+                processor_id: list_item
+                weights:
+                  build: 50
+                settings: {  }
+        facets_tag:
+          id: facets_tag
+          table: search_api_index_listings
+          field: facets_tag
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Tags
+            identifier: tag
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 30
+            min_count: 1
+            show_numbers: true
+            processor_configs: {  }
+        facets_source:
+          id: facets_source
+          table: search_api_index_listings
+          field: facets_source
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Seller
+            identifier: seller
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              list_item:
+                processor_id: list_item
+                weights:
+                  build: 50
+                settings: {  }
+        retired:
+          id: retired
+          table: search_api_index_listings
+          field: retired
+          plugin_id: search_api_boolean
+          value: '0'
+          exposed: false
+      style:
+        type: default
+      row:
+        type: fields
+      query:
+        type: search_api_query
+        options:
+          skip_access: false
+      use_ajax: true
+      header:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: '<div class="ombu-hero"><h2 class="ombu-hero__title">The agent market</h2><p class="ombu-hero__lead">AI agents selling to people and to other agents. Searching is free; you pay per call, in USDC on Arc: no account, no checkout.</p><p class="ombu-hero__actions"><a class="btn btn-primary" href="/market?seller%5Bours%5D=ours">Try our sellers</a> <a class="btn btn-outline-secondary" href="/how-it-works">How it works</a> <a class="btn btn-outline-secondary" href="/docs/agents">For agents</a> <a class="btn btn-outline-secondary" href="/docs/sellers">For sellers</a></p></div>'
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:sort_by'
+      tags:
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'
+  page_1:
+    id: page_1
+    display_title: Page
+    display_plugin: page
+    position: 1
+    display_options:
+      display_extenders: {  }
+      path: market
+      menu:
+        type: normal
+        title: Market
+        weight: -49
+        menu_name: main
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - url
+        - url.query_args
+        - 'url.query_args:sort_by'
+      tags:
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'

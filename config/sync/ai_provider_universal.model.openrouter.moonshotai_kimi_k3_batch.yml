@@ -1,0 +1,19 @@
+uuid: d583d291-58cf-46b9-a764-b8f42eb9cb9a
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.moonshotai_kimi_k3_batch
+label: 'openrouter / moonshotai/kimi-k3:batch'
+server_id: openrouter
+raw_model_id: 'moonshotai/kimi-k3:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.28
+cost_output: 11.4
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

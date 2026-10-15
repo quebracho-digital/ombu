@@ -1,0 +1,19 @@
+uuid: 5c58bc35-b777-4358-aa54-40b72f94697c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_muse_glimmer_30b
+label: 'openrouter / meta/muse-glimmer-30b'
+server_id: openrouter
+raw_model_id: meta/muse-glimmer-30b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 1.2
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

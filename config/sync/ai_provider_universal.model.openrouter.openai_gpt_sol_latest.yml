@@ -1,0 +1,19 @@
+uuid: 84fcea7d-bb97-4f6f-9d31-ffc0c222f7fd
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_sol_latest
+label: 'openrouter / ~openai/gpt-sol-latest'
+server_id: openrouter
+raw_model_id: ~openai/gpt-sol-latest
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 10.0
+quality_tier: 4
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

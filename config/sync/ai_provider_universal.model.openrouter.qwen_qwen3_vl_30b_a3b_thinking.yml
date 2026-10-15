@@ -1,0 +1,21 @@
+uuid: 181fd3a5-4621-4640-ae99-95736d7274dc
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_vl_30b_a3b_thinking
+label: 'openrouter / qwen/qwen3-vl-30b-a3b-thinking'
+server_id: openrouter
+raw_model_id: qwen/qwen3-vl-30b-a3b-thinking
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.29
+cost_output: 1.0
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

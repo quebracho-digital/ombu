@@ -1,0 +1,19 @@
+uuid: 5c56412b-d82a-4ba2-94b8-b0abbe69322b
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_inkling
+label: 'fireworks / accounts/fireworks/models/inkling'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/inkling
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

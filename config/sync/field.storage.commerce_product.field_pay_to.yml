@@ -1,0 +1,23 @@
+uuid: ca350704-ecbb-4579-9bb9-d7bbdffdb375
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+_core:
+  default_config_hash: q3sMnjW3ZyepUC3WNyR1R5keFSRGnWDmWUKRWJG17V4
+id: commerce_product.field_pay_to
+field_name: field_pay_to
+entity_type: commerce_product
+type: string
+settings:
+  max_length: 128
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,19 @@
+uuid: 118bc0fd-27d8-48fb-a521-c6ac25166be5
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_4_argon_batch
+label: 'openrouter / google/gemini-4-argon:batch'
+server_id: openrouter
+raw_model_id: 'google/gemini-4-argon:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.0
+cost_output: 5.0
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

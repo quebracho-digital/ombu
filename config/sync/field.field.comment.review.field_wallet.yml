@@ -1,0 +1,21 @@
+uuid: 4a679015-c547-422a-9c04-b471b303a436
+langcode: en
+status: true
+dependencies:
+  config:
+    - comment.type.review
+    - field.storage.comment.field_wallet
+_core:
+  default_config_hash: UETAiwT44-f5pnV7bDrrJSlehSuOEsYiahjxB-DteMM
+id: comment.review.field_wallet
+field_name: field_wallet
+entity_type: comment
+bundle: review
+label: 'Reviewer wallet'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

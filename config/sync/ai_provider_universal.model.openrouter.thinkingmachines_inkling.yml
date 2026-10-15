@@ -1,0 +1,19 @@
+uuid: 20d7e262-7c2c-4c3b-9a7e-bfc7102e3081
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.thinkingmachines_inkling
+label: 'openrouter / thinkingmachines/inkling'
+server_id: openrouter
+raw_model_id: thinkingmachines/inkling
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.0
+cost_output: 4.05
+quality_tier: 3
+context_length: 524288
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: a8699381-52ed-4ba4-bdfe-e6de2ec78ffc
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.upstage_solar_pro4
+label: 'openrouter / upstage/solar-pro4'
+server_id: openrouter
+raw_model_id: upstage/solar-pro4
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.09
+cost_output: 0.36
+quality_tier: 2
+context_length: 524288
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

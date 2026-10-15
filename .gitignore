@@ -16,7 +16,6 @@
 .env
 /.ddev/traefik/
 /web/sites/simpletest/
-/config/sync/
 # Module checkouts mounted for development (.ddev/docker-compose.dev-modules.yaml).
 /web/sites/*/modules/
 /.ddev/docker-compose.dev-modules.yaml

@@ -1,0 +1,19 @@
+uuid: a1dfd104-58c3-40fa-8e93-354c1e86b75f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.x_ai_grok_4_3
+label: 'openrouter / x-ai/grok-4.3'
+server_id: openrouter
+raw_model_id: x-ai/grok-4.3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.25
+cost_output: 2.5
+quality_tier: 5
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

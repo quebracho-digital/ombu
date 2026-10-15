@@ -1,0 +1,19 @@
+uuid: e205acd9-17d8-4b7e-8c34-9f1d52fba42c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.thedrummer_skyfall_36b_v2
+label: 'openrouter / thedrummer/skyfall-36b-v2'
+server_id: openrouter
+raw_model_id: thedrummer/skyfall-36b-v2
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.55
+cost_output: 0.8
+quality_tier: 3
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

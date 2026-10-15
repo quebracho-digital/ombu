@@ -1,0 +1,19 @@
+uuid: 0bda3a6a-37ea-4b4b-a3e2-3d505396b5c4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_3_1_pro_preview_batch
+label: 'openrouter / google/gemini-3.1-pro-preview:batch'
+server_id: openrouter
+raw_model_id: 'google/gemini-3.1-pro-preview:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.0
+cost_output: 6.0
+quality_tier: 5
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

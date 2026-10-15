@@ -1,0 +1,4 @@
+label: 'Vendedor verificado'
+settings:
+  on_label: 'On'
+  off_label: 'Off'

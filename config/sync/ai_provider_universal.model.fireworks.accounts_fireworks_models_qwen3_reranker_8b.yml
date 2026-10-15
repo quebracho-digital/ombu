@@ -1,0 +1,21 @@
+uuid: cc72f3ab-0337-4c4b-9002-1e21ee5c71ea
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_qwen3_reranker_8b
+label: 'fireworks / accounts/fireworks/models/qwen3-reranker-8b'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/qwen3-reranker-8b
+detected_operation_types:
+  - rerank
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 2
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

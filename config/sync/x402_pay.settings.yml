@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: Ua0XH2U8CI-QJdkK1j4Eo_pOi81G5D0OZV21bNYFOu8
+agent_user_agents: GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|PerplexityBot|Perplexity-User|Google-Extended|CCBot|Bytespider|Amazonbot|meta-externalagent|cohere-ai|Applebot-Extended
+facilitator:
+  auth: api_key
+  api_key_id: drupal1_arc_testnet
+  own_networks:
+    - 'eip155:5042'
+  own_key_id: gas_wallet
+sweep:
+  enabled: false
+  to: ''
+  keys: {  }
+  min: '1'
+  interval: 21600

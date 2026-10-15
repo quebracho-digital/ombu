@@ -1,0 +1,19 @@
+uuid: af79e979-a43b-4bb3-a3d6-82e32dc2222b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.sakana_sakana_namazu
+label: 'openrouter / sakana/sakana-namazu'
+server_id: openrouter
+raw_model_id: sakana/sakana-namazu
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.95
+cost_output: 4.0
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

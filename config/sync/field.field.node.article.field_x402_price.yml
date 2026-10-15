@@ -1,0 +1,28 @@
+uuid: f77f88db-8f25-4739-ad82-c4d5f03841e0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_x402_price
+    - node.type.article
+  module:
+    - x402_pay
+id: node.article.field_x402_price
+field_name: field_x402_price
+entity_type: node
+bundle: article
+label: 'Price for agents'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  enabled: true
+  amount: '0.01'
+  network: 'eip155:5042002'
+  key_id: arc_testnet_seller
+  allow_override: true
+  view_mode: full
+  canonical: true
+field_type: x402_price

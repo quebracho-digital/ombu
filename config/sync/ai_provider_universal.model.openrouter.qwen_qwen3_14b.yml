@@ -1,0 +1,21 @@
+uuid: 275e06f3-b536-44de-a1ae-4c0dca46b81c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_14b
+label: 'openrouter / qwen/qwen3-14b'
+server_id: openrouter
+raw_model_id: qwen/qwen3-14b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.12
+cost_output: 0.24
+quality_tier: 2
+context_length: 40960
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

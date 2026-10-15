@@ -1,0 +1,19 @@
+uuid: db3a4d4c-c0d5-4755-a2de-9df84607ba6d
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.amazon_nova_pro_v1
+label: 'openrouter / amazon/nova-pro-v1'
+server_id: openrouter
+raw_model_id: amazon/nova-pro-v1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.8
+cost_output: 3.2
+quality_tier: 3
+context_length: 300000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

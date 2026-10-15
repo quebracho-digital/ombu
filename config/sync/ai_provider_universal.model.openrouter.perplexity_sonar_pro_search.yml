@@ -1,0 +1,19 @@
+uuid: afac631a-2091-484a-a053-b07b2b63d533
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.perplexity_sonar_pro_search
+label: 'openrouter / perplexity/sonar-pro-search'
+server_id: openrouter
+raw_model_id: perplexity/sonar-pro-search
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 3.0
+cost_output: 15.0
+quality_tier: 4
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

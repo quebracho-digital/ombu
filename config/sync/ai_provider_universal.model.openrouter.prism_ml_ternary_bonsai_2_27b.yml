@@ -1,0 +1,19 @@
+uuid: e9141e6c-3b14-409a-b24b-b0b5935f3b28
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.prism_ml_ternary_bonsai_2_27b
+label: 'openrouter / prism-ml/ternary-bonsai-2-27b'
+server_id: openrouter
+raw_model_id: prism-ml/ternary-bonsai-2-27b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.5
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

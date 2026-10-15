@@ -1,0 +1,19 @@
+uuid: 0f160c77-6370-4709-a8d5-37b41e74aaa4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_llama_llama_guard_4_12b
+label: 'openrouter / meta-llama/llama-guard-4-12b'
+server_id: openrouter
+raw_model_id: meta-llama/llama-guard-4-12b
+detected_operation_types:
+  - moderation
+operation_types: {  }
+cost_input: 0.18
+cost_output: 0.18
+quality_tier: 2
+context_length: 163840
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

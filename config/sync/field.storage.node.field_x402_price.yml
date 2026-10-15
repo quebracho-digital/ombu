@@ -1,0 +1,19 @@
+uuid: bba07bdd-ab92-40a7-80de-685593848e8a
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - x402_pay
+id: node.field_x402_price
+field_name: field_x402_price
+entity_type: node
+type: x402_price
+settings: {  }
+module: x402_pay
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

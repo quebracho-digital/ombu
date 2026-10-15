@@ -1,0 +1,19 @@
+uuid: 64a03ba0-62d2-430a-ab77-f4c48f92e220
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_5_2_pro
+label: 'openrouter / openai/gpt-5.2-pro'
+server_id: openrouter
+raw_model_id: openai/gpt-5.2-pro
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 21.0
+cost_output: 168.0
+quality_tier: 5
+context_length: 400000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

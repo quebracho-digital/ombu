@@ -1,0 +1,19 @@
+uuid: e5382bf0-7999-41fb-b6a0-f677438c22cb
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.sao10k_l3_1_euryale_70b
+label: 'openrouter / sao10k/l3.1-euryale-70b'
+server_id: openrouter
+raw_model_id: sao10k/l3.1-euryale-70b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.85
+cost_output: 0.85
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

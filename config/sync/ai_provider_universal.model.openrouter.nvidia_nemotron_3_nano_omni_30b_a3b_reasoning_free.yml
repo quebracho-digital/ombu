@@ -1,0 +1,19 @@
+uuid: cf57d7a2-df70-40fb-9afe-fbd6f1ff0612
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nvidia_nemotron_3_nano_omni_30b_a3b_reasoning_free
+label: 'openrouter / nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
+server_id: openrouter
+raw_model_id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 3
+context_length: 256000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

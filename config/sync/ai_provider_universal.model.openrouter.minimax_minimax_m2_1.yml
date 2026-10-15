@@ -1,0 +1,19 @@
+uuid: 80ca888a-70dc-4fd3-b1a4-b9aa118dd79a
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.minimax_minimax_m2_1
+label: 'openrouter / minimax/minimax-m2.1'
+server_id: openrouter
+raw_model_id: minimax/minimax-m2.1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 1.2
+quality_tier: 3
+context_length: 204800
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

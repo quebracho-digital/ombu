@@ -1,0 +1,19 @@
+uuid: b87302c3-1b21-4392-b198-305f854a6025
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen_2_5_coder_32b_instruct
+label: 'openrouter / qwen/qwen-2.5-coder-32b-instruct'
+server_id: openrouter
+raw_model_id: qwen/qwen-2.5-coder-32b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.66
+cost_output: 1.0
+quality_tier: 3
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

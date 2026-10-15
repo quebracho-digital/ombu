@@ -1,0 +1,19 @@
+uuid: 7fade85e-2a56-4589-bd80-2a3239fa64aa
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.firerouter_auto
+label: 'fireworks / firerouter/auto'
+server_id: fireworks
+raw_model_id: firerouter/auto
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

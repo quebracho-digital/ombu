@@ -1,0 +1,19 @@
+uuid: b6eb8950-69c3-4e5d-b60c-37f764e68acc
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.bytedance_seed_seed_2_1_turbo
+label: 'openrouter / bytedance-seed/seed-2-1-turbo'
+server_id: openrouter
+raw_model_id: bytedance-seed/seed-2-1-turbo
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.5
+cost_output: 2.5
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

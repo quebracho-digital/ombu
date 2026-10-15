@@ -1,0 +1,20 @@
+uuid: 452fc142-1d50-43de-aa61-8b74f13f7ee1
+langcode: en
+status: true
+dependencies: {  }
+id: groq.meta_llama_llama_prompt_guard_2_86m
+label: 'groq / meta-llama/llama-prompt-guard-2-86m'
+server_id: groq
+raw_model_id: meta-llama/llama-prompt-guard-2-86m
+detected_operation_types:
+  - moderation
+operation_types: {  }
+cost_input: 0.04
+cost_output: 0.04
+quality_tier: 1
+context_length: 512
+reasoning: null
+supported_features:
+  - json_mode
+sampling: {  }
+extra_params: {  }

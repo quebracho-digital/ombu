@@ -1,0 +1,19 @@
+uuid: 8b23cd03-59be-4417-aeec-c86b26f38ecd
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.cohere_command_r_08_2024
+label: 'openrouter / cohere/command-r-08-2024'
+server_id: openrouter
+raw_model_id: cohere/command-r-08-2024
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 0.6
+quality_tier: 3
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

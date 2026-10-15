@@ -1,0 +1,19 @@
+uuid: d8144317-3936-4bda-9137-46e218dd049e
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.sakana_fugu_ultra
+label: 'openrouter / sakana/fugu-ultra'
+server_id: openrouter
+raw_model_id: sakana/fugu-ultra
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 5.0
+cost_output: 30.0
+quality_tier: 5
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

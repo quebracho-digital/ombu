@@ -1,0 +1,21 @@
+uuid: e282fd9a-a371-4fe6-8ee7-be1e2c056a60
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_oss_safeguard_20b
+label: 'openrouter / openai/gpt-oss-safeguard-20b'
+server_id: openrouter
+raw_model_id: openai/gpt-oss-safeguard-20b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.3
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 1.0
+  top_p: 1.0
+extra_params: {  }

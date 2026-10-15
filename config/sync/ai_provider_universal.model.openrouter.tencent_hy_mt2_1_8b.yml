@@ -1,0 +1,19 @@
+uuid: 50719191-9753-4ff7-90c2-d132173d570b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.tencent_hy_mt2_1_8b
+label: 'openrouter / tencent/hy-mt2-1.8b'
+server_id: openrouter
+raw_model_id: tencent/hy-mt2-1.8b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.044
+cost_output: 0.177
+quality_tier: 1
+context_length: 8192
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

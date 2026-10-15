@@ -1,0 +1,19 @@
+uuid: 6f503607-b18f-4510-86e9-582a4e927ffb
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_llama_llama_3_1_8b_instruct
+label: 'openrouter / meta-llama/llama-3.1-8b-instruct'
+server_id: openrouter
+raw_model_id: meta-llama/llama-3.1-8b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.08
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

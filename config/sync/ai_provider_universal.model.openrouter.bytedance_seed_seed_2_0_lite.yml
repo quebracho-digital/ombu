@@ -1,0 +1,19 @@
+uuid: e3acde81-4d1e-4d0c-9cc9-a759a0755a7b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.bytedance_seed_seed_2_0_lite
+label: 'openrouter / bytedance-seed/seed-2.0-lite'
+server_id: openrouter
+raw_model_id: bytedance-seed/seed-2.0-lite
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.25
+cost_output: 2.0
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

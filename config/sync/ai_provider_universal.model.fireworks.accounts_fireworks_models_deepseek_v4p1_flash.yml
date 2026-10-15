@@ -1,0 +1,19 @@
+uuid: a1c73ffc-7e40-4643-b08a-e571dcd0a15f
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_deepseek_v4p1_flash
+label: 'fireworks / accounts/fireworks/models/deepseek-v4p1-flash'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/deepseek-v4p1-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 4
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

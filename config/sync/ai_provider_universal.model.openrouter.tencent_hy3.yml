@@ -1,0 +1,19 @@
+uuid: d0a19ee3-31ba-4a5c-a269-60343cb9a476
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.tencent_hy3
+label: 'openrouter / tencent/hy3'
+server_id: openrouter
+raw_model_id: tencent/hy3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.132
+cost_output: 0.528
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

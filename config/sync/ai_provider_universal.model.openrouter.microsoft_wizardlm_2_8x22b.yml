@@ -1,0 +1,19 @@
+uuid: f9d8fe17-3b65-4911-83b0-6db04d2f892f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.microsoft_wizardlm_2_8x22b
+label: 'openrouter / microsoft/wizardlm-2-8x22b'
+server_id: openrouter
+raw_model_id: microsoft/wizardlm-2-8x22b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.62
+cost_output: 0.62
+quality_tier: 2
+context_length: 65535
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

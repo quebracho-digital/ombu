@@ -1,0 +1,23 @@
+uuid: f943aca9-d680-4f55-8106-0d5e6ec3ca91
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+    - file
+id: commerce_product.field_videos
+field_name: field_videos
+entity_type: commerce_product
+type: file
+settings:
+  target_type: file
+  display_field: false
+  display_default: false
+  uri_scheme: public
+module: file
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

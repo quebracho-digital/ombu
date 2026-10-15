@@ -1,0 +1,21 @@
+uuid: e2ee1a39-f229-45c3-b4a7-c95c796e8733
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+_core:
+  default_config_hash: z_sKOIU0XTKtWLa-N1izc4ylK-N5tuIGtM8y8KPP7OE
+id: commerce_product.field_input_schema
+field_name: field_input_schema
+entity_type: commerce_product
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

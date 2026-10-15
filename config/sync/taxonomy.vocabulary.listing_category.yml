@@ -1,0 +1,11 @@
+uuid: 1e899809-30ec-42cf-a2c8-0c3761238025
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: eGZGg8lPd3OPyoUVj6lQyu4ShqMJftyuHEd2ojkTQFs
+name: 'Listing category'
+vid: listing_category
+description: null
+weight: 0
+new_revision: false

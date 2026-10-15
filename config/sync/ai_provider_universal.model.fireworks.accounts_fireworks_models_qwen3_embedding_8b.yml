@@ -1,0 +1,21 @@
+uuid: 555485a9-4e94-4334-8e10-4118768faa8f
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_qwen3_embedding_8b
+label: 'fireworks / accounts/fireworks/models/qwen3-embedding-8b'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/qwen3-embedding-8b
+detected_operation_types:
+  - embeddings
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 2
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: b4707f63-05c8-4ec7-98f5-ce537bcba6a3
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.arcee_ai_trinity_large_thinking
+label: 'openrouter / arcee-ai/trinity-large-thinking'
+server_id: openrouter
+raw_model_id: arcee-ai/trinity-large-thinking
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.25
+cost_output: 0.8
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

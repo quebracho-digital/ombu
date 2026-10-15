@@ -1,0 +1,27 @@
+uuid: b9418d6b-8be3-4aba-a858-6dab8522472e
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.social
+  module:
+    - system
+  theme:
+    - belgrade
+_core:
+  default_config_hash: K-1ayI8DqKOdAUEDV38kUkMI0my_RWWBWwm80zMrNjI
+id: belgrade_social
+theme: belgrade
+region: footer
+weight: -4
+provider: null
+plugin: 'system_menu_block:social'
+settings:
+  id: 'system_menu_block:social'
+  label: "Let's get social"
+  label_display: visible
+  provider: system
+  level: 1
+  depth: null
+  expand_all_items: false
+visibility: {  }

@@ -1,0 +1,21 @@
+uuid: a29bbbb5-9d99-4cb2-b8dd-18afc2dbdd7d
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+id: commerce_product.field_source_hash
+field_name: field_source_hash
+entity_type: commerce_product
+type: string
+settings:
+  max_length: 64
+  case_sensitive: false
+  is_ascii: true
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,19 @@
+uuid: 20788b0c-9bf9-4949-bafd-b48e16af6011
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nvidia_nemotron_3_ultra_550b_a55b
+label: 'openrouter / nvidia/nemotron-3-ultra-550b-a55b'
+server_id: openrouter
+raw_model_id: nvidia/nemotron-3-ultra-550b-a55b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.6
+cost_output: 2.4
+quality_tier: 4
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

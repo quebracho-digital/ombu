@@ -1,0 +1,19 @@
+uuid: 60844449-4309-4e04-98d0-38a4a4952173
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.rekaai_reka_edge
+label: 'openrouter / rekaai/reka-edge'
+server_id: openrouter
+raw_model_id: rekaai/reka-edge
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.1
+quality_tier: 1
+context_length: 16384
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

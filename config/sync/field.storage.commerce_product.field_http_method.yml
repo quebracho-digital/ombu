@@ -1,0 +1,23 @@
+uuid: 7115ab63-ff0c-4ac6-bc51-390c72993fd1
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+_core:
+  default_config_hash: Z55SgoFKik4oWJ63ZDL_srlZnGQgNwy9EaIT2Iw5RYs
+id: commerce_product.field_http_method
+field_name: field_http_method
+entity_type: commerce_product
+type: string
+settings:
+  max_length: 8
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,19 @@
+uuid: d1daa7b6-deb1-42b4-b1ce-40a2141e790c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_codestral_2508_batch
+label: 'openrouter / mistralai/codestral-2508:batch'
+server_id: openrouter
+raw_model_id: 'mistralai/codestral-2508:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 0.45
+quality_tier: 2
+context_length: 256000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 1bb8ec54-ccbb-4169-9df9-c2cfdf3beed8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nousresearch_hermes_3_llama_3_1_70b
+label: 'openrouter / nousresearch/hermes-3-llama-3.1-70b'
+server_id: openrouter
+raw_model_id: nousresearch/hermes-3-llama-3.1-70b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.7
+cost_output: 0.7
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

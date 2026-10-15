@@ -1,0 +1,23 @@
+uuid: d4f55dd3-5b2c-4037-acd6-4f6a54406624
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+_core:
+  default_config_hash: 00tR-KUlrEeoCsL6V6dhWjJ_nJlY3hYyNxrXvKbr64E
+id: commerce_product.field_network
+field_name: field_network
+entity_type: commerce_product
+type: string
+settings:
+  max_length: 64
+  case_sensitive: false
+  is_ascii: false
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

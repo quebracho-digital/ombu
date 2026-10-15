@@ -1,0 +1,19 @@
+uuid: 8d07e29a-bb5e-489d-b623-84c83f2811f3
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_routers_glm_5p3_fast
+label: 'fireworks / accounts/fireworks/routers/glm-5p3-fast'
+server_id: fireworks
+raw_model_id: accounts/fireworks/routers/glm-5p3-fast
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 2285f8ac-afc4-48b4-a29c-fa393ce154fe
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_ministral_14b_2512
+label: 'openrouter / mistralai/ministral-14b-2512'
+server_id: openrouter
+raw_model_id: mistralai/ministral-14b-2512
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 0.2
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

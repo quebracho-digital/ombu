@@ -1,0 +1,19 @@
+uuid: cb7fd924-e660-4cae-a314-2ead804189fc
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.thedrummer_unslopnemo_12b
+label: 'openrouter / thedrummer/unslopnemo-12b'
+server_id: openrouter
+raw_model_id: thedrummer/unslopnemo-12b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.4
+cost_output: 0.4
+quality_tier: 2
+context_length: 1024000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

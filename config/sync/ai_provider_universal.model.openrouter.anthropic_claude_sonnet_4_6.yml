@@ -1,0 +1,19 @@
+uuid: 228a2b4e-636b-4666-983f-56dc591448fc
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.anthropic_claude_sonnet_4_6
+label: 'openrouter / anthropic/claude-sonnet-4.6'
+server_id: openrouter
+raw_model_id: anthropic/claude-sonnet-4.6
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 3.0
+cost_output: 15.0
+quality_tier: 4
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

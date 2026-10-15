@@ -1,0 +1,21 @@
+uuid: 949cac98-14dc-47c9-bb9e-0f330eed6a7c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_30b_a3b_instruct_2507
+label: 'openrouter / qwen/qwen3-30b-a3b-instruct-2507'
+server_id: openrouter
+raw_model_id: qwen/qwen3-30b-a3b-instruct-2507
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.3
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

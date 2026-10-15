@@ -1,0 +1,11 @@
+uuid: 260e4d36-5660-477f-a62f-a46c01d40194
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 5E6MxqocBNnVFruJoOrCmkFUSJOkeUDoL7mW5PBBWFc
+name: 'Listing tag'
+vid: listing_tag
+description: ''
+weight: 0
+new_revision: false

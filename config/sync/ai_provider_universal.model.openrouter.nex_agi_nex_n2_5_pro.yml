@@ -1,0 +1,19 @@
+uuid: d06f62ba-d111-42d3-a437-b34dfbccc39e
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nex_agi_nex_n2_5_pro
+label: 'openrouter / nex-agi/nex-n2.5-pro'
+server_id: openrouter
+raw_model_id: nex-agi/nex-n2.5-pro
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.25
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

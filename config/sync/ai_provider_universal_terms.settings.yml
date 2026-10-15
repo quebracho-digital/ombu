@@ -1,0 +1,6 @@
+_core:
+  default_config_hash: cLBCOI6FXuz_I14RYsjKTa31lVGp6uevi1xdtH6Zt0M
+model: minisforum.unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_xl
+chunk_words: 0
+max_chars: 200000
+requests_per_hour: 30

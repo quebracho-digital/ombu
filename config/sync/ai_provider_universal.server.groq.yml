@@ -1,0 +1,17 @@
+uuid: f3c93c6b-1e21-4095-a702-533bfa581821
+langcode: en
+status: true
+dependencies: {  }
+id: groq
+label: groq
+backend: groq
+host_name: ''
+port: ''
+api_key: groq
+timeout: 90
+operation_types: {  }
+model_filter: ''
+daily_request_limit: null
+daily_token_limit: null
+alert_threshold: 80
+limit_grace: null

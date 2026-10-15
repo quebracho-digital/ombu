@@ -1,0 +1,19 @@
+uuid: 92a4ba9e-a600-4434-864c-f67532e7b914
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.thedrummer_cydonia_24b_v4_1
+label: 'openrouter / thedrummer/cydonia-24b-v4.1'
+server_id: openrouter
+raw_model_id: thedrummer/cydonia-24b-v4.1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 0.5
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

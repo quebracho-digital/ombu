@@ -1,0 +1,22 @@
+label: 'Mis listados'
+display:
+  default:
+    display_options:
+      title: 'Mis listados'
+      fields:
+        title:
+          label: Listado
+        field_source:
+          label: Origen
+        changed:
+          label: Actualizado
+      header:
+        area_text_custom:
+          content: 'Los listados que pagan a una de tus billeteras. Edita uno para agregar una nota, imágenes, videos y archivos, o para traducirlo; los datos de Circle se mantienen sincronizados.'
+      empty:
+        area_text_custom:
+          content: 'Todavía ningún listado paga a una billetera tuya. Inicia sesión con la billetera a la que se paga tu listado, o vincúlala: mira <a href="/es/docs/sellers">Para vendedores</a>.'
+  page_1:
+    display_options:
+      menu:
+        title: 'Mis listados'

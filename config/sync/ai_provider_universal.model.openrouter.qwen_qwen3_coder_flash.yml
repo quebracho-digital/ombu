@@ -1,0 +1,21 @@
+uuid: 41375702-7f2b-430e-a715-1bae5d7958e2
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_coder_flash
+label: 'openrouter / qwen/qwen3-coder-flash'
+server_id: openrouter
+raw_model_id: qwen/qwen3-coder-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.195
+cost_output: 0.975
+quality_tier: 3
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 37bd7339-5afc-468b-b03e-09a4746166c6
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.morph_morph_v3_fast
+label: 'openrouter / morph/morph-v3-fast'
+server_id: openrouter
+raw_model_id: morph/morph-v3-fast
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.8
+cost_output: 1.2
+quality_tier: 3
+context_length: 81920
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

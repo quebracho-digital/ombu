@@ -1,0 +1,19 @@
+uuid: 8ffd4931-6036-41a0-89a4-16eda877867f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.z_ai_glm_5v_turbo
+label: 'openrouter / z-ai/glm-5v-turbo'
+server_id: openrouter
+raw_model_id: z-ai/glm-5v-turbo
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.2
+cost_output: 4.0
+quality_tier: 3
+context_length: 202752
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

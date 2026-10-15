@@ -1,0 +1,19 @@
+uuid: f20fe469-eba0-480d-9f24-6ab9ccc13d0b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_o4_mini
+label: 'openrouter / openai/o4-mini'
+server_id: openrouter
+raw_model_id: openai/o4-mini
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.1
+cost_output: 4.4
+quality_tier: 3
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

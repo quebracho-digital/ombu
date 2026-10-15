@@ -1,0 +1,19 @@
+uuid: d0a42b25-fce6-4673-9340-3348664b3ed6
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.microsoft_phi_4
+label: 'openrouter / microsoft/phi-4'
+server_id: openrouter
+raw_model_id: microsoft/phi-4
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.07
+cost_output: 0.14
+quality_tier: 2
+context_length: 16384
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

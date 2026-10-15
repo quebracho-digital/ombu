@@ -1,0 +1,19 @@
+uuid: 3d116be8-c57d-409b-a0c8-453391c3d7d0
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.relace_relace_apply_3
+label: 'openrouter / relace/relace-apply-3'
+server_id: openrouter
+raw_model_id: relace/relace-apply-3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.85
+cost_output: 1.25
+quality_tier: 3
+context_length: 256000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

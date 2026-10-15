@@ -1,0 +1,19 @@
+uuid: 5f9874e3-a6b4-48da-9b7c-dc8d3e0d7ae8
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.bytedance_ui_tars_1_5_7b
+label: 'openrouter / bytedance/ui-tars-1.5-7b'
+server_id: openrouter
+raw_model_id: bytedance/ui-tars-1.5-7b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.2
+quality_tier: 2
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

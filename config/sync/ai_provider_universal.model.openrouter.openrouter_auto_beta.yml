@@ -1,0 +1,19 @@
+uuid: d430d16b-1dbd-4a90-9171-07ddcf18cf90
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openrouter_auto_beta
+label: 'openrouter / openrouter/auto-beta'
+server_id: openrouter
+raw_model_id: openrouter/auto-beta
+detected_operation_types:
+  - text_to_image
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: 2000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

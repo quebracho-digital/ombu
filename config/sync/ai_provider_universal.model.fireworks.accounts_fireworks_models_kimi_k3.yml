@@ -1,0 +1,19 @@
+uuid: cd9633df-adf7-4d50-aec4-dfdf7d74f061
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_kimi_k3
+label: 'fireworks / accounts/fireworks/models/kimi-k3'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/kimi-k3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

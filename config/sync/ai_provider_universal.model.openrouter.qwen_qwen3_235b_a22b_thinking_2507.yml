@@ -1,0 +1,21 @@
+uuid: 50bb554a-4052-46d0-b7d7-68f2cb8add9d
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_235b_a22b_thinking_2507
+label: 'openrouter / qwen/qwen3-235b-a22b-thinking-2507'
+server_id: openrouter
+raw_model_id: qwen/qwen3-235b-a22b-thinking-2507
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.45
+cost_output: 3.5
+quality_tier: 4
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

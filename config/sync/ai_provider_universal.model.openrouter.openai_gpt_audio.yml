@@ -1,0 +1,19 @@
+uuid: 41c39989-0347-48eb-a677-db65fde5d7c4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_audio
+label: 'openrouter / openai/gpt-audio'
+server_id: openrouter
+raw_model_id: openai/gpt-audio
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.5
+cost_output: 10.0
+quality_tier: 4
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

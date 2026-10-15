@@ -1,0 +1,19 @@
+uuid: e5be7078-178a-40fb-aec5-e39bcd8c017d
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_glm_5p3_flash
+label: 'fireworks / accounts/fireworks/models/glm-5p3-flash'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/glm-5p3-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

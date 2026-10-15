@@ -1,0 +1,21 @@
+uuid: dcb86186-8109-4a6f-bd41-79582d7bb342
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_next_80b_a3b_thinking
+label: 'openrouter / qwen/qwen3-next-80b-a3b-thinking'
+server_id: openrouter
+raw_model_id: qwen/qwen3-next-80b-a3b-thinking
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 1.2
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

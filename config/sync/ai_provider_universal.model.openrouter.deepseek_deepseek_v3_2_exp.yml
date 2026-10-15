@@ -1,0 +1,19 @@
+uuid: 5a5a81a1-8357-491b-933a-50060abf7828
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.deepseek_deepseek_v3_2_exp
+label: 'openrouter / deepseek/deepseek-v3.2-exp'
+server_id: openrouter
+raw_model_id: deepseek/deepseek-v3.2-exp
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.27
+cost_output: 0.41
+quality_tier: 4
+context_length: 163840
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

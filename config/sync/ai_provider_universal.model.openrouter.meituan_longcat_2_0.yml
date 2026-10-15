@@ -1,0 +1,19 @@
+uuid: 140bcab5-77ae-41e1-a171-66ea293ea5ff
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meituan_longcat_2_0
+label: 'openrouter / meituan/longcat-2.0'
+server_id: openrouter
+raw_model_id: meituan/longcat-2.0
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 1.2
+quality_tier: 3
+context_length: 1048756
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

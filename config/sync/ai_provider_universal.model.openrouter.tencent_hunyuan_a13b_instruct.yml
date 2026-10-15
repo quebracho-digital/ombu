@@ -1,0 +1,19 @@
+uuid: f37a9e27-a0f4-4e16-9e8e-dc91a405526c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.tencent_hunyuan_a13b_instruct
+label: 'openrouter / tencent/hunyuan-a13b-instruct'
+server_id: openrouter
+raw_model_id: tencent/hunyuan-a13b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.14
+cost_output: 0.57
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

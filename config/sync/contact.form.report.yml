@@ -1,0 +1,12 @@
+uuid: c71658d9-ea7a-4ef4-ad6c-3e89d89065eb
+langcode: en
+status: true
+dependencies: {  }
+id: report
+label: 'Report abuse'
+recipients:
+  - ombu@quebracho.digital
+reply: ''
+weight: 0
+message: 'We received your report and will review it. If we need more, we will write to the address you gave.'
+redirect: /

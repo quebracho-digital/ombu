@@ -1,0 +1,19 @@
+uuid: e058620f-35cc-4875-bd0c-9aea8ffa40ab
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.anthropic_claude_opus_4_8
+label: 'openrouter / anthropic/claude-opus-4.8'
+server_id: openrouter
+raw_model_id: anthropic/claude-opus-4.8
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 5.0
+cost_output: 25.0
+quality_tier: 5
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

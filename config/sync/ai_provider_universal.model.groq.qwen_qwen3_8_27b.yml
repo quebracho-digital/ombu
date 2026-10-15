@@ -1,0 +1,25 @@
+uuid: c8cd99e2-9f12-468e-b017-72d385d3207d
+langcode: en
+status: true
+dependencies: {  }
+id: groq.qwen_qwen3_8_27b
+label: 'groq / qwen/qwen3.8-27b'
+server_id: groq
+raw_model_id: qwen/qwen3.8-27b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.8
+cost_output: 4.0
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features:
+  - json_mode
+  - reasoning
+  - tools
+  - vision
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

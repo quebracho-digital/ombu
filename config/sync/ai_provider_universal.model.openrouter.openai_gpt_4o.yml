@@ -1,0 +1,19 @@
+uuid: 7dfe2cfd-f9ad-4d71-966e-557d7eaa28d4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_4o
+label: 'openrouter / openai/gpt-4o'
+server_id: openrouter
+raw_model_id: openai/gpt-4o
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.5
+cost_output: 10.0
+quality_tier: 4
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

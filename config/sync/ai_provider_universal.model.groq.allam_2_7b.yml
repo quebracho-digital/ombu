@@ -1,0 +1,20 @@
+uuid: 14f5a5ab-6bd5-4a0b-b55d-1cce2daef2c3
+langcode: en
+status: true
+dependencies: {  }
+id: groq.allam_2_7b
+label: 'groq / allam-2-7b'
+server_id: groq
+raw_model_id: allam-2-7b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: 2
+context_length: 4096
+reasoning: null
+supported_features:
+  - json_mode
+sampling: {  }
+extra_params: {  }

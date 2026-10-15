@@ -1,0 +1,19 @@
+uuid: 96c61e4a-acb4-416d-976b-54e5ebf71fe3
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.inclusionai_ling_3_0_flash_vl
+label: 'openrouter / inclusionai/ling-3.0-flash-vl'
+server_id: openrouter
+raw_model_id: inclusionai/ling-3.0-flash-vl
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.06
+cost_output: 0.18
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

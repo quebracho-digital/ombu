@@ -1,0 +1,13 @@
+display:
+  default:
+    display_title: 'Por defecto'
+    display_options:
+      fields:
+        subject:
+          label: Asunto
+        url:
+          label: URL
+  page_1:
+    display_title: Página
+  block_1:
+    display_title: Bloque

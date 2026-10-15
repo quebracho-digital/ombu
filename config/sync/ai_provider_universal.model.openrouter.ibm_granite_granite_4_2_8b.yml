@@ -1,0 +1,19 @@
+uuid: 086b2779-6323-4344-8363-90f73f9e4d2c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.ibm_granite_granite_4_2_8b
+label: 'openrouter / ibm-granite/granite-4.2-8b'
+server_id: openrouter
+raw_model_id: ibm-granite/granite-4.2-8b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.06
+cost_output: 0.25
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

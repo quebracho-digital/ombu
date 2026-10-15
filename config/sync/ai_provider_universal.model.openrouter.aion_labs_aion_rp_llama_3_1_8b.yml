@@ -1,0 +1,19 @@
+uuid: 43185d50-24bf-41ad-be80-4f6cde6dd6dd
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.aion_labs_aion_rp_llama_3_1_8b
+label: 'openrouter / aion-labs/aion-rp-llama-3.1-8b'
+server_id: openrouter
+raw_model_id: aion-labs/aion-rp-llama-3.1-8b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.8
+cost_output: 1.6
+quality_tier: 2
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

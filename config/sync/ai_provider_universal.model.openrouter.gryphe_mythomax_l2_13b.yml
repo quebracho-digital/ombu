@@ -1,0 +1,19 @@
+uuid: c005b99c-5473-44a6-a7fc-e078921bdea6
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.gryphe_mythomax_l2_13b
+label: 'openrouter / gryphe/mythomax-l2-13b'
+server_id: openrouter
+raw_model_id: gryphe/mythomax-l2-13b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.08
+cost_output: 0.11
+quality_tier: 2
+context_length: 8192
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

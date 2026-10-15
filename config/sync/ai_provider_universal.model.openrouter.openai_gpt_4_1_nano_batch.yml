@@ -1,0 +1,19 @@
+uuid: 5c0a290e-427d-427a-aa31-b99e6c34b89b
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_4_1_nano_batch
+label: 'openrouter / openai/gpt-4.1-nano:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-4.1-nano:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.2
+quality_tier: 4
+context_length: 1047576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

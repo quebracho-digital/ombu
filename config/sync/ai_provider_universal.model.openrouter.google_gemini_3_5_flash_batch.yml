@@ -1,0 +1,19 @@
+uuid: 9283694d-e108-4724-a211-054c26dd3925
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_3_5_flash_batch
+label: 'openrouter / google/gemini-3.5-flash:batch'
+server_id: openrouter
+raw_model_id: 'google/gemini-3.5-flash:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.75
+cost_output: 4.5
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

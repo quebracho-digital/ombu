@@ -1,0 +1,19 @@
+uuid: 051664d5-2a77-4145-98e6-80faba2ff7e7
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_terra_latest
+label: 'openrouter / ~openai/gpt-terra-latest'
+server_id: openrouter
+raw_model_id: ~openai/gpt-terra-latest
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 12.0
+quality_tier: 4
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

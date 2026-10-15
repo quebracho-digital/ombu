@@ -1,0 +1,19 @@
+uuid: e943fc95-7749-427e-907a-b13e76fce1ae
+langcode: en
+status: true
+dependencies: {  }
+id: groq.canopylabs_orpheus_arabic_saudi
+label: 'groq / canopylabs/orpheus-arabic-saudi'
+server_id: groq
+raw_model_id: canopylabs/orpheus-arabic-saudi
+detected_operation_types:
+  - text_to_speech
+operation_types: {  }
+cost_input: 40.0
+cost_output: null
+quality_tier: null
+context_length: 4000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,10 @@
+uuid: 045c08af-f8cd-4d13-9b47-184169e91729
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: CQ3UbsgenVVgTgwwu3RdVVNd9PCkahXSkIGwrhZPE-M
+id: review
+label: Review
+target_entity_type_id: commerce_product
+description: 'A rated review by a person or an agent.'

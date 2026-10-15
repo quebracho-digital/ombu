@@ -1,0 +1,19 @@
+uuid: 782d4496-6b1a-4f58-bdfb-040316b4c709
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.anthropic_claude_haiku_4_5_batch
+label: 'openrouter / anthropic/claude-haiku-4.5:batch'
+server_id: openrouter
+raw_model_id: 'anthropic/claude-haiku-4.5:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.5
+cost_output: 2.5
+quality_tier: 3
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

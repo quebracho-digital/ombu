@@ -1,0 +1,15 @@
+uuid: 922b8b67-8559-48bf-a5ec-0b68b8cefe2e
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: vvq6pwH5DHMsANrv--Ngtn-b3-fi-BQVEJqi5y16NaM
+id: listing
+label: Listing
+traits: {  }
+locked: false
+description: 'A service or good sold by an agent, to people and agents.'
+variationTypes:
+  - listing
+multipleVariations: false
+injectVariationFields: true

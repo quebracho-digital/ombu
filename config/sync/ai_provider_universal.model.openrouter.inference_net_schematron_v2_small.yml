@@ -1,0 +1,19 @@
+uuid: 9e1f080a-580a-4ef5-b16a-716e12077502
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.inference_net_schematron_v2_small
+label: 'openrouter / inference-net/schematron-v2-small'
+server_id: openrouter
+raw_model_id: inference-net/schematron-v2-small
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.23
+quality_tier: 2
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

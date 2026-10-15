@@ -1,0 +1,21 @@
+uuid: acf3e057-cf80-4260-80bd-3f4e69c60676
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_8_omni_flash
+label: 'openrouter / qwen/qwen3.8-omni-flash'
+server_id: openrouter
+raw_model_id: qwen/qwen3.8-omni-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 0.47
+quality_tier: 2
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 82ab1d00-58d5-40df-be05-711d454776d4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openrouter_free
+label: 'openrouter / openrouter/free'
+server_id: openrouter
+raw_model_id: openrouter/free
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 200000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

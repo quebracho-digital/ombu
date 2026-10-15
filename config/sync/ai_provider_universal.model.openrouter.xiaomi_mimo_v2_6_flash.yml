@@ -1,0 +1,19 @@
+uuid: c9f67393-0d5d-4388-bc31-206ab41d6e02
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.xiaomi_mimo_v2_6_flash
+label: 'openrouter / xiaomi/mimo-v2.6-flash'
+server_id: openrouter
+raw_model_id: xiaomi/mimo-v2.6-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.14
+cost_output: 0.28
+quality_tier: 2
+context_length: 1050000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

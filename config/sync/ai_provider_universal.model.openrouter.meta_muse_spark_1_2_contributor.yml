@@ -1,0 +1,19 @@
+uuid: 16fdca40-5221-4d62-a280-214fded9e5d9
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.meta_muse_spark_1_2_contributor
+label: 'openrouter / meta/muse-spark-1.2-contributor'
+server_id: openrouter
+raw_model_id: meta/muse-spark-1.2-contributor
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.2
+quality_tier: 2
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

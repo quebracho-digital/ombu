@@ -1,0 +1,19 @@
+uuid: 378ab846-9e90-4370-b37d-05c758f5e15c
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_mistral_small_3_1_24b_instruct
+label: 'openrouter / mistralai/mistral-small-3.1-24b-instruct'
+server_id: openrouter
+raw_model_id: mistralai/mistral-small-3.1-24b-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.351
+cost_output: 0.555
+quality_tier: 3
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

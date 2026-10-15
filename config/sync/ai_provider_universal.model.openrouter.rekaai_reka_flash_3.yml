@@ -1,0 +1,19 @@
+uuid: 77e26b55-8eeb-4f0d-9a62-df359ac64480
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.rekaai_reka_flash_3
+label: 'openrouter / rekaai/reka-flash-3'
+server_id: openrouter
+raw_model_id: rekaai/reka-flash-3
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.2
+quality_tier: 2
+context_length: 65536
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

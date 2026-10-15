@@ -1,0 +1,19 @@
+uuid: fa65c0cd-9af9-491d-8f9d-d714bf7968c1
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.inception_mercury_2
+label: 'openrouter / inception/mercury-2'
+server_id: openrouter
+raw_model_id: inception/mercury-2
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.25
+cost_output: 0.75
+quality_tier: 3
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

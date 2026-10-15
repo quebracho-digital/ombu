@@ -1,0 +1,19 @@
+uuid: e8d6fd8a-3329-4b7b-898c-f0e2af63293f
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_codestral_2508
+label: 'openrouter / mistralai/codestral-2508'
+server_id: openrouter
+raw_model_id: mistralai/codestral-2508
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 0.9
+quality_tier: 3
+context_length: 256000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

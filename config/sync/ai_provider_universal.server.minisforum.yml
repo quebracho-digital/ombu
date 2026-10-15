@@ -1,0 +1,17 @@
+uuid: eed92876-cb73-4461-aeae-2bdfec30bb4a
+langcode: en
+status: true
+dependencies: {  }
+id: minisforum
+label: minisforum
+backend: openai_compatible
+host_name: 'http://192.168.1.150'
+port: '8080'
+api_key: minisforum_llama
+timeout: 600
+operation_types: {  }
+model_filter: '*Qwen3.8-27B*, unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL'
+daily_request_limit: null
+daily_token_limit: null
+alert_threshold: 80
+limit_grace: null

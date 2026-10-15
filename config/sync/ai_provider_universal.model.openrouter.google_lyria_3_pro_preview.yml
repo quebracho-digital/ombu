@@ -1,0 +1,19 @@
+uuid: 41bd97a0-da34-44fc-a94e-4f98688ff346
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_lyria_3_pro_preview
+label: 'openrouter / google/lyria-3-pro-preview'
+server_id: openrouter
+raw_model_id: google/lyria-3-pro-preview
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

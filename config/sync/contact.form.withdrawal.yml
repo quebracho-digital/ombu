@@ -1,0 +1,12 @@
+uuid: fba2ad50-2670-4485-a266-6891a293489b
+langcode: en
+status: true
+dependencies: {  }
+id: withdrawal
+label: 'Cancel a purchase'
+recipients:
+  - ombu@quebracho.digital
+reply: ''
+weight: 0
+message: 'We received your request. Within 24 hours we will write to you with its reference number, and we will return the amount paid to the wallet that paid it.'
+redirect: /

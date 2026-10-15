@@ -1,0 +1,19 @@
+uuid: 3dbef40b-7f61-43c7-8998-5011cb70a6a2
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_mistral_large_2407
+label: 'openrouter / mistralai/mistral-large-2407'
+server_id: openrouter
+raw_model_id: mistralai/mistral-large-2407
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 6.0
+quality_tier: 4
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

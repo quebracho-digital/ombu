@@ -1,0 +1,19 @@
+uuid: 2ed2ef7f-70b4-4467-93f9-b57c3e7073c2
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.auto
+label: 'fireworks / auto'
+server_id: fireworks
+raw_model_id: auto
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

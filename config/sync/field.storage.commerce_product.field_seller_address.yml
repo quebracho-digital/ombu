@@ -1,0 +1,21 @@
+uuid: 6553bc62-cf8c-4943-9575-69e01a7de8c5
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+id: commerce_product.field_seller_address
+field_name: field_seller_address
+entity_type: commerce_product
+type: string
+settings:
+  max_length: 42
+  case_sensitive: false
+  is_ascii: true
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

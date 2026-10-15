@@ -1,0 +1,21 @@
+uuid: 7e3dc879-7a1c-4721-be31-b3e316abe518
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_oss_20b_batch
+label: 'openrouter / openai/gpt-oss-20b:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-oss-20b:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.024
+cost_output: 0.112
+quality_tier: 2
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 1.0
+  top_p: 1.0
+extra_params: {  }

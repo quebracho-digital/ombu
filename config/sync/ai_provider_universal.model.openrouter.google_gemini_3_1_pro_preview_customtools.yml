@@ -1,0 +1,19 @@
+uuid: 70d63aae-e9e1-4e38-b548-8b2b0f702cee
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_3_1_pro_preview_customtools
+label: 'openrouter / google/gemini-3.1-pro-preview-customtools'
+server_id: openrouter
+raw_model_id: google/gemini-3.1-pro-preview-customtools
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 12.0
+quality_tier: 5
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

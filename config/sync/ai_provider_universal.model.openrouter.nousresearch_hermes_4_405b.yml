@@ -1,0 +1,19 @@
+uuid: be16224c-4d3f-4432-883b-0492de46c63d
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nousresearch_hermes_4_405b
+label: 'openrouter / nousresearch/hermes-4-405b'
+server_id: openrouter
+raw_model_id: nousresearch/hermes-4-405b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.0
+cost_output: 3.0
+quality_tier: 4
+context_length: 131072
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

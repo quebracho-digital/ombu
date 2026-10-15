@@ -1,0 +1,25 @@
+uuid: 90c3b76d-e316-4b2f-8446-1f44711c6f8d
+langcode: en
+status: true
+dependencies: {  }
+id: groq.openai_gpt_oss_120b
+label: 'groq / openai/gpt-oss-120b'
+server_id: groq
+raw_model_id: openai/gpt-oss-120b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.15
+cost_output: 0.6
+quality_tier: 3
+context_length: 131072
+reasoning: null
+supported_features:
+  - json_mode
+  - reasoning
+  - structured_outputs
+  - tools
+sampling:
+  temperature: 1.0
+  top_p: 1.0
+extra_params: {  }

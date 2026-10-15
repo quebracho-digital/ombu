@@ -1,0 +1,19 @@
+uuid: 2bc299f1-2c66-47bd-b03d-7baf9f30895e
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.stepfun_step_3_5_flash
+label: 'openrouter / stepfun/step-3.5-flash'
+server_id: openrouter
+raw_model_id: stepfun/step-3.5-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.1
+cost_output: 0.3
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

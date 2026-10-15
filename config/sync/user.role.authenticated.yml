@@ -1,0 +1,36 @@
+uuid: 0b864ece-30d4-4a60-81e4-850bf0bd74b3
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.basic_html
+  module:
+    - comment
+    - commerce_order
+    - commerce_product
+    - commerce_store
+    - contact
+    - content_translation
+    - file
+    - filter
+    - system
+_core:
+  default_config_hash: wkW7P5A53YhGmsgamrmTbfwpZrqdnPYiJdoAZQtdmJg
+id: authenticated
+label: 'Authenticated user'
+weight: 1
+is_admin: false
+permissions:
+  - 'access comments'
+  - 'access content'
+  - 'access site-wide contact form'
+  - 'create content translations'
+  - 'delete own files'
+  - 'post comments'
+  - 'skip comment approval'
+  - 'translate editable entities'
+  - 'update content translations'
+  - 'use text format basic_html'
+  - 'view commerce_product'
+  - 'view commerce_store'
+  - 'view own commerce_order'

@@ -1,0 +1,29 @@
+uuid: 138ead93-226c-4f0d-94fc-9ea30c6ad19b
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_x402_price
+  module:
+    - x402_pay
+id: commerce_product.listing.field_x402_price
+field_name: field_x402_price
+entity_type: commerce_product
+bundle: listing
+label: 'Price for agents'
+description: "What an agent pays per call. The seller is the listing's own key."
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  enabled: true
+  amount: '0.01'
+  network: 'eip155:5042'
+  key_id: ''
+  pay_to: ''
+  allow_override: true
+  view_mode: full
+  canonical: false
+field_type: x402_price

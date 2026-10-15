@@ -1,0 +1,19 @@
+uuid: a87a3653-dee3-4e59-b341-ae83d99e484a
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_mistral_saba
+label: 'openrouter / mistralai/mistral-saba'
+server_id: openrouter
+raw_model_id: mistralai/mistral-saba
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.2
+cost_output: 0.6
+quality_tier: 3
+context_length: 32768
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

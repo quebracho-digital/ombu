@@ -1,0 +1,19 @@
+uuid: 6f725787-6a12-4822-8d06-e78dd1e59aca
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.amazon_nova_micro_v1
+label: 'openrouter / amazon/nova-micro-v1'
+server_id: openrouter
+raw_model_id: amazon/nova-micro-v1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.035
+cost_output: 0.14
+quality_tier: 2
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

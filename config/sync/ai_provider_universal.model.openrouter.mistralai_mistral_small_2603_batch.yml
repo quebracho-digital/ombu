@@ -1,0 +1,19 @@
+uuid: 05de6170-5818-4a93-b85f-62ea8545f75e
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.mistralai_mistral_small_2603_batch
+label: 'openrouter / mistralai/mistral-small-2603:batch'
+server_id: openrouter
+raw_model_id: 'mistralai/mistral-small-2603:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.075
+cost_output: 0.3
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: 8ffe6c45-98bf-4811-b895-48ea2962d7db
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nvidia_nemotron_3_super_120b_a12b_free
+label: 'openrouter / nvidia/nemotron-3-super-120b-a12b:free'
+server_id: openrouter
+raw_model_id: 'nvidia/nemotron-3-super-120b-a12b:free'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 3
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

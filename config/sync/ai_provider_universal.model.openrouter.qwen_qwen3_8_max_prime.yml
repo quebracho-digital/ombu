@@ -1,0 +1,21 @@
+uuid: cc34425e-e54d-4946-94cc-bfe2046eb743
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_8_max_prime
+label: 'openrouter / qwen/qwen3.8-max-prime'
+server_id: openrouter
+raw_model_id: qwen/qwen3.8-max-prime
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 4.0
+cost_output: 12.0
+quality_tier: 4
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

@@ -1,0 +1,13 @@
+display:
+  default:
+    display_title: 'Por defecto'
+    display_options:
+      fields:
+        route_id:
+          label: Ruta
+      filters:
+        route_id:
+          expose:
+            label: Ruta
+  page_1:
+    display_title: Página

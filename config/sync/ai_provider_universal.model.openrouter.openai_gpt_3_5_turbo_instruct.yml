@@ -1,0 +1,19 @@
+uuid: 954311ca-9e57-4563-a2a6-fc16e312d7fa
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_3_5_turbo_instruct
+label: 'openrouter / openai/gpt-3.5-turbo-instruct'
+server_id: openrouter
+raw_model_id: openai/gpt-3.5-turbo-instruct
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.5
+cost_output: 2.0
+quality_tier: 3
+context_length: 4095
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

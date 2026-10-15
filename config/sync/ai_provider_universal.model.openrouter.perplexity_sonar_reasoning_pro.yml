@@ -1,0 +1,19 @@
+uuid: c96efaf5-19fc-48a2-9814-907f6b526963
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.perplexity_sonar_reasoning_pro
+label: 'openrouter / perplexity/sonar-reasoning-pro'
+server_id: openrouter
+raw_model_id: perplexity/sonar-reasoning-pro
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 8.0
+quality_tier: 4
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

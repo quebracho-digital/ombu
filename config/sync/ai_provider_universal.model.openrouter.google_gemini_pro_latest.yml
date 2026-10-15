@@ -1,0 +1,19 @@
+uuid: e124b696-8fea-4729-80e1-5a6860b79b14
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_pro_latest
+label: 'openrouter / ~google/gemini-pro-latest'
+server_id: openrouter
+raw_model_id: ~google/gemini-pro-latest
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.0
+cost_output: 10.0
+quality_tier: 4
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

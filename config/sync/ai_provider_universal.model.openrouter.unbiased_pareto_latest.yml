@@ -1,0 +1,19 @@
+uuid: 18df2b3c-6869-4b51-9e8f-0e940dd0e865
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.unbiased_pareto_latest
+label: 'openrouter / ~unbiased/pareto-latest'
+server_id: openrouter
+raw_model_id: ~unbiased/pareto-latest
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.5
+cost_output: 7.5
+quality_tier: 4
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

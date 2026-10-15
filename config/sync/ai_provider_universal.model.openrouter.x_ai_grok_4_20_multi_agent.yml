@@ -1,0 +1,19 @@
+uuid: 692a4f44-64a6-4e69-adab-05a9fe37f9b4
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.x_ai_grok_4_20_multi_agent
+label: 'openrouter / x-ai/grok-4.20-multi-agent'
+server_id: openrouter
+raw_model_id: x-ai/grok-4.20-multi-agent
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 1.25
+cost_output: 2.5
+quality_tier: 5
+context_length: 2000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

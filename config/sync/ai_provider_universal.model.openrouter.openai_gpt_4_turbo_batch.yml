@@ -1,0 +1,19 @@
+uuid: 7708602a-ac9d-4218-91b0-797ee6e70074
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_4_turbo_batch
+label: 'openrouter / openai/gpt-4-turbo:batch'
+server_id: openrouter
+raw_model_id: 'openai/gpt-4-turbo:batch'
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 5.0
+cost_output: 15.0
+quality_tier: 4
+context_length: 128000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

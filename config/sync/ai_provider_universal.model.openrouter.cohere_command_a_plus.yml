@@ -1,0 +1,19 @@
+uuid: 0b3b7bb9-2a99-4254-ad3f-9bcc48459b89
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.cohere_command_a_plus
+label: 'openrouter / cohere/command-a-plus'
+server_id: openrouter
+raw_model_id: cohere/command-a-plus
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 1.5
+quality_tier: 3
+context_length: 192000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

@@ -1,0 +1,19 @@
+uuid: f4d7133b-0943-48f4-8413-b74e1777d053
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.z_ai_glm_5_3_flashx
+label: 'openrouter / z-ai/glm-5.3-flashx'
+server_id: openrouter
+raw_model_id: z-ai/glm-5.3-flashx
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.37
+cost_output: 1.25
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

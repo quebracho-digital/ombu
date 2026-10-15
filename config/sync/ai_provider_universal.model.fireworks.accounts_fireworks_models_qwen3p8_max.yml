@@ -1,0 +1,21 @@
+uuid: 03e8f949-d14a-4545-b336-63ebf5ce709b
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks.accounts_fireworks_models_qwen3p8_max
+label: 'fireworks / accounts/fireworks/models/qwen3p8-max'
+server_id: fireworks
+raw_model_id: accounts/fireworks/models/qwen3p8-max
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: null
+cost_output: null
+quality_tier: null
+context_length: null
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

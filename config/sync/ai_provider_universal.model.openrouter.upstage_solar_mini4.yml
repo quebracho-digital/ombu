@@ -1,0 +1,19 @@
+uuid: d75558dc-f5fe-4797-a8d2-4320a75d47d9
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.upstage_solar_mini4
+label: 'openrouter / upstage/solar-mini4'
+server_id: openrouter
+raw_model_id: upstage/solar-mini4
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.05
+cost_output: 0.2
+quality_tier: 2
+context_length: 524288
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

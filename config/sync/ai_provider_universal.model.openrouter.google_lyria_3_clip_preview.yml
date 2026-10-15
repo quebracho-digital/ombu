@@ -1,0 +1,19 @@
+uuid: 811d2eef-7a0f-44f2-8768-c97c455825f5
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_lyria_3_clip_preview
+label: 'openrouter / google/lyria-3-clip-preview'
+server_id: openrouter
+raw_model_id: google/lyria-3-clip-preview
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.0
+cost_output: 0.0
+quality_tier: 1
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

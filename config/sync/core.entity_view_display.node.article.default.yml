@@ -1,0 +1,41 @@
+uuid: 59c653eb-1f7d-4ca2-9768-236a881aebb7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.article.body
+    - field.field.node.article.field_x402_price
+    - field.field.node.article.field_x402_summary
+    - node.type.article
+  module:
+    - text
+    - user
+    - x402_pay
+id: node.article.default
+targetEntityType: node
+bundle: article
+mode: default
+content:
+  body:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_x402_price:
+    type: x402_price_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_x402_summary: true
+  langcode: true
+  search_api_excerpt: true

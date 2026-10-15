@@ -1,0 +1,19 @@
+uuid: 24ed11a1-d479-4ec1-a8d1-29e88eb21c43
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.nvidia_nemotron_3_5_lightning
+label: 'openrouter / nvidia/nemotron-3.5-lightning'
+server_id: openrouter
+raw_model_id: nvidia/nemotron-3.5-lightning
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.07
+cost_output: 0.2
+quality_tier: 2
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

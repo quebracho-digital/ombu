@@ -1,0 +1,19 @@
+uuid: ea47eb13-d44c-4bd0-b53c-88918e50f2b7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_openapi_url
+    - taxonomy.vocabulary.listing_provider
+id: taxonomy_term.listing_provider.field_openapi_url
+field_name: field_openapi_url
+entity_type: taxonomy_term
+bundle: listing_provider
+label: OpenAPI
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

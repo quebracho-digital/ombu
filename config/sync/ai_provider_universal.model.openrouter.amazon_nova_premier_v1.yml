@@ -1,0 +1,19 @@
+uuid: d89351c1-549e-4842-b128-21c235db2516
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.amazon_nova_premier_v1
+label: 'openrouter / amazon/nova-premier-v1'
+server_id: openrouter
+raw_model_id: amazon/nova-premier-v1
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 2.5
+cost_output: 12.5
+quality_tier: 4
+context_length: 1000000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

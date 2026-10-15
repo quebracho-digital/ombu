@@ -1,0 +1,21 @@
+uuid: 9bc9c85d-a9b9-43e4-9fc7-4a1d75526b59
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.qwen_qwen3_5_397b_a17b
+label: 'openrouter / qwen/qwen3.5-397b-a17b'
+server_id: openrouter
+raw_model_id: qwen/qwen3.5-397b-a17b
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.5
+cost_output: 3.6
+quality_tier: 4
+context_length: 262144
+reasoning: null
+supported_features: {  }
+sampling:
+  temperature: 0.6
+  top_p: 0.95
+extra_params: {  }

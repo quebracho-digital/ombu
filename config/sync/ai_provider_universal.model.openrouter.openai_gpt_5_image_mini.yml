@@ -1,0 +1,19 @@
+uuid: 8516f96c-a9f8-45d3-a0ce-1735fc3cfb49
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.openai_gpt_5_image_mini
+label: 'openrouter / openai/gpt-5-image-mini'
+server_id: openrouter
+raw_model_id: openai/gpt-5-image-mini
+detected_operation_types:
+  - text_to_image
+operation_types: {  }
+cost_input: 2.5
+cost_output: 2.0
+quality_tier: 5
+context_length: 400000
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

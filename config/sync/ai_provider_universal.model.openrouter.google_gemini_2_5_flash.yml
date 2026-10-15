@@ -1,0 +1,19 @@
+uuid: ffbf7559-c47a-4ee6-973a-e37879a727c9
+langcode: en
+status: true
+dependencies: {  }
+id: openrouter.google_gemini_2_5_flash
+label: 'openrouter / google/gemini-2.5-flash'
+server_id: openrouter
+raw_model_id: google/gemini-2.5-flash
+detected_operation_types:
+  - chat
+operation_types: {  }
+cost_input: 0.3
+cost_output: 2.5
+quality_tier: 3
+context_length: 1048576
+reasoning: null
+supported_features: {  }
+sampling: {  }
+extra_params: {  }

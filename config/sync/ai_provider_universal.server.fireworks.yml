@@ -1,0 +1,17 @@
+uuid: cfb8e144-58ed-42b5-af6c-f75d3f51b64b
+langcode: en
+status: true
+dependencies: {  }
+id: fireworks
+label: fireworks
+backend: fireworks
+host_name: ''
+port: ''
+api_key: fireworks
+timeout: 90
+operation_types: {  }
+model_filter: ''
+daily_request_limit: null
+daily_token_limit: null
+alert_threshold: 80
+limit_grace: null

@@ -178,8 +178,8 @@ every key (`key` module) reads its value from the environment. The model
 catalogue (`ai_provider_universal.model.*`) changes on its own with each
 discovery.
 
-**Scripts** for agents (`agent.mjs`, `review.mjs`) need `npm install` in
-`scripts/`; `agent.mjs` also uses `x402_pay`'s client from `../x402_pay`.
+**Scripts** for agents (`agent.mjs`, `review.mjs`) are Node for now, moving
+to PHP: see *No Node.js, on purpose* below.
 
 ```sh
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
@@ -210,6 +210,30 @@ git clone git@git.drupal.org:project/ai_provider_universal.git ../ai_provider_un
 cp .ddev/docker-compose.dev-modules.yaml.example .ddev/docker-compose.dev-modules.yaml
 ddev restart
 ```
+
+## No Node.js, on purpose
+
+Ombú and its modules are PHP, installed with composer. Node.js is not used,
+and the scripts that still use it are being moved to PHP.
+
+**Why.** On 2026-10-15, to let a review script sign in with a wallet, we
+added a `package.json` with [viem](https://viem.sh) (a JavaScript library
+that signs EIP-712 payments and Sign-In With Ethereum messages) and ran
+`npm install`. It pulled 13 packages. None had an install script that time,
+but npm's model is the risk: a version range (`^2.57.4`) takes whatever is
+published next, a dependency's `postinstall` runs with the installer's
+permissions, and npm has a record of hijacked packages and self-spreading
+worms that read `.env` files, SSH keys and tokens. Our scripts run with a
+wallet's private key in their environment; anyone who installs Ombú would
+run the same `npm install`.
+
+**What instead.** Everything those scripts sign, `x402_pay` already signs
+in PHP (`Signer`, `Eip712`, on `kornrunner/keccak` and
+`kornrunner/secp256k1`), byte for byte equal to viem, checked by its tests.
+So the buyer agent and the review script move to Drush scripts on those
+classes: no new dependency, and the key never leaves PHP. Until then,
+`scripts/agent.mjs` and `scripts/review.mjs` are the only Node in the
+repo; if you run them, use `npm ci --ignore-scripts` with the lockfile.
 
 ## Licence
 

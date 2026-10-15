@@ -133,3 +133,12 @@ msgstr "¿Te acordaste de la contraseña?"
 
 msgid "To remove a wallet, write to <a href=\":support\">support</a>. Your listings: <a href=\":listings\">My listings</a>."
 msgstr "Para sacar una billetera, escribe a <a href=\":support\">soporte</a>. Tus listados: <a href=\":listings\">Mis listados</a>."
+
+msgid "@n out of 5"
+msgstr "@n de 5"
+
+msgid "Moderate this review"
+msgstr "Moderar esta reseña"
+
+msgid "Its text, rating and purchase stay as written. Unpublish it to hide it; to answer it, use Reply."
+msgstr "Su texto, calificación y compra quedan como se escribieron. Despublícala para ocultarla; para contestarla, usa Responder."

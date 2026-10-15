@@ -85,6 +85,19 @@ final class SellerHooks {
     $form['comment_body']['widget'][0]['#allowed_formats'] = ['plain_text'];
     $form['comment_body']['widget'][0]['#after_build'][] = [self::class, 'noFormatPicker'];
     $form['subject']['#access'] = FALSE;
+    // Reviewers are wallets, not websites: no homepage to type into.
+    $form['author']['homepage']['#access'] = FALSE;
+    $review = $form_state->getFormObject()->getEntity();
+    if (!$review->isNew()) {
+      $form['author']['#open'] = TRUE;
+      // A saved review stands as said (ReviewHooks::fieldAccess): editing it
+      // is only publishing or unpublishing it.
+      $form['heading'] = [
+        '#markup' => '<h2 class="review-heading">' . new TranslatableMarkup('Moderate this review') . '</h2><p>' . new TranslatableMarkup('Its text, rating and purchase stay as written. Unpublish it to hide it; to answer it, use Reply.') . '</p>',
+        '#weight' => -100,
+      ];
+      return;
+    }
     if ($form_state->getFormObject()->getEntity()->hasParentComment()) {
       $form['field_rating']['#access'] = FALSE;
       $form['field_tx_hash']['#access'] = FALSE;

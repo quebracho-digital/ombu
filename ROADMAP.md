@@ -31,15 +31,28 @@ in). Draft answers and video script kept outside the repo.
   (log 26, 29, 30), 2 reviews by the agent. Leo's 4 past mainnet purchases
   reviewed by `scripts/review.mjs` (one ★1: the terms charged without a
   result on 10-14).
-- **Long terms on a faster model**: over 20k characters the analysis runs
-  on `$settings['ombu_long_terms_model']`. Waiting on Leo: a key (OpenRouter,
-  amazee, Fireworks or Groq) in SER5's `deploy/.env` and the server.
+- **Long terms on a faster model** (deployed): over 20k characters the
+  analysis runs on OpenRouter's Qwen3.6-35B-A3B (62k chars in 12 s; Groq's
+  free tier rate-limits at once). Keys for Groq, Fireworks and OpenRouter
+  in SER5's `deploy/.env`. **Rotate them after the hackathon.**
+- **Reviews stand as said** (deployed): no one edits a saved review's text,
+  rating or tx, admins included; unpublish and delete are logged with who.
+- **Sales as a view** `ombu_sales` (deployed, x402_pay `6ba5075`): the log
+  names the entity sold and is in Views; latest on the market, per listing,
+  all at `/market/sales`. Next: a block per seller (filter on `pay_to`).
+- **Settling retries a refused send** (x402_pay `5a9244c`, deployed), then
+  looks for the tx by its hash: the 🐛 below.
+- `ombu.quebrachos.digital` dropped from trusted hosts (400); its tunnel
+  route on minisforum is still there.
+- composer pins `drupal/x402_pay:1.0.x-dev#6ba5075`: back to `@dev` once
+  drupal.org's packages list it.
 - Twig debug was on in prod (kept from fixing the logo): off.
 
 **Found**
-- 🐛 Two settlements failed with `eth_sendRawTransaction: internal error`
+- ✅ Two settlements failed with `eth_sendRawTransaction: internal error`
   (log 27, 28): the buyer was not charged but the seller did the work (one
-  a terms analysis). Retry the send once? Cause unknown (Arc RPC?).
+  a terms analysis). Fixed by the retry above; Arc down longer than one
+  retry still loses the sale.
 
 ## Before — 2026-10-14
 

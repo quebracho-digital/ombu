@@ -2,8 +2,8 @@
 
 /**
  * @file
- * A buyer for the Drush scripts: pays an x402 call and signs in with its
- * wallet, signing with x402_pay's Signer and Eip712 (no Node, no npm: see the
+ * A buyer for the Drush scripts: pays an x402 call (x402_pay's Buyer) and
+ * signs in with its wallet, signing with x402_pay's Signer and Eip712 (no Node, no npm: see the
  * README, "No Node.js, on purpose").
  *
  * The key comes from BUYER_PRIVATE_KEY in the environment and stays in PHP.
@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Scripts;
 
+use Drupal\x402_pay\Buyer as X402Buyer;
 use Drupal\x402_pay\Eip712;
 use Drupal\x402_pay\Networks;
-use Drupal\x402_pay\PaymentHeaders;
 use Drupal\x402_pay\Signer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
@@ -34,68 +34,14 @@ final class Buyer {
   }
 
   /**
-   * Calls $url with $input as JSON and pays its 402.
+   * Calls $url with $input as JSON and pays its 402 (x402_pay's Buyer).
    *
    * $approve($requirements) runs before signing and throws to refuse (the
    * budget). Returns status, body, tx (NULL if not settled), amount,
    * network.
    */
   public function pay(string $url, array $input, ?callable $approve = NULL): array {
-    $body = json_encode($input ?: new \stdClass(), JSON_UNESCAPED_SLASHES);
-    $call = fn(array $headers = [], int $timeout = 30) => $this->http->post($url, [
-      'body' => $body,
-      'headers' => ['Content-Type' => 'application/json', 'Accept' => '*/*'] + $headers,
-      'timeout' => $timeout,
-    ]);
-
-    // 1. The 402 says what to pay, to whom, on which chain.
-    $first = $call();
-    if ($first->getStatusCode() !== 402) {
-      throw new \RuntimeException(sprintf('Expected 402, got %d: %s', $first->getStatusCode(), substr((string) $first->getBody(), 0, 300)));
-    }
-    $required = PaymentHeaders::decode($first->getHeaderLine('PAYMENT-REQUIRED'));
-    $req = $required['accepts'][0];
-    if ($approve) {
-      $approve($req);
-    }
-
-    // 2. One EIP-3009 transfer of exactly that: no gas, no allowance.
-    $authorization = [
-      'from' => $this->wallet->address(),
-      'to' => $req['payTo'],
-      'value' => (string) $req['amount'],
-      'validAfter' => '0',
-      'validBefore' => (string) (time() + (int) $req['maxTimeoutSeconds']),
-      'nonce' => '0x' . bin2hex(random_bytes(32)),
-    ];
-    $digest = Eip712::hash(
-      ['name' => $req['extra']['name'], 'version' => $req['extra']['version'], 'chainId' => (int) explode(':', $req['network'])[1], 'verifyingContract' => $req['asset']],
-      ['TransferWithAuthorization' => [
-        ['name' => 'from', 'type' => 'address'], ['name' => 'to', 'type' => 'address'], ['name' => 'value', 'type' => 'uint256'],
-        ['name' => 'validAfter', 'type' => 'uint256'], ['name' => 'validBefore', 'type' => 'uint256'], ['name' => 'nonce', 'type' => 'bytes32'],
-      ]],
-      'TransferWithAuthorization',
-      $authorization,
-    );
-    $payment = [
-      'x402Version' => 2,
-      'resource' => $required['resource'],
-      'accepted' => ['extra' => ['assetTransferMethod' => 'eip3009'] + $req['extra']] + $req,
-      'payload' => ['signature' => $this->wallet->sign($digest), 'authorization' => $authorization],
-    ];
-
-    // 3. The same call, paid. It waits as long as the payment can settle: a
-    // buyer that hangs up first may be charged for an answer it never reads.
-    $paid = $call(['PAYMENT-SIGNATURE' => PaymentHeaders::encode($payment)], (int) $req['maxTimeoutSeconds'] + 30);
-    $receipt = $paid->getHeaderLine('PAYMENT-RESPONSE');
-    $receipt = $receipt === '' ? [] : PaymentHeaders::decode($receipt);
-    return [
-      'status' => $paid->getStatusCode(),
-      'body' => (string) $paid->getBody(),
-      'tx' => !empty($receipt['success']) ? $receipt['transaction'] : NULL,
-      'amount' => (string) $req['amount'],
-      'network' => $req['network'],
-    ];
+    return (new X402Buyer($this->http, $this->wallet))->pay($url, $input, $approve);
   }
 
   /**

@@ -39,7 +39,7 @@ final class SellerPageHooks {
   public function access(UserInterface $account, string $operation, AccountInterface $viewer): AccessResultInterface {
     // ponytail: tagged by listings only; a wallet linked later shows once
     // a listing changes or the cache is cleared.
-    return AccessResult::allowedIf($operation === 'view' && $account->isActive() && $this->verifier->listingsOf((int) $account->id()))
+    return AccessResult::allowedIf(in_array($operation, ['view', 'view linked label'], TRUE) && $account->isActive() && $this->verifier->listingsOf((int) $account->id()))
       ->addCacheableDependency($account)
       ->addCacheTags(['commerce_product_list']);
   }

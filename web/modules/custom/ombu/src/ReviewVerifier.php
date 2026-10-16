@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ombu;
 
+use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\x402_pay\Networks;
@@ -154,9 +155,35 @@ final class ReviewVerifier {
   }
 
   /**
+   * The IDs of the listings an account sells: those paying one of its
+   * wallets, as sells() sees it.
+   */
+  public function listingsOf(int $uid): array {
+    if (!$wallets = $this->wallets($uid)) {
+      return [];
+    }
+    // The columns compare case-insensitively: checksummed values match.
+    $ids = [];
+    foreach (['commerce_product__field_pay_to' => 'field_pay_to_value', 'commerce_product__field_seller_address' => 'field_seller_address_value'] as $table => $column) {
+      $ids = [...$ids, ...$this->database->select($table, 't')->fields('t', ['entity_id'])
+        ->condition($column, $wallets, 'IN')->execute()->fetchCol()];
+    }
+    // Ours paid to a seller key (no address on the listing): the key's
+    // address, as Sellers::payTo() sees it.
+    $keyed = $this->database->select('commerce_product__field_seller_key', 'k')->fields('k', ['entity_id'])->execute()->fetchCol();
+    $lower = array_map('strtolower', $wallets);
+    foreach (Product::loadMultiple(array_diff($keyed, $ids)) as $listing) {
+      if (in_array(strtolower((string) $this->sellers->payTo($listing)), $lower, TRUE)) {
+        $ids[] = $listing->id();
+      }
+    }
+    return array_values(array_unique(array_map('intval', $ids)));
+  }
+
+  /**
    * An account's wallets, lowercase.
    */
-  private function wallets(int $uid): array {
+  public function wallets(int $uid): array {
     return $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['address'])
       ->condition('uid', $uid)->condition('namespace', 'eip155')->execute()->fetchCol();
   }

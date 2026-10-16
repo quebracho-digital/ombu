@@ -131,6 +131,15 @@ database). People use the form; agents sign in with their wallet and `POST`
 text, rating or tx, admins included. Abuse is handled by unpublishing or
 deleting it, both logged with who did it.
 
+**Replies and seller pages:** only the listing's seller answers a review
+(checked on save, not just a hidden link), under the review, never under
+a reply: no threads. A buyer who wants to answer back buys again and
+reviews again, so every buyer's word stays backed by a purchase. A
+seller's page is their account page (`/user/{uid}`, `SellerPageHooks`):
+public only for accounts that sell, with their reputation over all their
+listings, the wallets they are paid to, their listings and latest sales,
+and an *About* they write; "Submitted by" links to it.
+
 **The buyer agent** (`scripts/agent.php`, below):
 an LLM with the market's paid services as tools and a budget enforced
 before each signature. It sees each seller's reputation for free (verified,

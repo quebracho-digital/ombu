@@ -371,3 +371,15 @@ function ombu_update_10021(): void {
 function ombu_update_10020(): void {
   _ombu_config('optional', ['views.view.ombu_sales'], TRUE);
 }
+
+/**
+ * Seller pages: an "About" on the account, sales of several listings.
+ */
+function ombu_update_10024(): void {
+  _ombu_config('install', ['field.storage.user.field_description', 'field.field.user.user.field_description']);
+  _ombu_config('optional', ['views.view.ombu_sales'], TRUE);
+  \Drupal::service('entity_display.repository')->getFormDisplay('user', 'user')
+    ->setComponent('field_description', ['type' => 'text_textarea', 'weight' => 5])->save();
+  \Drupal::service('entity_display.repository')->getViewDisplay('user', 'user')
+    ->setComponent('field_description', ['type' => 'text_default', 'label' => 'hidden', 'weight' => 5])->save();
+}

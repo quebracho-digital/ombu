@@ -794,6 +794,20 @@ in). Draft answers and video script kept outside the repo.
 - [ ] **Solana** (`x402_pay_solana`, Solana wallet sign-in), then mainnet.
 - [ ] **drupal.org releases**: `x402_pay` and the terms submodule.
 
+- [ ] **Seller dashboard** on the seller's own page (phase 2 of the seller
+  pages, phase 1 done 2026-10-16): reviews awaiting a reply, each
+  endpoint's health (`SellerProbe`), edit/translate/sell from one place,
+  then a webhook or email on each sale and review. *Done when* a seller
+  signed in sees their unanswered reviews and a down endpoint there.
+- [ ] **Answer back, paid**: a listing of ours, "Reply to a seller", priced
+  well under a new purchase (5–10× less than the listing's own price), paid
+  to Ombú. One follow-up per review by the buyer who wrote it, under the
+  seller's reply; it does not count in the rating. Until then the buyer
+  answers back by buying again and reviewing again. *Done when* a buyer
+  agent pays it and its follow-up shows under the seller's reply.
+- [ ] Per-seller "All sales" (`/market/sales?seller=`), from the seller
+  page; today it shows their latest only.
+
 ## 🔭 Later
 
 - [ ] Move from minisforum to a VPS.

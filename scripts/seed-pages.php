@@ -39,6 +39,8 @@ $pages['/how-it-works'] = ['How Ombú works', 1, <<<HTML
 
 <h2>Trust what you read</h2>
 <p>Only buyers can review, and only what they paid for: a review carries the transaction of the purchase, and the site checks it on chain before publishing it. Once published, no one can edit it, not even us. A <em>Verified seller</em> badge marks the sellers whose wallet we know.</p>
+<p>The seller can answer each review, once per review, under it. A buyer who wants to answer back buys again and leaves a new review: it says whether the fix worked, it counts in the rating, and like every review it is backed by a purchase.</p>
+<p>Every seller has a page, linked from their name: their reputation over all their listings, the wallet they are paid to, their listings and their latest sales.</p>
 
 <h2>Sign in with your wallet</h2>
 <p>No email, no password: <em>Sign in with a wallet</em> on the login page opens your account with a signature from MetaMask or any browser wallet. Agents sign the same message in code.</p>
@@ -99,6 +101,7 @@ $pages['/docs/sellers'] = ['For sellers', 3, <<<HTML
   <li><strong>No fee, for now.</strong> Listing is free, and buyers pay your endpoint directly.</li>
   <li><strong>Found by people and by agents.</strong> Your listing is a page for people, an entry in <code>/market.json</code> and <code>/openapi.json</code> for agents, and is announced in <code>/llms.txt</code>.</li>
   <li><strong>Reviews you can trust.</strong> Only buyers who paid can review, and you can answer them.</li>
+  <li><strong>Your own page.</strong> Signing in with your wallet gives you a public seller page: your reputation over every listing, your listings and your sales. Add a picture and an <em>About</em> from your account's Edit.</li>
   <li><strong>A cold wallet is enough.</strong> A seller can be just an address: no key of yours is needed on the site.</li>
   <li><strong>Your listing in every language.</strong> Translate its title and description yourself; buyers read it in theirs.</li>
 </ul>
@@ -152,6 +155,8 @@ $es['/how-it-works'] = ['Cómo funciona Ombú', <<<HTML
 
 <h2>Confiar en lo que lees</h2>
 <p>Solo reseñan los compradores, y solo lo que pagaron: cada reseña lleva la transacción de la compra, y el sitio la verifica en la cadena antes de publicarla. Una vez publicada, nadie puede editarla, ni siquiera nosotros. La marca <em>Vendedor verificado</em> señala a los vendedores cuya billetera conocemos.</p>
+<p>El vendedor puede responder cada reseña, debajo de ella. Si el comprador quiere contestar, vuelve a comprar y deja una reseña nueva: cuenta si el arreglo funcionó, suma a la calificación y, como toda reseña, la respalda una compra.</p>
+<p>Cada vendedor tiene su página, enlazada desde su nombre: su reputación sobre todos sus listados, la billetera a la que se le paga, sus listados y sus últimas ventas.</p>
 
 <h2>Entrar con tu billetera</h2>
 <p>Sin email ni contraseña: <em>Iniciar sesión con una billetera</em>, en la página de ingreso, abre tu cuenta con una firma de MetaMask o de cualquier billetera del navegador. Los agentes firman el mismo mensaje desde código.</p>
@@ -213,6 +218,7 @@ $es['/docs/sellers'] = ['Para vendedores', <<<HTML
   <li><strong>Sin comisión, por ahora.</strong> Publicar es gratis, y los compradores le pagan directo a tu endpoint.</li>
   <li><strong>Te encuentran personas y agentes.</strong> Tu listado es una página para personas, una entrada en <code>/market.json</code> y <code>/openapi.json</code> para agentes, y aparece en <code>/llms.txt</code>.</li>
   <li><strong>Reseñas confiables.</strong> Solo pueden reseñar los compradores que pagaron, y tú puedes responderles.</li>
+  <li><strong>Tu propia página.</strong> Al entrar con tu billetera tienes una página pública de vendedor: tu reputación sobre todos tus listados, tus listados y tus ventas. Agrega una foto y un <em>Acerca de</em> desde Editar en tu cuenta.</li>
   <li><strong>Alcanza con una billetera fría.</strong> Un vendedor puede ser solo una dirección: el sitio no necesita ninguna llave tuya.</li>
   <li><strong>Tu listado en cada idioma.</strong> Traduce tú mismo su título y descripción; cada comprador lo lee en el suyo.</li>
 </ul>

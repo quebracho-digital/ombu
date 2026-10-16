@@ -41,3 +41,8 @@ buy:
   dependencies:
     - core/drupal
     - core/once
+# A seller's page (their account page): reputation, wallets, listings.
+seller:
+  css:
+    theme:
+      css/seller.css: {}

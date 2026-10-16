@@ -25,17 +25,21 @@ final class Sales {
   public const TAG = 'ombu_sales';
 
   /**
-   * The latest sales, of one listing or of the whole market.
+   * The latest sales, of one listing, of several (a seller's), or of the
+   * whole market.
    *
    * The market's also shows totals: sales, USDC moved, listings.
    */
-  public static function build(?ProductInterface $listing = NULL): array {
+  public static function build(ProductInterface|array|null $listing = NULL): array {
+    if ($listing instanceof ProductInterface) {
+      $listing = [(int) $listing->id()];
+    }
     $network = (string) FieldConfig::loadByName('commerce_product', 'listing', 'field_x402_price')?->getSetting('network');
     $cache = ['tags' => [self::TAG, 'commerce_product_list', 'config:x402_pay.settings']];
     // The list is the ombu_sales view, so admins can change it (and place
     // its blocks elsewhere, or link its page /market/sales).
     $view = Views::getView('ombu_sales');
-    $args = $listing ? [$network, (string) $listing->id()] : [$network];
+    $args = $listing ? [$network, implode('+', $listing)] : [$network];
     $list = $view?->buildRenderable($listing ? 'listing' : 'latest', $args);
     if ($listing && $view) {
       $view->setDisplay('listing');

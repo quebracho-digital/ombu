@@ -220,6 +220,7 @@ display:
           table: x402_pay_log
           field: entity_id
           plugin_id: string
+          break_phrase: true
           default_action: default
           default_argument_type: raw
           default_argument_options:

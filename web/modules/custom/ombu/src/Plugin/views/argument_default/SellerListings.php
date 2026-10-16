@@ -6,11 +6,9 @@ namespace Drupal\ombu\Plugin\views\argument_default;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\commerce_product\Entity\Product;
-use Drupal\ombu\Sellers;
+use Drupal\ombu\ReviewVerifier;
 use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,9 +31,8 @@ final class SellerListings extends ArgumentDefaultPluginBase implements Cacheabl
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    private readonly Connection $database,
     private readonly AccountInterface $currentUser,
-    private readonly Sellers $sellers,
+    private readonly ReviewVerifier $verifier,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -44,35 +41,15 @@ final class SellerListings extends ArgumentDefaultPluginBase implements Cacheabl
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static($configuration, $plugin_id, $plugin_definition, $container->get('database'), $container->get('current_user'), $container->get('ombu.sellers'));
+    return new static($configuration, $plugin_id, $plugin_definition, $container->get('current_user'), $container->get('ombu.review_verifier'));
   }
 
   /**
    * {@inheritdoc}
    */
   public function getArgument(): string {
-    $wallets = $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['address'])
-      ->condition('uid', $this->currentUser->id())->condition('namespace', 'eip155')->execute()->fetchCol();
-    if (!$wallets) {
-      // No wallet, no listing: an ID that matches nothing.
-      return '0';
-    }
-    // The columns compare case-insensitively: checksummed values match.
-    $ids = [];
-    foreach (['commerce_product__field_pay_to' => 'field_pay_to_value', 'commerce_product__field_seller_address' => 'field_seller_address_value'] as $table => $column) {
-      $ids = [...$ids, ...$this->database->select($table, 't')->fields('t', ['entity_id'])
-        ->condition($column, $wallets, 'IN')->execute()->fetchCol()];
-    }
-    // Ours paid to a seller key (no address on the listing): the key's
-    // address, as Sellers::payTo() and ReviewVerifier::sells() see it.
-    $keyed = $this->database->select('commerce_product__field_seller_key', 'k')->fields('k', ['entity_id'])->execute()->fetchCol();
-    $lower = array_map('strtolower', $wallets);
-    foreach (Product::loadMultiple(array_diff($keyed, $ids)) as $listing) {
-      if (in_array(strtolower((string) $this->sellers->payTo($listing)), $lower, TRUE)) {
-        $ids[] = $listing->id();
-      }
-    }
-    return $ids ? implode('+', array_unique($ids)) : '0';
+    // No wallet, no listing: an ID that matches nothing.
+    return implode('+', $this->verifier->listingsOf((int) $this->currentUser->id())) ?: '0';
   }
 
   /**

@@ -1,0 +1,31 @@
+/* A seller's page: reputation under the name, listings as a grid of cards. */
+.seller-reputation {
+  font-size: 1.125rem;
+}
+.seller-wallets {
+  padding: 0;
+  list-style: none;
+  font-family: var(--bs-font-monospace, monospace);
+}
+.seller-listings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+.seller-listings > li {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .5rem;
+}
+.seller-listing__title {
+  display: block;
+  margin-bottom: .25rem;
+  font-weight: 600;
+}
+.seller-listing__meta strong {
+  margin-right: .5rem;
+  color: var(--bs-success, #198754);
+}

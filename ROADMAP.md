@@ -808,6 +808,41 @@ in). Draft answers and video script kept outside the repo.
 - [ ] Per-seller "All sales" (`/market/sales?seller=`), from the seller
   page; today it shows their latest only.
 
+- [ ] **Seller blog, paid per post**: a seller posts updates, changelogs
+  and how-tos on their page (a `seller_post` node, author = the seller's
+  account, listed under their page and in an RSS feed agents can follow).
+  Each post costs a small x402 payment to Ombú, which pays for moderation
+  and keeps spam out; a post can link the listings it talks about.
+  *Done when* a seller pays and publishes a post that shows on their page,
+  in the feed and on the listings it names.
+
+### What big marketplaces do that fits Ombú
+
+Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
+- [ ] **Seller levels** (Mercado Libre's colours, Amazon's badges): computed
+  from sales, rating and how fast the seller answers reviews; shown on the
+  listing and the seller page, sortable in the market and in `/market.json`
+  so agents can filter by it.
+- [ ] **Uptime and latency per listing**: we already probe endpoints; a
+  public "answered 99% of calls, median 3 s" is our "ships on time".
+- [ ] **Questions before buying** (Mercado Libre's *preguntas*): free,
+  answered by the seller, public on the listing; one per account per
+  listing per day.
+- [ ] **Follow a seller / saved searches**: a feed or webhook when a seller
+  publishes or a new listing matches a search (agents subscribe too).
+- [ ] **Coupons and launch prices** (Shopify discounts): a seller sets a
+  lower price for N calls or N days; the 402 offers it.
+- [ ] **Bundles and subscriptions**: N calls prepaid at a discount, or a
+  monthly plan, settled once.
+- [ ] **Guarantee / disputes** (Mercado Libre's *Compra Protegida*, Amazon's
+  A-to-z): a charge without a result is refunded by the seller within a
+  deadline, or Ombú says so on the seller's page.
+- [ ] **Best seller / trending lists** per category, from the sales log.
+- [ ] **Affiliates**: a link that pays its author a share of the sales it
+  brings, on chain.
+- [ ] **Storefront look**: the seller's banner and colours on their page.
+- [ ] **Seller analytics**: calls, revenue, conversion from listing views.
+
 ## 🔭 Later
 
 - [ ] Move from minisforum to a VPS.

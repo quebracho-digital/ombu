@@ -383,3 +383,14 @@ function ombu_update_10024(): void {
   \Drupal::service('entity_display.repository')->getViewDisplay('user', 'user')
     ->setComponent('field_description', ['type' => 'text_default', 'label' => 'hidden', 'weight' => 5])->save();
 }
+
+/**
+ * Seller pages: the seller's website and social links.
+ */
+function ombu_update_10025(): void {
+  _ombu_config('install', ['field.storage.user.field_links', 'field.field.user.user.field_links']);
+  \Drupal::service('entity_display.repository')->getFormDisplay('user', 'user')
+    ->setComponent('field_links', ['type' => 'link_default', 'weight' => 6])->save();
+  \Drupal::service('entity_display.repository')->getViewDisplay('user', 'user')
+    ->setComponent('field_links', ['type' => 'link', 'label' => 'hidden', 'weight' => -10, 'settings' => ['rel' => 'nofollow', 'target' => '_blank']])->save();
+}

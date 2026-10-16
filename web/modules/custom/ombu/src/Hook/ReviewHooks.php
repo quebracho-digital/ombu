@@ -71,7 +71,7 @@ final class ReviewHooks {
   #[Hook('comment_delete')]
   public function deleted(CommentInterface $review): void {
     if ($review->bundle() === 'review') {
-      \Drupal::logger('ombu')->notice('Review @id deleted by @user: "@body" (tx @tx).', ['@id' => $review->id(), '@user' => \Drupal::currentUser()->getAccountName(), '@body' => mb_substr((string) $review->get('comment_body')->value, 0, 200), '@tx' => $review->get('field_tx_hash')->value]);
+      \Drupal::logger('ombu')->notice('Review @id deleted by @user: "@body" (tx @tx).', ['@id' => $review->id(), '@user' => \Drupal::currentUser()->getAccountName() ?: 'drush', '@body' => mb_substr((string) $review->get('comment_body')->value, 0, 200), '@tx' => $review->get('field_tx_hash')->value ?? 'none, a reply']);
     }
   }
 

@@ -1,0 +1,20 @@
+uuid: fbfa3602-f6eb-443c-b403-1671b0522c87
+langcode: en
+status: true
+dependencies:
+  module:
+    - text
+    - user
+id: user.field_description
+field_name: field_description
+entity_type: user
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
+

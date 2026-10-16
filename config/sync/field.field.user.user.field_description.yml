@@ -1,0 +1,23 @@
+uuid: 34a9cd2a-8e2f-49ff-b198-bffe40b18872
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_description
+  module:
+    - text
+    - user
+id: user.user.field_description
+field_name: field_description
+entity_type: user
+bundle: user
+label: About
+description: 'What you sell and who you are. Shown on your seller page.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long
+

@@ -1,0 +1,24 @@
+uuid: cbf3b003-6691-49be-8b86-a35903a47eb0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_links
+  module:
+    - link
+    - user
+id: user.user.field_links
+field_name: field_links
+entity_type: user
+bundle: user
+label: 'Website and social'
+description: 'Your website, X, GitHub, LinkedIn, Discord, YouTube… One per row; the text is optional.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  title: 1
+  link_type: 16
+field_type: link
+

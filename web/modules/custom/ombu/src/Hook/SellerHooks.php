@@ -64,12 +64,13 @@ final class SellerHooks {
   }
 
   /**
-   * Replies are the seller's: only they get the link.
+   * Replies are the seller's: only they get the link, and only under a
+   * review, not under a reply (no threads).
    */
   #[Hook('comment_links_alter')]
   public function links(array &$links, CommentInterface $review, array $context): void {
     $listing = $review->getCommentedEntity();
-    if ($review->bundle() === 'review' && $listing instanceof ProductInterface && !$this->verifier->sells($listing, (int) \Drupal::currentUser()->id())) {
+    if ($review->bundle() === 'review' && $listing instanceof ProductInterface && ($review->hasParentComment() || !$this->verifier->sells($listing, (int) \Drupal::currentUser()->id()))) {
       unset($links['comment']['#links']['comment-reply']);
     }
     $links['comment']['#cache']['contexts'][] = 'user';

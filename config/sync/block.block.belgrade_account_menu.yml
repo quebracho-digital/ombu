@@ -12,7 +12,7 @@ _core:
   default_config_hash: W1mUb_Fv5zaCLkG8UWNiJ76yfWgtvNV8gX5jk8SSnEE
 id: belgrade_account_menu
 theme: belgrade
-region: top_bar
+region: header
 weight: -6
 provider: null
 plugin: 'system_menu_block:account'

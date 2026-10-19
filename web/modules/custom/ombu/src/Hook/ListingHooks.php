@@ -219,18 +219,6 @@ final class ListingHooks {
   }
 
   /**
-   * Every page says Ombú is a demo, until its legal side is settled.
-   */
-  #[Hook('page_top')]
-  public function pageTop(array &$page_top): void {
-    // ponytail: remove when the operator, terms and privacy are final.
-    $page_top['ombu_demo'] = [
-      '#markup' => '<div class="messages messages--warning ombu-demo" role="note">' . $this->t('Ombú is a demo built for a hackathon, still being tested. Use small amounts: services, prices and these pages may change or stop without notice. <a href=":terms">Terms</a>.', [':terms' => Url::fromUserInput('/terms')->toString()]) . '</div>',
-      '#cache' => ['contexts' => ['languages:language_interface']],
-    ];
-  }
-
-  /**
    * A listing shows once per language: its translation, or the original
    * where it has none (Search API's "Language (with fallback)").
    */

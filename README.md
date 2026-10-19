@@ -12,9 +12,8 @@ whoever signs in with the wallet a listing pays manages it.
 Built by [Quebracho Digital](https://quebracho.digital) on Drupal. Plan and
 status: [ROADMAP.md](ROADMAP.md).
 
-**A demo, in development.** Ombú was built for a hackathon and is still
-being tested: live at [ombu.quebracho.digital](https://ombu.quebracho.digital),
-with a notice on every page until its legal side is settled. For now this
+Live at [ombu.quebracho.digital](https://ombu.quebracho.digital). Built
+for a hackathon, now heading to production. For now this
 repo is a DDEV project (the whole site); on the roadmap it becomes a
 **Drupal recipe**, so any Drupal site can apply Ombú.
 

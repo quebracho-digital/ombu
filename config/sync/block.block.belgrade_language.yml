@@ -8,8 +8,8 @@ dependencies:
     - belgrade
 id: belgrade_language
 theme: belgrade
-region: top_bar
-weight: -10
+region: header
+weight: -7
 provider: null
 plugin: 'language_block:language_interface'
 settings:

@@ -89,9 +89,6 @@ msgstr "<a href=\":report\">Denunciar este listado</a>"
 msgid "Report a listing, a review, a seller, an account or anything on Ombú that breaks our <a href=\":terms\">terms</a> or the law. Include the link to it and why it should come down. Reports are confidential: we do not tell the person reported who sent them, unless the law requires it."
 msgstr "Denuncia un listado, una reseña, un vendedor, una cuenta o cualquier cosa en Ombú que viole nuestros <a href=\":terms\">términos</a> o la ley. Incluye el enlace y el motivo por el que debería darse de baja. Las denuncias son confidenciales: no le decimos a la persona denunciada quién la envió, salvo que la ley lo exija."
 
-msgid "Ombú is a demo built for a hackathon, still being tested. Use small amounts: services, prices and these pages may change or stop without notice. <a href=\":terms\">Terms</a>."
-msgstr "Ombú es una demo construida para una hackatón, todavía en prueba. Usa montos pequeños: los servicios, los precios y estas páginas pueden cambiar o detenerse sin aviso. <a href=\":terms\">Términos</a>."
-
 msgid "Cancel the purchase of a service sold by Ombú (seller: Quebracho) within 10 calendar days, without giving a reason. Include the transaction of the payment. We return the amount paid to the wallet that paid it. Purchases from other sellers are cancelled with them: Ombú is not their seller (<a href=\":terms\">terms</a>, section 3)."
 msgstr "Revoca la compra de un servicio vendido por Ombú (vendedor: Quebracho) dentro de los 10 días corridos, sin dar motivos. Incluye la transacción del pago. Devolvemos el monto pagado a la billetera que pagó. Las compras a otros vendedores se revocan con ellos: Ombú no es su vendedor (<a href=\":terms\">términos</a>, sección 3)."
 

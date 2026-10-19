@@ -18,6 +18,26 @@
   }
 }
 
+/* The latest sales: after the listings, a right column on wide screens. */
+.view-market > .attachment-before {
+  order: 1;
+}
+@media (min-width: 1200px) {
+  .view-market {
+    grid-template-columns: 17rem minmax(0, 1fr) 18rem;
+  }
+  .view-market > .attachment-before {
+    grid-column: 3;
+    grid-row: 2 / span 3;
+  }
+  .view-market > .attachment-before .ombu-sales {
+    margin-top: 0;
+  }
+  .view-market > .attachment-before .ombu-sales__stats {
+    gap: .25rem 1rem;
+  }
+}
+
 /* What Ombú is, above everything. */
 .ombu-hero {
   padding: 2rem 0 1rem;

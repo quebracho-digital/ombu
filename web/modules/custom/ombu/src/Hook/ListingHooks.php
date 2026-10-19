@@ -112,6 +112,8 @@ final class ListingHooks {
         'markdown' => '{"url": "https://www.arc.io"}',
         'terms' => '{"url": "https://www.circle.com/legal/privacy-policy"}',
         'factcheck' => '{"claim": "USDC is issued by Circle."}',
+        'aitext' => '{"text": "In today\'s fast-paced world, it is important to note that innovation plays a pivotal role."}',
+        'plagiarism' => '{"text": "We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights."}',
       ];
       $service = (string) ($product->hasField('field_service') ? $product->get('field_service')->value : '');
       $price = $product->hasField('field_x402_price') ? $product->get('field_x402_price')->first() : NULL;

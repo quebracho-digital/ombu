@@ -23,6 +23,12 @@ settings:
     -
       value: markdown
       label: 'Web page to markdown'
+    -
+      value: aitext
+      label: 'AI-written text likelihood'
+    -
+      value: plagiarism
+      label: 'Plagiarism: verbatim web matches'
   allowed_values_function: ''
 module: options
 locked: false

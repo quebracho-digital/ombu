@@ -39,6 +39,16 @@ $settings['x402_pay_deadline'] = 95;
 // model, which outlives that limit (scripts/remote-llms.php).
 $settings['ombu_long_terms_model'] = 'openrouter.qwen_qwen3_6_35b_a3b';
 
+// Fact-check, AI-text and plagiarism sellers run on minisforum's
+// ai_provider_universal_factcheck (it holds the Tavily and Serper keys), as
+// its "ombu" user (role factcheck_api) over HTTP Basic on the LAN.
+if ($factcheck_auth = getenv('OMBU_FACTCHECK_API_AUTH')) {
+  $settings['ombu_factcheck_api'] = [
+    'url' => getenv('OMBU_FACTCHECK_API_URL') ?: 'http://192.168.1.150:8088',
+    'auth' => explode(':', $factcheck_auth, 2),
+  ];
+}
+
 // Mail through Brevo's SMTP relay, with core's Symfony mailer: the image
 // has no sendmail. The key is the one Stalwart relays with, from the env
 // only, so it never lands in exported config. ombu@quebracho.digital is a

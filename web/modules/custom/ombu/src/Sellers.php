@@ -13,6 +13,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\key\KeyRepositoryInterface;
 use Drupal\x402_pay\Eip712;
 use Drupal\x402_pay\Signer;
+use GuzzleHttp\ClientInterface;
 use League\HTMLToMarkdown\HtmlConverter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Our four sellers. Each answers a paid call with JSON.
+ * Our sellers. Each answers a paid call with JSON.
  *
  * Input is the request's JSON body. Anything but a 2xx is never charged:
  * 400 for input the service cannot use, 422 for a page it may not or
@@ -46,6 +47,7 @@ class Sellers {
     private readonly ?PageFetcher $fetcher = NULL,
     private readonly ?TermsAnalyzer $terms = NULL,
     private readonly ?FactChecker $factChecker = NULL,
+    private readonly ?ClientInterface $http = NULL,
   ) {}
 
   /**
@@ -89,6 +91,8 @@ class Sellers {
         'markdown' => $this->markdown($input),
         'terms' => $this->terms($input),
         'factcheck' => $this->factcheck($input),
+        'aitext' => $this->remote('ai', $this->text($input)),
+        'plagiarism' => $this->remote('plagiarism', $this->text($input)),
         default => new JsonResponse(['error' => "Unknown service: $service"], 503),
       };
     }
@@ -201,17 +205,51 @@ class Sellers {
   }
 
   /**
-   * A verdict on one claim. Model only until a search key is set: no web
-   * evidence, and the answer says so.
+   * Verdicts on a claim, or on every claim in a text. On the fact-check API
+   * (with web search) when one is set, else the local model on its own.
    */
   private function factcheck(array $input): Response {
-    if (!is_string($input['claim'] ?? NULL) || trim($input['claim']) === '') {
-      return new JsonResponse(['error' => 'Send {"claim": "…"}.'], 400);
+    $text = $this->text($input + ['text' => $input['claim'] ?? NULL]);
+    if ($text === NULL) {
+      return new JsonResponse(['error' => 'Send {"claim": "…"} or {"text": "…"}.'], 400);
+    }
+    if (Settings::get('ombu_factcheck_api')) {
+      $response = $this->remote('claims', $text);
+      return $response->isSuccessful() ? new JsonResponse(self::factcheckAnswer(json_decode((string) $response->getContent(), TRUE) ?: [])) : $response;
     }
     if (!$this->factChecker?->isConfigured()) {
       return new JsonResponse(['error' => 'Not available right now.'], 503);
     }
-    return new JsonResponse(self::factcheckAnswer($this->factChecker->verifyClaims([trim($input['claim'])])));
+    $result = isset($input['claim']) ? $this->factChecker->verifyClaims([$text]) : $this->factChecker->verify('', $text);
+    return new JsonResponse(self::factcheckAnswer($result));
+  }
+
+  /**
+   * The input's non-empty "text", or NULL.
+   */
+  private function text(array $input): ?string {
+    return is_string($input['text'] ?? NULL) && trim($input['text']) !== '' ? trim($input['text']) : NULL;
+  }
+
+  /**
+   * One check on the fact-check API (ai_provider_universal_factcheck's
+   * /api/factcheck/{check}), its status and body passed through.
+   */
+  private function remote(string $check, ?string $text): Response {
+    if ($text === NULL) {
+      return new JsonResponse(['error' => 'Send {"text": "…"}.'], 400);
+    }
+    $api = Settings::get('ombu_factcheck_api');
+    if (!$api || !$this->http) {
+      return new JsonResponse(['error' => 'Not available right now.'], 503);
+    }
+    $response = $this->http->request('POST', rtrim($api['url'], '/') . "/api/factcheck/$check?_format=json", [
+      'auth' => $api['auth'],
+      'json' => ['text' => $text],
+      'http_errors' => FALSE,
+      'timeout' => 900,
+    ]);
+    return new JsonResponse(json_decode((string) $response->getBody(), TRUE), $response->getStatusCode());
   }
 
   /**

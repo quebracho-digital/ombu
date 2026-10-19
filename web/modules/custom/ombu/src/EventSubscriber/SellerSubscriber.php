@@ -23,7 +23,7 @@ final class SellerSubscriber implements EventSubscriberInterface {
   /**
    * Services that wait on a model: the buyer's payment must outlive them.
    */
-  private const SLOW = ['terms', 'factcheck'];
+  private const SLOW = ['terms', 'factcheck', 'aitext', 'plagiarism'];
 
   public function __construct(private readonly Sellers $sellers) {}
 

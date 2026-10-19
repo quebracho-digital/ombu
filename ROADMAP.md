@@ -21,6 +21,21 @@ the cut line moves as we go.
 
 **Freeze for the submission** (Tameion closes 2026-10-17 23:59 ET; Leo is
 in). Draft answers and video script kept outside the repo.
+- **Framing for the form (2026-10-16).** Goal: get noticed by Arc's team, as
+  a market they could prefer to their own; winning is unlikely after one
+  week. Arc OSS answer opens against named repos (`circlefin/arc-commerce`,
+  `arc-p2p-payments`: "they do X, we add Y"), then honest limits: our own
+  facilitator is unaudited, third-party sellers settle themselves, a demo
+  with a legal notice. Fact-check: say it is model-only now, and that
+  Drupal's fact-check module goes well beyond current fact-checkers. No
+  real outside sales or stars either; what we have is every commit on record.
+- **Seen in Tameion:** `drained69/arc-growth-tools` (created 10-16, 0 stars):
+  zero-dep TS library from sale to reward (capture/refund replay, refund
+  hold, spend reservations, transfer verification, signed receipts, an
+  unaudited escrow on mainnet). Not a competitor: infrastructure without a
+  product, we are a product. Its `verifyTransfers` overlaps our review tx
+  check (already in `x402_pay`). Worth copying: its trust-boundary table and
+  "what this adds to Arc references" section.
 - **Reviews bought, not just paid** (`71b1ec6`, deployed): a tx backs a
   review only of the listing it bought (ours: the sale in `x402_pay_log`;
   Circle's: at least the price), one per tx by a unique key. Before, one

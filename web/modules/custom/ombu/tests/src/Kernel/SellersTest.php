@@ -37,7 +37,7 @@ final class SellersTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user', 'wallet_auth',
+    'text', 'filter', 'link', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user', 'wallet_auth',
     // PageFetcher (the markdown seller's guarded fetch) lives here; its
     // config is not needed, and the model sellers stay unconfigured.
     'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',

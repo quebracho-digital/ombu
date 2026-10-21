@@ -12,6 +12,15 @@ use Drupal\Core\Hook\Attribute\Hook;
 final class ThemeHooks {
 
   /**
+   * Implements hook_theme().
+   */
+  #[Hook('theme')]
+  public function theme(): array {
+    // Belgrade has no menu--account template, so this one is used.
+    return ['menu__account' => ['base hook' => 'menu']];
+  }
+
+  /**
    * Implements hook_theme_registry_alter().
    */
   #[Hook('theme_registry_alter')]

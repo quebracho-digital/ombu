@@ -1,0 +1,25 @@
+{#
+/**
+ * @file
+ * The account menu as one dropdown, so it reads apart from the main menu
+ * next to it in the header. A lone link (Log in) stays a plain link.
+ *
+ * Bootstrap's dropdown script comes with Belgrade's global library.
+ */
+#}
+{% if items|length > 1 %}
+  <div{{ attributes.addClass('dropdown', 'ombu-account') }}>
+    <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">{{ 'Account'|t }}</button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      {% for item in items %}
+        <li>{{ link(item.title, item.url, {'class': ['dropdown-item']}) }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% elseif items %}
+  <ul{{ attributes.addClass('nav', 'ombu-account') }}>
+    {% for item in items %}
+      <li class="nav-item">{{ link(item.title, item.url, {'class': ['nav-link']}) }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

@@ -3,7 +3,9 @@
 # every other: `docker compose exec web composer install --no-dev`.
 # Secrets in deploy/.env (git-ignored, mode 600): the sellers' keys, the
 # LLM key, Circle's keys, the gas wallet, and the database's MARIADB_*.
-name: ombu
+# A second checkout runs dev beside it: its .env sets OMBU_STACK, OMBU_PORT
+# and OMBU_HOST (another project, port and database), with testnet keys only.
+name: ${OMBU_STACK:-ombu}
 
 services:
   web:
@@ -15,7 +17,7 @@ services:
     # LAN only (minisforum's tunnel forwards here); Docker bypasses UFW, so
     # binding to the LAN address is what keeps it off other interfaces.
     ports:
-      - "192.168.1.66:8097:80"
+      - "192.168.1.66:${OMBU_PORT:-8097}:80"
     volumes:
       - ..:/var/www/html
     depends_on:

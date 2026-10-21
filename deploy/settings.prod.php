@@ -21,7 +21,7 @@ $databases['default']['default'] = [
 $settings['hash_salt'] = getenv('OMBU_HASH_SALT');
 
 $settings['trusted_host_patterns'] = [
-  '^ombu\.quebracho\.digital$',
+  '^' . preg_quote(getenv('OMBU_HOST') ?: 'ombu.quebracho.digital') . '$',
   '^192\.168\.1\.66$',
 ];
 

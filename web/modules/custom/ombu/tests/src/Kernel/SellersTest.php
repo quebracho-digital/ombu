@@ -177,7 +177,9 @@ final class SellersTest extends CommerceKernelTestBase {
         }
 
         public function requirements(string $url, string $method): array {
-          return [$url, [['scheme' => 'exact', 'network' => 'eip155:8453', 'asset' => '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', 'payTo' => $this->payTo, 'amount' => '20000']]];
+          // cspell:disable-next-line
+          [$network, $asset] = str_starts_with($this->payTo, '0x') ? ['eip155:8453', '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'] : ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'];
+          return [$url, [['scheme' => 'exact', 'network' => $network, 'asset' => $asset, 'payTo' => $this->payTo, 'amount' => '20000']]];
         }
 
       };
@@ -202,6 +204,14 @@ final class SellersTest extends CommerceKernelTestBase {
     // The same endpoint again does not make a second one.
     $submit($wallet, 'https://acme.example/weather');
     $this->assertCount(1, \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute());
+
+    // Paid on Solana, to their Solana wallet; base58 matches only exactly.
+    // cspell:disable-next-line
+    $solana = '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU';
+    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $solana, 'uid' => $seller->id(), 'created' => time()])->execute();
+    $this->assertNotEmpty($submit(strtolower($solana), 'https://acme.example/solana'));
+    $this->assertSame([], $submit($solana, 'https://acme.example/solana'));
+    $this->assertCount(2, \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute());
   }
 
   public function testMarkdownWithoutAUrlIsNotCharged(): void {

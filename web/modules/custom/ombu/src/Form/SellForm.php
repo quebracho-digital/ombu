@@ -65,10 +65,12 @@ final class SellForm extends FormBase {
       $form_state->setErrorByName('endpoint', $e->getMessage());
       return;
     }
+    // EVM addresses in any case; Solana's (base58) exactly, as stored.
     $wallets = $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['address'])
-      ->condition('uid', $this->currentUser()->id())->condition('namespace', 'eip155')->execute()->fetchCol();
-    $paid = array_map(fn($a) => strtolower((string) ($a['payTo'] ?? '')), $accepts);
-    if (!array_intersect($paid, array_map('strtolower', $wallets))) {
+      ->condition('uid', $this->currentUser()->id())->execute()->fetchCol();
+    $key = fn(string $address) => stripos($address, '0x') === 0 ? strtolower($address) : $address;
+    $paid = array_map(fn($a) => $key((string) ($a['payTo'] ?? '')), $accepts);
+    if (!array_intersect($paid, array_map($key, $wallets))) {
       $form_state->setErrorByName('endpoint', $this->t('Its 402 pays @to: sign in with (or link) that wallet to list it.', ['@to' => implode(', ', array_unique($paid))]));
       return;
     }

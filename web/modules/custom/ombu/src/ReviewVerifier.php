@@ -232,7 +232,7 @@ final class ReviewVerifier {
    */
   public static function normalize(string $tx): string {
     $tx = trim($tx);
-    return str_starts_with($tx, '0x') ? strtolower($tx) : $tx;
+    return stripos($tx, '0x') === 0 ? strtolower($tx) : $tx;
   }
 
   /**

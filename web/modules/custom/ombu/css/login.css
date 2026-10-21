@@ -67,6 +67,9 @@ div.user-authenticate__main {
   font-size: 1rem;
   font-weight: 700;
 }
+.ombu-login .ombu-login__wallet + .ombu-login__wallet {
+  margin-top: .5rem;
+}
 .ombu-login .ombu-login__wallet:hover,
 .ombu-login .ombu-login__wallet:focus-visible {
   background: var(--ombu-brand-dark);

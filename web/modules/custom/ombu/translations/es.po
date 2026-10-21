@@ -26,11 +26,17 @@ msgstr "Retirado: su proveedor ya no lo ofrece. Las reseñas siguen abiertas."
 msgid "API: @method @path"
 msgstr "API: @method @path"
 
-msgid "Sign in with a wallet"
-msgstr "Iniciar sesión con una billetera"
+msgid "Sign in with an Ethereum wallet"
+msgstr "Iniciar sesión con una billetera Ethereum"
 
-msgid "Link a wallet"
-msgstr "Vincular una billetera"
+msgid "Sign in with a Solana wallet"
+msgstr "Iniciar sesión con una billetera Solana"
+
+msgid "Link an Ethereum wallet"
+msgstr "Vincular una billetera Ethereum"
+
+msgid "Link a Solana wallet"
+msgstr "Vincular una billetera Solana"
 
 msgid "Wallets"
 msgstr "Billeteras"
@@ -59,8 +65,8 @@ msgstr "EVM, todas las cadenas"
 msgid "Unlink"
 msgstr "Desvincular"
 
-msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. An address is the same on every EVM chain (Arc, Base, Ethereum…): the network your wallet shows when signing does not matter. <em>Link a wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction."
-msgstr "Cada billetera de esta lista inicia sesión en esta cuenta, y una billetera pertenece a una sola cuenta. Una dirección es la misma en todas las cadenas EVM (Arc, Base, Ethereum…): la red que muestre tu billetera al firmar no importa. <em>Vincular una billetera</em> abre tu billetera para elegir la cuenta a agregar y después pide una firma: no cuesta nada ni envía ninguna transacción."
+msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. An address is the same on every EVM chain (Arc, Base, Ethereum…): the network your wallet shows when signing does not matter. <em>Link an Ethereum wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction. A Solana wallet links the account selected in it."
+msgstr "Cada billetera de esta lista inicia sesión en esta cuenta, y una billetera pertenece a una sola cuenta. Una dirección es la misma en todas las cadenas EVM (Arc, Base, Ethereum…): la red que muestre tu billetera al firmar no importa. <em>Vincular una billetera Ethereum</em> abre tu billetera para elegir la cuenta a agregar y después pide una firma: no cuesta nada ni envía ninguna transacción. Una billetera Solana vincula la cuenta que tenga seleccionada."
 
 msgid "Unlink a wallet"
 msgstr "Desvincular una billetera"
@@ -79,6 +85,9 @@ msgstr "%address ya no inicia sesión en esta cuenta."
 
 msgid "No wallet in this browser: install MetaMask."
 msgstr "No hay billetera en este navegador: instala MetaMask."
+
+msgid "No Solana wallet in this browser: install Phantom or Solflare."
+msgstr "No hay billetera Solana en este navegador: instala Phantom o Solflare."
 
 msgid "Offered by a third party: Ombú is not its seller and does not answer for it. <a href=\":terms\">Terms</a>."
 msgstr "Lo ofrece un tercero: Ombú no es su vendedor y no responde por él. <a href=\":terms\">Términos</a>."

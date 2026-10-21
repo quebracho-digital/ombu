@@ -56,9 +56,14 @@ final class UserHooks {
       '#markup' => '<p class="ombu-login__lead">' . $this->t('Sign in with your wallet. New here? The same button creates your account: no email, no password.') . '</p>',
       '#weight' => -100,
     ];
+    // Ethereum's button, then Solana's.
+    foreach (['wallet_auth' => -91, 'wallet_auth_solana' => -90] as $button => $weight) {
+      if (isset($form[$button])) {
+        $form[$button]['#weight'] = $weight;
+        $form[$button]['#attributes']['class'][] = 'ombu-login__wallet';
+      }
+    }
     if (isset($form['wallet_auth'])) {
-      $form['wallet_auth']['#weight'] = -90;
-      $form['wallet_auth']['#attributes']['class'][] = 'ombu-login__wallet';
       $form['wallet_hint'] = [
         '#markup' => '<p class="ombu-login__hint">' . $this->t('Your wallet asks you to sign a message. Nothing is paid or moved.') . '</p>',
         '#weight' => -89,

@@ -64,9 +64,38 @@ the cut line moves as we go.
      600; `check-keys.php` checks each matches its account): sender
      `45ZDXdW1ZiBLQ2MjGywk2RZRoXQDi5duGCGZGx1rHAUJ1KHF6r`, sponsor
      `4sH3aazuQSnjNPYC7KWjMvpcHmnhFtL2GwWyvPKWwuXM1UQQad`, ~20,000 CCD
-     each. Next: the x402 `exact` scheme for Concordium (what the buyer
-     signs, how the facilitator verifies and settles it) from the
-     official TypeScript facilitator, then the port.
+     each.
+     **The scheme (read 2026-10-21):** x402 has an official spec,
+     `specs/schemes/exact/scheme_exact_concordium.md` (x402-foundation,
+     May 2026), and a TypeScript mechanism `@x402/concordium` 2.28.0 on
+     `@concordium/web-sdk` ^12. Networks `ccd:4221332d34e1694168c2a0c0b3fd0f27`
+     (testnet), `ccd:9dd9ca4d19e9393877d2c44b70f89acb` (mainnet). `asset` is
+     `"CCD"` or a PLT's symbol; **the default is USDR** (StablR, 6
+     decimals), on testnet too. `extra.feePayer` is the sponsor. The
+     payload is `{signedTransaction}`: the SDK's `Transaction.toJSON` of a
+     V1 sponsored transaction, sender-signed, sponsor slot `{}`:
+     `{version: 1, header: {sender, nonce, expiry, executionEnergyAmount,
+     numSignatures, sponsor: {account, numSignatures}}, payload: {type:
+     "transfer", toAddress, amount} | {type: "tokenUpdate", tokenId,
+     operations: <CBOR hex>}, signatures: {sender: {"0": {"0": hex}},
+     sponsor: {}}}`. `executionEnergyAmount` is the base cost (300 for a
+     transfer, 300 + 100 per PLT transfer operation); the signed energy
+     adds 100 per signature (sender's and sponsor's) and 1 per byte of
+     header and payload — what the spike already computes. The
+     facilitator's MUST rules: V1, sponsor = feePayer, exact amount and
+     recipient, one transfer only, expiry in the future and within
+     maxTimeoutSeconds (TS caps at 600 s), sender signature verified
+     against the account's on-chain keys, preflight (nonce, balance), then
+     sponsor-sign, submit, wait for finalization, check the on-chain
+     outcome. Testnet has USDR and EURR; **our accounts hold neither**
+     (no faucet found). Explorer: `ccdexplorer.io/testnet/transaction/<hash>`.
+     **Open:** whether the hackathon accepts code written before the build
+     window (19 Nov); the page renders with JavaScript, rules not read.
+     Plan once that is clear: a PHP codec (SDK JSON ↔ bytes, sign hash,
+     energy, the PLT transfer's CBOR), tested against the SDK's fixtures
+     and the spike's finalized transaction; then the facilitator plugged
+     into x402_pay's per-network choice, likely as its own module
+     (`x402_concordium`, protobuf over gRPC-web).
 - **Solana, remote facilitator only** (decided 2026-10-21: no facilitator
   of our own for Solana; Concordium gets ours). Estimate 10.5–15 days; what
   is done by 18 Nov ships as is.

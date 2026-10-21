@@ -1,0 +1,1 @@
+- [ ] 2026-10-21 Rebuild con PHP 8.3.36 (CVE-2026-109618/109619) cuando php:8.3-apache lo traiga: en SER5 deploy/ 'docker compose build --pull && docker compose up -d', verificar php -v. Hoy: mitigación parcial (d64efed).

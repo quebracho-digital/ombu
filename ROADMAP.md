@@ -21,13 +21,26 @@ the cut line moves as we go.
 
 **Solana until 2026-11-18, then the Concordium hackathon only.**
 
+- **Work on `dev.ombu.quebracho.digital` from now on** (decided
+  2026-10-21): production stays as the Arc hackathons saw it. Not set up
+  yet: a second stack next to production on SER5 (its own compose project,
+  database copied from production, its own `.env` with testnet and devnet
+  keys only), and the hostname in Caddy and the tunnel. First task of the
+  next session.
+
 - **Concordium Trusted Agents Hackathon** (Encode,
   encodeclub.com/programmes/concordium-trusted-agents-hackathon): workshops
   2–18 Nov, build window 19 Nov – 9 Dec, Checkpoint 1 on **22 Nov**
   (project, team, idea), submissions close **9 Dec 23:59 UTC**. Judged on
   depth of Concordium integration (identity, Agent Registry, agent
-  payments), path to production, a working demo, usefulness. Plan
-  (2026-10-19), one project in two layers:
+  payments), path to production, a working demo, usefulness. It must run
+  on Concordium testnet and use at least one of: Concordium ID or Verify
+  and Access, the Agent Registry and *Verified by Concordium* badge, x402
+  payments, Protocol-Level Tokens, sponsored transactions, the Agent
+  Registry MCP server. Submit: what it does and which components, a public
+  repo, a demo video of at most 3 minutes, a CCDExplorer link (agent,
+  contract or transactions), and the path to mainnet. Plan (2026-10-19),
+  one project in two layers:
   1. Ombú's Arc agent in the Agent Registry with its *Verified by
      Concordium* badge, and Ombú checking a buyer agent's badge before
      selling. The safe base, for the checkpoint.
@@ -55,8 +68,15 @@ the cut line moves as we go.
     `solana:signTransaction`, no `@solana/web3.js`), and a paid call end to
     end on devnet (x402.org's facilitator), which needs a buyer wallet with
     devnet USDC (faucet.circle.com).
-  - Not pushed yet: `wallet_auth` and `x402_pay` to drupal.org, Ombú to
-    GitHub (its login strings need the new `wallet_auth`).
+  - CI clean in both modules with drupal.org's own rulesets (phpcs,
+    phpstan, cspell; `x402_pay` had failed phpcs and phpstan since
+    2026-10-15): `wallet_auth` 66a0cbe, `x402_pay` eb096c3. **Pushed to
+    GitHub; drupal.org refused the push** ("Unable to contact Drupal.org",
+    their outage, 2026-10-21): push `1.0.x` to the `drupal` remote again.
+    Production's composer takes the modules from drupal.org, so deploying
+    Ombú (its new login strings) waits for that push.
+  - Still to do: E's *Try it* and a devnet end-to-end payment, F, the
+    `upfront` flow.
   - [ ] **F. Around Ombú**: a review proved by a Solana USDC transfer,
     explorer links, the sales view, `/market/sell` with a Solana `payTo`.
   - [ ] **The `upfront` flow for slow sellers.** A Solana payment's

@@ -840,6 +840,16 @@ in). Draft answers and video script kept outside the repo.
   how to use Ombú, how to list a service, how an agent buys. Then anyone's,
   sold, the money straight to the author's wallet and the reviews only from
   who paid. Module: the contrib `lms` (Opigno is out, decided 2026-10-14).
+  - **First course: GPG for accountants** (asked 2026-10-21), in Spanish,
+    free. A funnel for Urunday, Quebracho's DFE agent: its alerts can
+    carry the details encrypted with the client's key. One path per mail
+    client, each the same on Windows, Mac and Linux: **Thunderbird** (built-in
+    OpenPGP) and **Gmail** (the Mailvelope extension; Gmail has no OpenPGP of
+    its own). Steps: make a key, send the public one to Quebracho, back it up,
+    read the first encrypted alert. Losing the key loses nothing: the
+    original is always in ARCA's portal, which makes GPG easy to recommend.
+    Phones: Android works (OpenKeychain + FairEmail); iPhone waits for
+    Lapacho on iOS with a GPG plugin.
   - **What is sold:** a lesson, a whole course, or a whole certification
     (several courses). Bundles and access that lasts go through Commerce,
     with traditional and crypto gateways (the Commerce Arc USDC gateway,

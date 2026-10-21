@@ -7,7 +7,7 @@ namespace Drupal\ombu\Hook;
 use Drupal\Core\Hook\Attribute\Hook;
 
 /**
- * Ombú's accessible pager, over whatever pager the theme brings.
+ * Ombú's accessible pager and the header's two dropdowns, over Belgrade.
  */
 final class ThemeHooks {
 
@@ -16,8 +16,23 @@ final class ThemeHooks {
    */
   #[Hook('theme')]
   public function theme(): array {
-    // Belgrade has no menu--account template, so this one is used.
-    return ['menu__account' => ['base hook' => 'menu']];
+    // Belgrade has neither template, so these are used.
+    return [
+      'menu__account' => ['base hook' => 'menu'],
+      'links__language_block' => ['base hook' => 'links'],
+    ];
+  }
+
+  /**
+   * Implements hook_preprocess_HOOK() for links__language_block.
+   */
+  #[Hook('preprocess_links__language_block')]
+  public function preprocessLanguageBlock(array &$variables): void {
+    // The block is cached per interface language, so this is safe.
+    $variables['current'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    foreach ($variables['links'] as &$item) {
+      $item['link']['#options']['attributes']['class'][] = 'dropdown-item';
+    }
   }
 
   /**

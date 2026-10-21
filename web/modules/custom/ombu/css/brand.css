@@ -7,20 +7,13 @@
   text-decoration: none;
 }
 
-/* The language switcher: one line in the top bar, the current one bold. */
+/* The language switcher and the account menu: two dropdowns in the
+   header (templates/), the current language bold. */
 .block-language-blocklanguage-interface {
   margin-inline: 1rem;
 }
-.block-language-blocklanguage-interface ul {
-  display: flex;
-  gap: .75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.block-language-blocklanguage-interface a.is-active {
+.ombu-language .dropdown-item.is-active {
   font-weight: 700;
-  text-decoration: underline;
 }
 
 /* Belgrade renders the logo (img or inline svg) at its natural size: cap it. */

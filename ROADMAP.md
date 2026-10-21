@@ -56,9 +56,17 @@ the cut line moves as we go.
      TypeScript only, and no npm here): Ombú also charges in CCD or a PLT,
      with sponsored transactions. Spike in `.spike-concordium/`
      (git-excluded): reads the node over gRPC-web from PHP, builds, signs
-     and sends a sponsored V1 transfer. **Waiting for** two testnet
-     accounts' key exports (sender, sponsor) in `.spike-concordium/keys/`
-     to prove the sign hash.
+     and sends a sponsored V1 transfer. **Proven on testnet (2026-10-21):**
+     our own sign hash, signed from PHP by sender and sponsor, finalized
+     (tx `a8537a106de3d3bebd0c418e76ac56b83fd407c124834fa6c96dc1d83bf538ce`):
+     the sender paid only the 1 microCCD sent, the sponsor the fee
+     (~4.36 CCD for 635 NRG). Testnet accounts, keys in `keys/` (mode
+     600; `check-keys.php` checks each matches its account): sender
+     `45ZDXdW1ZiBLQ2MjGywk2RZRoXQDi5duGCGZGx1rHAUJ1KHF6r`, sponsor
+     `4sH3aazuQSnjNPYC7KWjMvpcHmnhFtL2GwWyvPKWwuXM1UQQad`, ~20,000 CCD
+     each. Next: the x402 `exact` scheme for Concordium (what the buyer
+     signs, how the facilitator verifies and settles it) from the
+     official TypeScript facilitator, then the port.
 - **Solana, remote facilitator only** (decided 2026-10-21: no facilitator
   of our own for Solana; Concordium gets ours). Estimate 10.5–15 days; what
   is done by 18 Nov ships as is.

@@ -17,7 +17,50 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
-## Where we left off — 2026-10-15
+## Where we left off — 2026-10-21
+
+**Solana until 2026-11-18, then the Concordium hackathon only.**
+
+- **Concordium Trusted Agents Hackathon** (Encode,
+  encodeclub.com/programmes/concordium-trusted-agents-hackathon): workshops
+  2–18 Nov, build window 19 Nov – 9 Dec, Checkpoint 1 on **22 Nov**
+  (project, team, idea), submissions close **9 Dec 23:59 UTC**. Judged on
+  depth of Concordium integration (identity, Agent Registry, agent
+  payments), path to production, a working demo, usefulness. Plan
+  (2026-10-19), one project in two layers:
+  1. Ombú's Arc agent in the Agent Registry with its *Verified by
+     Concordium* badge, and Ombú checking a buyer agent's badge before
+     selling. The safe base, for the checkpoint.
+  2. An x402 facilitator for Concordium **in PHP** (the official one is
+     TypeScript only, and no npm here): Ombú also charges in CCD or a PLT,
+     with sponsored transactions. Spike in `.spike-concordium/`
+     (git-excluded): reads the node over gRPC-web from PHP, builds, signs
+     and sends a sponsored V1 transfer. **Waiting for** two testnet
+     accounts' key exports (sender, sponsor) in `.spike-concordium/keys/`
+     to prove the sign hash.
+- **Solana, remote facilitator only** (decided 2026-10-21: no facilitator
+  of our own for Solana; Concordium gets ours). Estimate 10.5–15 days; what
+  is done by 18 Nov ships as is.
+  - [x] **A. Addresses by namespace** and **B. Solana sign-in (SIWS)** in
+    `wallet_auth` (4551dc9) and Ombú's login page (8720948). Not pushed.
+  - [ ] **D. A facilitator per network** in `x402_pay`: ours, Circle's, or
+    any x402 facilitator by URL (`/verify`, `/settle`; `/supported` gives
+    Solana's `feePayer`). Concordium plugs in here later.
+  - [ ] **E. Buyers**: for *Try it*, the server builds the unsigned
+    transaction and the wallet signs it (`signTransaction`, no
+    `@solana/web3.js`); `Buyer.php` builds and signs in PHP.
+  - [ ] **F. Around Ombú**: a review proved by a Solana USDC transfer,
+    explorer links, the sales view, `/market/sell` with a Solana `payTo`.
+  - [ ] **The `upfront` flow for slow sellers.** A Solana payment's
+    blockhash lives ~60–90 s, too short for terms and fact-check, which
+    settle after answering. x402 v2 has `paymentFlow: upfront` (settle,
+    then run): their input is checked first, so a 400/422 still costs
+    nothing, and a failing model is refunded by hand. Ping and markdown
+    keep `authorization`.
+- A and D serve Concordium too: its addresses are base58 as well, and its
+  facilitator is one more network in the same setting.
+
+## Before — 2026-10-15
 
 **Freeze for the submission** (Tameion closes 2026-10-17 23:59 ET; Leo is
 in). Draft answers and video script kept outside the repo.
@@ -806,7 +849,8 @@ in). Draft answers and video script kept outside the repo.
   - **Done when:** two sources configured in the UI (all of Circle, and
     Circle with only one category and a name regex) import what each
     filter says, with no code change, and today's tests still pass.
-- [ ] **Solana** (`x402_pay_solana`, Solana wallet sign-in), then mainnet.
+- [ ] **Solana**: sign-in done (2026-10-21); payments through a remote
+  facilitator, then mainnet. Plan and state in *Where we left off*.
 - [ ] **drupal.org releases**: `x402_pay` and the terms submodule.
 
 - [ ] **Seller dashboard** on the seller's own page (phase 2 of the seller

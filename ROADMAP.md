@@ -154,9 +154,12 @@ the cut line moves as we go.
   registered partner. Neither Circle's Agent Marketplace nor Agentic.Market
   pays across chains, verifies reviews against the purchase, or speaks
   more than one language (as far as their docs say).
-- The Circle import keeps every chain a service is paid on, whatever the
-  scheme (`upto`, `batch-settlement` too; 5 services had Solana only by
-  `upto`); the price stays the exact offers'.
+- The Circle import already kept every chain of a service's `exact`
+  offers (checked 2026-10-21: the 18 chains of the catalogue, the same
+  counts as Circle's). It now keeps the other schemes' offers too; the
+  price stays the exact offers'. **Not imported:** 5 services offered only
+  with `upto` (Solana; gateway-402.com's Gemini and Alibaba proxies) and 62
+  with no offer at all: an `upto` amount is a ceiling, no price to show.
 
 ## Before — 2026-10-15
 

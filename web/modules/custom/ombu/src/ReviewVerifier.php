@@ -32,6 +32,20 @@ final class ReviewVerifier {
     'eip155:5042002' => 'https://rpc.testnet.arc.network',
     'eip155:8453' => 'https://mainnet.base.org',
     'eip155:84532' => 'https://sepolia.base.org',
+    // The rest of the Circle catalogue's chains (each answered its chain
+    // id, 2026-10-21).
+    'eip155:1' => 'https://ethereum-rpc.publicnode.com',
+    'eip155:137' => 'https://polygon-bor-rpc.publicnode.com',
+    'eip155:80002' => 'https://polygon-amoy-bor-rpc.publicnode.com',
+    'eip155:42161' => 'https://arb1.arbitrum.io/rpc',
+    'eip155:10' => 'https://mainnet.optimism.io',
+    'eip155:43114' => 'https://api.avax.network/ext/bc/C/rpc',
+    'eip155:130' => 'https://mainnet.unichain.org',
+    'eip155:146' => 'https://rpc.soniclabs.com',
+    'eip155:1329' => 'https://evm-rpc.sei-apis.com',
+    'eip155:480' => 'https://worldchain-mainnet.g.alchemy.com/public',
+    'eip155:999' => 'https://rpc.hyperliquid.xyz/evm',
+    'eip155:196' => 'https://rpc.xlayer.tech',
   ];
 
   /**
@@ -42,6 +56,18 @@ final class ReviewVerifier {
     'eip155:5042002' => 'https://testnet.arcscan.app/tx/%s',
     'eip155:8453' => 'https://basescan.org/tx/%s',
     'eip155:84532' => 'https://sepolia.basescan.org/tx/%s',
+    'eip155:1' => 'https://etherscan.io/tx/%s',
+    'eip155:137' => 'https://polygonscan.com/tx/%s',
+    'eip155:80002' => 'https://amoy.polygonscan.com/tx/%s',
+    'eip155:42161' => 'https://arbiscan.io/tx/%s',
+    'eip155:10' => 'https://optimistic.etherscan.io/tx/%s',
+    'eip155:43114' => 'https://snowtrace.io/tx/%s',
+    'eip155:130' => 'https://unichain.blockscout.com/tx/%s',
+    'eip155:146' => 'https://sonicscan.org/tx/%s',
+    'eip155:1329' => 'https://seitrace.com/tx/%s?chain=pacific-1',
+    'eip155:480' => 'https://worldscan.org/tx/%s',
+    'eip155:999' => 'https://hyperevmscan.io/tx/%s',
+    'eip155:196' => 'https://www.oklink.com/xlayer/tx/%s',
     // cspell:disable-next-line
     'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' => 'https://solscan.io/tx/%s',
     // cspell:disable-next-line
@@ -215,6 +241,24 @@ final class ReviewVerifier {
     foreach (['commerce_product__field_pay_to' => 'field_pay_to_value', 'commerce_product__field_seller_address' => 'field_seller_address_value'] as $table => $column) {
       $ids = [...$ids, ...$this->database->select($table, 't')->fields('t', ['entity_id'])
         ->condition($column, $wallets, 'IN')->execute()->fetchCol()];
+    }
+    // An imported listing pays a wallet per chain (field_pay_to holds one):
+    // any of its offers' payTo. The LIKE finds candidates (it ignores case),
+    // payees() compares base58 exactly.
+    $offers = $this->database->select('commerce_product__field_accepts', 'a')->fields('a', ['entity_id']);
+    $any = $offers->orConditionGroup();
+    foreach ($wallets as $wallet) {
+      $any->condition('field_accepts_value', '%"payTo":"' . $this->database->escapeLike($wallet) . '"%', 'LIKE');
+    }
+    $key = fn(string $network, string $wallet) => str_starts_with($network, 'eip155:') ? strtolower($wallet) : $wallet;
+    foreach (Product::loadMultiple(array_diff($offers->condition($any)->execute()->fetchCol(), $ids)) as $listing) {
+      foreach ($this->payees($listing) as $network => $pairs) {
+        $mine = array_map(fn($wallet) => $key($network, $wallet), $wallets);
+        if (array_intersect(array_column($pairs, 1), $mine)) {
+          $ids[] = $listing->id();
+          break;
+        }
+      }
     }
     // Ours paid to a seller key (no address on the listing): the key's
     // address, as Sellers::payTo() sees it.

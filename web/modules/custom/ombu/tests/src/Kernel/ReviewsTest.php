@@ -193,6 +193,23 @@ final class ReviewsTest extends CommerceKernelTestBase {
     }
   }
 
+  public function testTheSellerFindsTheirListingByTheWalletOfAnyChain(): void {
+    // cspell:disable-next-line
+    $solana = '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU';
+    $accepts = json_decode($this->listing->get('field_accepts')->value, TRUE);
+    $accepts[] = ['scheme' => 'exact', 'network' => 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', 'asset' => 'x', 'payTo' => $solana, 'amount' => '1000'];
+    $this->listing->set('field_accepts', json_encode($accepts))->save();
+    $verifier = $this->container->get('ombu.review_verifier');
+    foreach ([$solana => [(int) $this->listing->id()], strtolower($solana) => []] as $wallet => $expected) {
+      $seller = $this->createUser();
+      \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $wallet, 'uid' => $seller->id(), 'created' => time()])->execute();
+      // Base58 is exact: another case is someone else.
+      $this->assertSame($expected, $verifier->listingsOf((int) $seller->id()), $wallet);
+      // The table's key ignores case: one of the two at a time.
+      \Drupal::database()->delete('wallet_auth_wallet')->condition('uid', $seller->id())->execute();
+    }
+  }
+
   public function testInATranslationTheSellerAlsoWordsTitleAndDescription(): void {
     $seller = $this->seller();
     $this->installConfig(['language']);

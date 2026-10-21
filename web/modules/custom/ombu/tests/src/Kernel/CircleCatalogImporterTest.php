@@ -71,6 +71,25 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertFalse((bool) $listing->get('field_retired')->value);
   }
 
+  public function testEveryChainItIsPaidOnWhateverTheScheme(): void {
+    $item = $this->item('/v1/weather');
+    // cspell:disable
+    $item['accepts'][] = [
+      'scheme' => 'upto',
+      'network' => 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+      'amount' => '500',
+      'payTo' => 'DcQNaByvstRZCERvb9UJHgHiQe8YX2FMdPptM86psQyz',
+      'asset' => 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    ];
+    // cspell:enable
+    $this->import([$item]);
+    $listing = $this->listing('/v1/weather');
+    $this->assertSame(['eip155:8453', 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'], array_column($listing->get('field_network')->getValue(), 'value'));
+    $this->assertCount(2, json_decode($listing->get('field_accepts')->value, TRUE));
+    // The price is the exact one's, not the cheaper ceiling.
+    $this->assertSame('0.001', (string) (float) $listing->get('variations')->entity->getPrice()->getNumber());
+  }
+
   public function testOneSpecFetchPerProviderPerRun(): void {
     $this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]);
     $this->assertSame(1, $this->fetches);

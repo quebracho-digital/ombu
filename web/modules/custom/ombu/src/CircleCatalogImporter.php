@@ -38,7 +38,7 @@ final class CircleCatalogImporter {
   /**
    * Bump to refresh every listing once, when the import learns a new field.
    */
-  private const FORMAT = 2;
+  private const FORMAT = 3;
 
   /**
    * Specs fetched in this run, by URL: one fetch per provider, not per item.
@@ -143,8 +143,11 @@ final class CircleCatalogImporter {
    * replaces a listing that exists: its seller claims that one instead.
    */
   public function upsert(array $item, string $source = 'circle'): string {
-    $accepts = array_values(array_filter($item['accepts'] ?? [], fn($a) => ($a['scheme'] ?? '') === 'exact' && isset($a['amount'], $a['payTo'])));
-    if (!$accepts || empty($item['resource'])) {
+    // Every way it is paid, whatever the scheme (upto, batch-settlement):
+    // its chains are all of theirs. The price is the exact ones'.
+    $accepts = array_values(array_filter($item['accepts'] ?? [], fn($a) => isset($a['scheme'], $a['network'], $a['amount'], $a['payTo'])));
+    $exact = array_values(array_filter($accepts, fn($a) => $a['scheme'] === 'exact'));
+    if (!$exact || empty($item['resource'])) {
       return 'skipped';
     }
     $meta = $item['metadata'] ?? [];
@@ -189,8 +192,8 @@ final class CircleCatalogImporter {
     }
 
     // Arc first (the hackathon chain), then the cheapest offer.
-    usort($accepts, fn($a, $b) => [!str_starts_with($a['network'], 'eip155:5042'), (int) $a['amount']] <=> [!str_starts_with($b['network'], 'eip155:5042'), (int) $b['amount']]);
-    $best = $accepts[0];
+    usort($exact, fn($a, $b) => [!str_starts_with($a['network'], 'eip155:5042'), (int) $a['amount']] <=> [!str_starts_with($b['network'], 'eip155:5042'), (int) $b['amount']]);
+    $best = $exact[0];
     // ponytail: assumes every asset is USDC (6 decimals), true for the whole
     // catalogue today; read the decimals per asset if non-USDC listings appear.
     $price = new Price(Calculator::divide((string) $best['amount'], '1000000', 6), 'USD');

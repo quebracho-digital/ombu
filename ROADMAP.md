@@ -141,6 +141,22 @@ the cut line moves as we go.
     under upfront runs after the buyer paid).
 - A and D serve Concordium too: its addresses are base58 as well, and its
   facilitator is one more network in the same setting.
+- **Pay on any chain, the seller paid on theirs** (talked 2026-10-21; a
+  new site, likely **shuk.trade**: ombu.quebracho.digital is not touched).
+  In order: (1) a listing sold through our gate offers every wallet its
+  seller linked, one `accepts` entry each (1–2 days; today one
+  `field_seller_address`, one network); (2) launch shuk with it;
+  (3) cross-chain through intent bridges (LI.FI's REST API, with an
+  integrator fee on top: our revenue), accepted by our gate as a
+  transfer verified on chain (`ReviewVerifier` already checks them);
+  (4) a float of our own per chain, so imported sellers can be paid
+  too, only once the PSAV question (CNV) is answered or with a
+  registered partner. Neither Circle's Agent Marketplace nor Agentic.Market
+  pays across chains, verifies reviews against the purchase, or speaks
+  more than one language (as far as their docs say).
+- The Circle import keeps every chain a service is paid on, whatever the
+  scheme (`upto`, `batch-settlement` too; 5 services had Solana only by
+  `upto`); the price stays the exact offers'.
 
 ## Before — 2026-10-15
 
@@ -976,6 +992,18 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
   so agents can filter by it.
 - [ ] **Uptime and latency per listing**: we already probe endpoints; a
   public "answered 99% of calls, median 3 s" is our "ships on time".
+- [ ] **Health check of every listing, imported ones too** (asked
+  2026-10-21; Circle's Agent Marketplace checks its catalogue
+  continuously, Coinbase's Agentic.Market shows usage): call each endpoint
+  unpaid through `SellerProbe` (the guarded fetch) and expect a 402 whose
+  `accepts` still match the listing's (chains, `payTo`, amount). Keep the
+  last check, its latency and the failures in a row; the listing shows
+  "checked 2 h ago, answers in 0.4 s"; after N failures it leaves the
+  market's results (not retired: it comes back when it answers), and
+  `/market.json` carries the result so agents can filter by it. Batches
+  from cron (~2.9k Circle services: 200 per hour checks each one daily).
+  **Done when** a listing whose endpoint stops answering leaves the
+  results by the next day, and comes back when it answers again.
 - [ ] **Questions before buying** (Mercado Libre's *preguntas*): free,
   answered by the seller, public on the listing; one per account per
   listing per day.

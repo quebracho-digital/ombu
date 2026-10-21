@@ -181,7 +181,8 @@ final class ReviewVerifier {
     }
     $prices = [];
     foreach (json_decode((string) $listing->get('field_accepts')->value, TRUE) ?: [] as $accept) {
-      if (($accept['network'] ?? NULL) === $network && isset($accept['amount'])) {
+      // An upto amount is a ceiling, not the price: it says nothing of it.
+      if (($accept['network'] ?? NULL) === $network && isset($accept['amount']) && ($accept['scheme'] ?? 'exact') !== 'upto') {
         $prices[] = (float) $accept['amount'];
       }
     }

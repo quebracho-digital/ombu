@@ -81,9 +81,16 @@ class Sellers {
    */
   public static function network(ProductInterface $listing): string {
     return X402PriceItem::isSolanaAddress(trim((string) $listing->get('field_seller_address')->value))
-      // cspell:disable-next-line
-      ? Settings::get('ombu_solana_network', 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')
+      ? self::solanaNetwork()
       : (string) $listing->get('field_x402_price')->getFieldDefinition()->getSetting('network');
+  }
+
+  /**
+   * The Solana network sold on: mainnet, devnet where settings.php says.
+   */
+  public static function solanaNetwork(): string {
+    // cspell:disable-next-line
+    return Settings::get('ombu_solana_network', 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp');
   }
 
   /**

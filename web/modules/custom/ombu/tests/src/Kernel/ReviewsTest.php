@@ -10,6 +10,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\User;
+use Drupal\x402_pay\Solana;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise\Create;
@@ -104,6 +105,36 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertSame(self::BUYER, $review->get('field_wallet')->value);
     $this->assertSame(['average' => 4.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
     $this->assertSame("https://testnet.arcscan.app/tx/$tx", $this->container->get('ombu.review_verifier')->explorerUrl($this->listing, $tx));
+  }
+
+  public function testASolanaPurchaseIsCheckedOnSolana(): void {
+    // cspell:disable
+    [$devnet, $usdc, $seller, $buyer] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'E89CVpe2pUDYGDk1EzK4oYrubi419Vb5WAEfxuAuTqCL'];
+    $tx = '5VERv8NMvzbJMEkV8xnrLkEaWRtSz9CosKDYjCJjBRnbJLgp8uirBgmQpjKhoR4tjF3ZpRzrFmBV6UjKdiSZkQUW';
+    // cspell:enable
+    $this->listing->set('field_accepts', json_encode([['scheme' => 'exact', 'network' => $devnet, 'asset' => $usdc, 'payTo' => $seller, 'amount' => '1000']]))->save();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $buyer, 'uid' => $this->buyer->id(), 'created' => time()])->execute();
+    // getTransaction, jsonParsed: the buyer's TransferChecked into the
+    // seller's USDC account.
+    self::$chain[$tx] = ['meta' => ['err' => NULL], 'transaction' => ['message' => ['instructions' => [
+      ['program' => 'spl-memo', 'parsed' => 'a nonce'],
+      ['program' => 'spl-token', 'parsed' => ['type' => 'transferChecked', 'info' => [
+        'authority' => $buyer,
+        'destination' => Solana::ata($seller, $usdc),
+        'mint' => $usdc,
+        'source' => Solana::ata($buyer, $usdc),
+        'tokenAmount' => ['amount' => '1000', 'decimals' => 6],
+      ]]],
+    ]]]];
+
+    $review = $this->review($tx, 5);
+    $this->assertCount(0, $review->validate());
+    $review->save();
+    // Base58 keeps its case: the signature and the wallet as they were.
+    $this->assertSame([$tx, $buyer], [$review->get('field_tx_hash')->value, $review->get('field_wallet')->value]);
+    $this->assertSame("https://explorer.solana.com/tx/$tx?cluster=devnet", $this->container->get('ombu.review_verifier')->explorerUrl($this->listing, $tx));
+    // A signature the chain does not know.
+    $this->assertRefused(strrev($tx), 'No such transaction on Solana devnet');
   }
 
   public function testAPaymentToAnotherWalletIsRefused(): void {

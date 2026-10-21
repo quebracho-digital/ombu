@@ -91,8 +91,8 @@ final class ReviewHooks {
       $review->set('field_wallet', NULL);
       return;
     }
-    $tx = strtolower(trim((string) $review->get('field_tx_hash')->value));
-    if (!$review->isNew() && $tx === strtolower((string) $review->original?->get('field_tx_hash')->value)) {
+    $tx = ReviewVerifier::normalize((string) $review->get('field_tx_hash')->value);
+    if (!$review->isNew() && $tx === ReviewVerifier::normalize((string) $review->original?->get('field_tx_hash')->value)) {
       return;
     }
     $review->set('field_tx_hash', $tx ?: NULL);

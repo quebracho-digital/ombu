@@ -16,8 +16,10 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\ombu\Rating;
 use Drupal\ombu\ReviewVerifier;
 use Drupal\ombu\Sales;
+use Drupal\ombu\Sellers;
 use Drupal\user\UserInterface;
 use Drupal\x402_pay\Networks;
+use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 
 /**
  * A seller's page is their account page: who they are, their reputation
@@ -62,10 +64,16 @@ final class SellerPageHooks {
 
     // The wallets their listings pay: what proves the listings are theirs.
     $network = (string) FieldConfig::loadByName('commerce_product', 'listing', 'field_x402_price')?->getSetting('network');
-    $explorer = isset(Networks::ALL[$network]['explorer']) ? str_replace('/tx/', '/address/', Networks::ALL[$network]['explorer']) : NULL;
-    $wallets = array_map(fn (string $w) => $explorer
-      ? ['#type' => 'link', '#title' => substr($w, 0, 6) . '…' . substr($w, -4), '#url' => Url::fromUri($explorer . $w), '#attributes' => ['title' => $w]]
-      : ['#plain_text' => $w], $this->verifier->wallets((int) $account->id()));
+    $evm = isset(Networks::ALL[$network]['explorer']) ? str_replace('/tx/', '/address/', Networks::ALL[$network]['explorer']) . '%s' : NULL;
+    // A Solana wallet, on the cluster Solana sellers sell on.
+    // cspell:disable-next-line
+    $solana = str_ends_with(Sellers::solanaNetwork(), 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1') ? 'https://explorer.solana.com/address/%s?cluster=devnet' : 'https://solscan.io/account/%s';
+    $wallets = array_map(function (string $w) use ($evm, $solana) {
+      $explorer = X402PriceItem::isSolanaAddress($w) ? $solana : $evm;
+      return $explorer
+        ? ['#type' => 'link', '#title' => substr($w, 0, 6) . '…' . substr($w, -4), '#url' => Url::fromUri(sprintf($explorer, $w)), '#attributes' => ['title' => $w]]
+        : ['#plain_text' => $w];
+    }, $this->verifier->wallets((int) $account->id()));
     $build['ombu_wallets'] = [
       '#theme' => 'item_list',
       '#title' => $this->t('Paid to'),

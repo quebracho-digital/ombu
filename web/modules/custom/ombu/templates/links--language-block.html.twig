@@ -4,12 +4,13 @@
  * The language switcher as one dropdown: the current language's code, then
  * every language by its own name. Room for more languages in the header.
  *
- * - current: the interface language's code (ThemeHooks).
+ * - current: the interface language's code (ThemeHooks), shown without its
+ *   region: PT for pt-br.
  */
 #}
 {% if links %}
   <div class="dropdown ombu-language">
-    <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="visually-hidden">{{ 'Language'|t }}: </span>{{ current|upper }}</button>
+    <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="visually-hidden">{{ 'Language'|t }}: </span>{{ current|split('-')|first|upper }}</button>
     <ul{{ attributes.addClass('dropdown-menu', 'dropdown-menu-end') }}>
       {% for item in links %}
         <li{{ item.attributes }}>{{ item.link }}</li>

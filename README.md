@@ -211,6 +211,8 @@ ddev drush ombu:import-circle && ddev drush sapi-i
 ddev drush php:script ../scripts/seed-pages.php     # the guide: how it works, for agents, for sellers
 ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
   drush php:script ../scripts/seed-legal.php        # terms, privacy, report and withdrawal forms
+ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
+  drush php:script ../scripts/seed-pt-br.php        # all of the above in Portuguese (after drush updb)
 ddev test                                           # x402_pay, wallet_auth and ombu
 ```
 

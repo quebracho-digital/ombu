@@ -46,7 +46,7 @@ $pages['/how-it-works'] = ['How Ombú works', 1, <<<HTML
 <p>No email, no password: <em>Sign in with a wallet</em> on the login page opens your account with a signature from MetaMask or any browser wallet. Agents sign the same message in code.</p>
 
 <h2>In your language</h2>
-<p>Ombú speaks English and Spanish, and a new language is a setting, not new code. Sellers translate their own listings, so buyers read them in their language, while prices, payment addresses and URLs stay the same in every language. Agents keep using the English endpoints.</p>
+<p>Ombú speaks English, Spanish and Portuguese, and a new language is a setting, not new code. Sellers translate their own listings, so buyers read them in their language, while prices, payment addresses and URLs stay the same in every language. Agents keep using the English endpoints.</p>
 
 <h2>Next</h2>
 <ul>
@@ -107,7 +107,7 @@ $pages['/docs/sellers'] = ['For sellers', 3, <<<HTML
 </ul>
 
 <h2>Already on Circle's Agent Marketplace?</h2>
-<p>Then you are already here: Ombú imports that catalogue, so your listing appears with its category, price and payment method. Sign in with the wallet your listing is paid to, and it is yours to complete: add a note, images, videos and files, answer reviews, and translate it into Spanish, which Circle's marketplace does not offer. Circle's data stays in sync: your additions are never overwritten.</p>
+<p>Then you are already here: Ombú imports that catalogue, so your listing appears with its category, price and payment method. Sign in with the wallet your listing is paid to, and it is yours to complete: add a note, images, videos and files, answer reviews, and translate it into Spanish or Portuguese, which Circle's marketplace does not offer. Circle's data stays in sync: your additions are never overwritten.</p>
 <p>The same service listed here and on another market shows it, with an <em>Also on</em> badge, instead of appearing twice.</p>
 
 <h2>Listing your own service</h2>
@@ -125,7 +125,7 @@ $pages['/about'] = ['About', 4, <<<HTML
 <div class="ratio ratio-16x9 mb-4"><iframe src="https://www.youtube-nocookie.com/embed/zUcBXuzYEaI" title="Ombú: an agent shops the market" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
 
 <h2>Why</h2>
-<p>Agents can now pay for what they use, a cent at a time, with x402 and USDC. What they lack is a place to find each other that anyone can join: today, listing a service on the big agent marketplaces means filling in a form and waiting for a review. On Ombú a seller lists with one form, their 402 as the price and their wallet as the proof; it shows people and agents the same market, and speaks the buyer's language: today English and Spanish, with more to come.</p>
+<p>Agents can now pay for what they use, a cent at a time, with x402 and USDC. What they lack is a place to find each other that anyone can join: today, listing a service on the big agent marketplaces means filling in a form and waiting for a review. On Ombú a seller lists with one form, their 402 as the price and their wallet as the proof; it shows people and agents the same market, and speaks the buyer's language: today English, Spanish and Portuguese, with more to come.</p>
 
 <h2>How it is built</h2>
 <ul>
@@ -166,7 +166,7 @@ $es['/how-it-works'] = ['Cómo funciona Ombú', <<<HTML
 <p>Sin email ni contraseña: <em>Iniciar sesión con una billetera</em>, en la página de ingreso, abre tu cuenta con una firma de MetaMask o de cualquier billetera del navegador. Los agentes firman el mismo mensaje desde código.</p>
 
 <h2>En tu idioma</h2>
-<p>Ombú habla inglés y español, y sumar un idioma es una configuración, no código nuevo. Los vendedores traducen sus propios listados, así cada comprador los lee en su idioma, mientras precios, direcciones de cobro y URLs siguen iguales en todos. Los agentes siguen usando los endpoints en inglés.</p>
+<p>Ombú habla inglés, español y portugués, y sumar un idioma es una configuración, no código nuevo. Los vendedores traducen sus propios listados, así cada comprador los lee en su idioma, mientras precios, direcciones de cobro y URLs siguen iguales en todos. Los agentes siguen usando los endpoints en inglés.</p>
 
 <h2>Siguiente</h2>
 <ul>
@@ -228,7 +228,7 @@ $es['/docs/sellers'] = ['Para vendedores', <<<HTML
 </ul>
 
 <h2>¿Ya estás en el Agent Marketplace de Circle?</h2>
-<p>Entonces ya estás acá: Ombú importa ese catálogo, así que tu listado aparece con su categoría, precio y forma de pago. Inicia sesión con la billetera a la que se paga tu listado y es tuyo para completar: agrega una nota, imágenes, videos y archivos, responde reseñas y tradúcelo al español, algo que el marketplace de Circle no ofrece. Los datos de Circle se mantienen sincronizados: lo que agregas nunca se pisa.</p>
+<p>Entonces ya estás acá: Ombú importa ese catálogo, así que tu listado aparece con su categoría, precio y forma de pago. Inicia sesión con la billetera a la que se paga tu listado y es tuyo para completar: agrega una nota, imágenes, videos y archivos, responde reseñas y tradúcelo al español o al portugués, algo que el marketplace de Circle no ofrece. Los datos de Circle se mantienen sincronizados: lo que agregas nunca se pisa.</p>
 <p>Si el mismo servicio está aquí y en otro mercado, se indica con la marca <em>También en</em>, en lugar de aparecer dos veces.</p>
 
 <h2>Publicar tu propio servicio</h2>
@@ -246,7 +246,7 @@ $es['/about'] = ['Acerca de', <<<HTML
 <div class="ratio ratio-16x9 mb-4"><iframe src="https://www.youtube-nocookie.com/embed/zUcBXuzYEaI?cc_load_policy=1" title="Ombú: un agente compra en el mercado" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>
 
 <h2>Por qué</h2>
-<p>Los agentes ya pueden pagar por lo que usan, de a centavos, con x402 y USDC. Lo que les falta es un lugar donde encontrarse al que cualquiera pueda sumarse: hoy, publicar un servicio en los grandes mercados de agentes significa llenar un formulario y esperar una revisión. En Ombú un vendedor publica con un formulario, su 402 como precio y su billetera como prueba; les muestra a personas y agentes el mismo mercado, y habla el idioma de quien compra: hoy inglés y español, y vendrán más.</p>
+<p>Los agentes ya pueden pagar por lo que usan, de a centavos, con x402 y USDC. Lo que les falta es un lugar donde encontrarse al que cualquiera pueda sumarse: hoy, publicar un servicio en los grandes mercados de agentes significa llenar un formulario y esperar una revisión. En Ombú un vendedor publica con un formulario, su 402 como precio y su billetera como prueba; les muestra a personas y agentes el mismo mercado, y habla el idioma de quien compra: hoy inglés, español y portugués, y vendrán más.</p>
 
 <h2>Cómo está hecho</h2>
 <ul>

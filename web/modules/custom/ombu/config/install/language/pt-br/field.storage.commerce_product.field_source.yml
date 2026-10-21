@@ -1,0 +1,8 @@
+settings:
+  allowed_values:
+    -
+      label: Quebracho
+    -
+      label: 'De terceiros'
+    -
+      label: 'Circle Agent Marketplace'

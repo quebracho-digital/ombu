@@ -394,3 +394,20 @@ function ombu_update_10025(): void {
   \Drupal::service('entity_display.repository')->getViewDisplay('user', 'user')
     ->setComponent('field_links', ['type' => 'link', 'label' => 'hidden', 'weight' => -10, 'settings' => ['rel' => 'nofollow', 'target' => '_blank']])->save();
 }
+
+/**
+ * Brazilian Portuguese next to English and Spanish: /pt-br, the market's
+ * labels and strings. The pages come from scripts/seed-pt-br.php.
+ *
+ * Interface translations come after: drush locale:check && drush locale:update
+ * (core and contrib from localize.drupal.org, ours from translations/pt-br.po).
+ */
+function ombu_update_10026(): void {
+  if (!\Drupal\language\Entity\ConfigurableLanguage::load('pt-br')) {
+    \Drupal\language\Entity\ConfigurableLanguage::createFromLangcode('pt-br')->save();
+  }
+  \Drupal::configFactory()->getEditable('language.negotiation')->set('url.prefixes.pt-br', 'pt-br')->save();
+  _ombu_translations();
+  // Each listing is indexed once per language (with fallback): pt-br too.
+  \Drupal\search_api\Entity\Index::load('listings')?->reindex();
+}

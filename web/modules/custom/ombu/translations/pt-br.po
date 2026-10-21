@@ -1,0 +1,150 @@
+# Brazilian Portuguese translation of Ombú (and, until localize.drupal.org
+# has them, the visible strings of wallet_auth).
+msgid ""
+msgstr ""
+"Language: pt-br\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "No reviews yet"
+msgstr "Ainda sem avaliações"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Filters (@count)"
+msgstr "Filtros (@count)"
+
+msgid "<a href=\":login\">Log in with your wallet</a> to post a review"
+msgstr "<a href=\":login\">Entre com sua carteira</a> para deixar uma avaliação"
+
+msgid "Retired: its provider no longer offers this. Reviews stay open."
+msgstr "Retirado: seu provedor não o oferece mais. As avaliações continuam abertas."
+
+msgid "API: @method @path"
+msgstr "API: @method @path"
+
+msgid "Sign in with an Ethereum wallet"
+msgstr "Entrar com uma carteira Ethereum"
+
+msgid "Sign in with a Solana wallet"
+msgstr "Entrar com uma carteira Solana"
+
+msgid "Link an Ethereum wallet"
+msgstr "Vincular uma carteira Ethereum"
+
+msgid "Link a Solana wallet"
+msgstr "Vincular uma carteira Solana"
+
+msgid "Wallets"
+msgstr "Carteiras"
+
+msgid "No wallet signs in to this account."
+msgstr "Nenhuma carteira entra nesta conta."
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Network"
+msgstr "Rede"
+
+msgid "Linked"
+msgstr "Vinculada"
+
+msgid "Name of @address"
+msgstr "Nome de @address"
+
+msgid "e.g. Phone, Ledger"
+msgstr "ex.: Celular, Ledger"
+
+msgid "EVM, every chain"
+msgstr "EVM, todas as redes"
+
+msgid "Unlink"
+msgstr "Desvincular"
+
+msgid "Each wallet here signs in to this account, and a wallet belongs to one account only. An address is the same on every EVM chain (Arc, Base, Ethereum…): the network your wallet shows when signing does not matter. <em>Link an Ethereum wallet</em> opens your wallet to choose the account to add, then asks for a signature: it costs nothing and sends no transaction. A Solana wallet links the account selected in it."
+msgstr "Cada carteira desta lista entra nesta conta, e uma carteira pertence a uma única conta. Um endereço é o mesmo em todas as redes EVM (Arc, Base, Ethereum…): a rede que sua carteira mostra ao assinar não importa. <em>Vincular uma carteira Ethereum</em> abre sua carteira para escolher a conta a adicionar e depois pede uma assinatura: não custa nada e não envia nenhuma transação. Uma carteira Solana vincula a conta que estiver selecionada nela."
+
+msgid "Unlink a wallet"
+msgstr "Desvincular uma carteira"
+
+msgid "Unlink %address from %account?"
+msgstr "Desvincular %address de %account?"
+
+msgid "This is the last wallet of the account: unless it has a password, nobody will be able to sign in to it."
+msgstr "Esta é a última carteira da conta: a menos que ela tenha senha, ninguém poderá entrar nela."
+
+msgid "The wallet will no longer sign in to this account, and can then be linked to another one."
+msgstr "A carteira não entrará mais nesta conta e poderá ser vinculada a outra."
+
+msgid "%address no longer signs in to this account."
+msgstr "%address não entra mais nesta conta."
+
+msgid "No wallet in this browser: install MetaMask."
+msgstr "Não há carteira neste navegador: instale o MetaMask."
+
+msgid "No Solana wallet in this browser: install Phantom or Solflare."
+msgstr "Não há carteira Solana neste navegador: instale o Phantom ou o Solflare."
+
+msgid "Offered by a third party: Ombú is not its seller and does not answer for it. <a href=\":terms\">Terms</a>."
+msgstr "Oferecido por terceiros: o Ombú não é o vendedor e não responde por ele. <a href=\":terms\">Termos</a>."
+
+msgid "<a href=\":report\">Report this listing</a>"
+msgstr "<a href=\":report\">Denunciar este anúncio</a>"
+
+msgid "Report a listing, a review, a seller, an account or anything on Ombú that breaks our <a href=\":terms\">terms</a> or the law. Include the link to it and why it should come down. Reports are confidential: we do not tell the person reported who sent them, unless the law requires it."
+msgstr "Denuncie um anúncio, uma avaliação, um vendedor, uma conta ou qualquer coisa no Ombú que viole nossos <a href=\":terms\">termos</a> ou a lei. Inclua o link e o motivo pelo qual deveria ser removido. As denúncias são confidenciais: não dizemos à pessoa denunciada quem as enviou, salvo quando a lei exigir."
+
+msgid "Cancel the purchase of a service sold by Ombú (seller: Quebracho) within 10 calendar days, without giving a reason. Include the transaction of the payment. We return the amount paid to the wallet that paid it. Purchases from other sellers are cancelled with them: Ombú is not their seller (<a href=\":terms\">terms</a>, section 3)."
+msgstr "Cancele a compra de um serviço vendido pelo Ombú (vendedor: Quebracho) em até 10 dias corridos, sem precisar dar um motivo. Inclua a transação do pagamento. Devolvemos o valor pago à carteira que pagou. Compras de outros vendedores são canceladas com eles: o Ombú não é o vendedor (<a href=\":terms\">termos</a>, seção 3)."
+
+msgid "Review this listing"
+msgstr "Avaliar este anúncio"
+
+msgid "Latest sales on chain"
+msgstr "Últimas vendas na blockchain"
+
+msgid "sales"
+msgstr "vendas"
+
+msgid "USDC moved"
+msgstr "USDC movimentados"
+
+msgid "listings"
+msgstr "anúncios"
+
+msgid "No sales yet: be the first."
+msgstr "Ainda não há vendas: seja o primeiro."
+
+msgid "Paid in USDC on @chain; each sale links to its transaction."
+msgstr "Pagas em USDC na @chain; cada venda leva à sua transação."
+
+msgid "All settled by Ombú from <a href=\":url\">@address</a>."
+msgstr "Todas liquidadas pelo Ombú a partir de <a href=\":url\">@address</a>."
+
+msgid "Sign in with your wallet. New here? The same button creates your account: no email, no password."
+msgstr "Entre com sua carteira. Primeira vez? O mesmo botão cria sua conta: sem e-mail e sem senha."
+
+msgid "Your wallet asks you to sign a message. Nothing is paid or moved."
+msgstr "Sua carteira pede que você assine uma mensagem. Nada é pago nem movimentado."
+
+msgid "or with a username and password"
+msgstr "ou com usuário e senha"
+
+msgid "Remember your password?"
+msgstr "Lembrou da senha?"
+
+msgid "To remove a wallet, write to <a href=\":support\">support</a>. Your listings: <a href=\":listings\">My listings</a>."
+msgstr "Para remover uma carteira, escreva para o <a href=\":support\">suporte</a>. Seus anúncios: <a href=\":listings\">Meus anúncios</a>."
+
+msgid "@n out of 5"
+msgstr "@n de 5"
+
+msgid "Moderate this review"
+msgstr "Moderar esta avaliação"
+
+msgid "Its text, rating and purchase stay as written. Unpublish it to hide it; to answer it, use Reply."
+msgstr "O texto, a nota e a compra ficam como foram escritos. Despublique para ocultá-la; para respondê-la, use Responder."

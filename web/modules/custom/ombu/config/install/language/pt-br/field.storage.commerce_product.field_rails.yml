@@ -1,0 +1,6 @@
+settings:
+  allowed_values:
+    -
+      label: 'x402 direto'
+    -
+      label: 'Circle Gateway'

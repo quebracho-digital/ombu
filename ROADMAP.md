@@ -42,13 +42,21 @@ the cut line moves as we go.
   of our own for Solana; Concordium gets ours). Estimate 10.5–15 days; what
   is done by 18 Nov ships as is.
   - [x] **A. Addresses by namespace** and **B. Solana sign-in (SIWS)** in
-    `wallet_auth` (4551dc9) and Ombú's login page (8720948). Not pushed.
-  - [ ] **D. A facilitator per network** in `x402_pay`: ours, Circle's, or
-    any x402 facilitator by URL (`/verify`, `/settle`; `/supported` gives
-    Solana's `feePayer`). Concordium plugs in here later.
-  - [ ] **E. Buyers**: for *Try it*, the server builds the unsigned
-    transaction and the wallet signs it (`signTransaction`, no
-    `@solana/web3.js`); `Buyer.php` builds and signs in PHP.
+    `wallet_auth` (cd3749d) and Ombú's login page (8720948).
+  - [x] **D. A facilitator per network** in `x402_pay` (fc77a95): ours,
+    then any x402 facilitator by URL (`RemoteFacilitator`: `/verify`,
+    `/settle`; `/supported` gives Solana's `feePayer`, which the 402
+    names), then Circle's. Solana mainnet and devnet are networks.
+    Concordium plugs in here later.
+  - [~] **E. Buyers**: `Buyer` and `drush x402:buy` pay on Solana with a
+    Solana key (eb49ad5; devnet's simulateTransaction runs it up to the
+    transfer). **To do:** *Try it* in the browser (the server builds the
+    unsigned transaction, the wallet signs it through the Wallet Standard's
+    `solana:signTransaction`, no `@solana/web3.js`), and a paid call end to
+    end on devnet (x402.org's facilitator), which needs a buyer wallet with
+    devnet USDC (faucet.circle.com).
+  - Not pushed yet: `wallet_auth` and `x402_pay` to drupal.org, Ombú to
+    GitHub (its login strings need the new `wallet_auth`).
   - [ ] **F. Around Ombú**: a review proved by a Solana USDC transfer,
     explorer links, the sales view, `/market/sell` with a Solana `payTo`.
   - [ ] **The `upfront` flow for slow sellers.** A Solana payment's

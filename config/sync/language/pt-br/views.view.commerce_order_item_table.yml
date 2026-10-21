@@ -1,0 +1,29 @@
+label: 'Itens do pedido'
+display:
+  default:
+    display_title: Principal
+    display_options:
+      exposed_form:
+        options:
+          submit_button: Aplicar
+          reset_button_label: Redefinir
+          exposed_sorts_label: 'Ordenar por'
+          sort_asc_label: Ascendente
+          sort_desc_label: Decrescente
+      fields:
+        title:
+          label: Título
+          separator: ', '
+        unit_price__number:
+          label: 'Preço unitário'
+          separator: ', '
+        quantity:
+          label: Quantidade
+          separator: ', '
+        total_price__number:
+          label: 'Preço total'
+          separator: ', '
+      arguments:
+        order_item_id:
+          exception:
+            title: Tudo

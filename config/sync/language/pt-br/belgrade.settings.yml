@@ -1,0 +1,6 @@
+cart_label: '@count itens'
+navigation_toggle_text: Menu
+http_error_403_title: 'Acesso negado'
+http_error_403_message: 'Você não está autorizado a acessar esta página.'
+http_error_403_primary_label: Entrar
+http_error_404_title: 'A página não foi encontrada'

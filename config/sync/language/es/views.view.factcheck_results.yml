@@ -1,13 +1,31 @@
+label: 'Fact check results'
 display:
   default:
     display_title: 'Por defecto'
     display_options:
+      title: 'Fact check results'
       fields:
+        created:
+          label: 'Scanned on'
         subject:
           label: Asunto
         url:
           label: URL
+        score:
+          label: 'Support score'
+        ai_score:
+          label: 'AI likelihood (%)'
+        readability:
+          label: Readability
+        uid:
+          label: 'Run by'
   page_1:
     display_title: Página
+    display_options:
+      menu:
+        title: 'Fact check results'
   block_1:
     display_title: Bloque
+    display_options:
+      block_description: 'Fact check results'
+      block_category: AI

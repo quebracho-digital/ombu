@@ -3,11 +3,26 @@ display:
     display_title: 'Por defecto'
     display_options:
       fields:
+        timestamp:
+          label: When
         route_id:
           label: Ruta
+        operation_type:
+          label: Operation
+        complexity:
+          label: Complexity
+        chosen_model:
+          label: 'Chosen model'
+        est_tokens:
+          label: 'Est. tokens'
+        candidates:
+          label: Candidates
       filters:
         route_id:
           expose:
             label: Ruta
+        complexity:
+          expose:
+            label: Complexity
   page_1:
     display_title: Página

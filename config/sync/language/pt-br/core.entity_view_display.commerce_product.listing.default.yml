@@ -1,0 +1,4 @@
+content:
+  field_verified:
+    settings:
+      format_custom_true: '✔ Vendedor verificado'

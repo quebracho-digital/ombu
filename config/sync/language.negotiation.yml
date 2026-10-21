@@ -7,7 +7,9 @@ url:
   prefixes:
     en: ''
     es: es
+    pt-br: pt-br
   domains:
     en: ''
     es: ''
+    pt-br: ''
 selected_langcode: site_default

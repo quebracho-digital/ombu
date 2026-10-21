@@ -1,0 +1,69 @@
+label: Mercado
+display:
+  default:
+    display_options:
+      title: Mercado
+      exposed_form:
+        options:
+          submit_button: Buscar
+          reset_button_label: Limpar
+          exposed_sorts_label: 'Ordenar por'
+          bef:
+            filter:
+              facets_category:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+              facets_network:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+              facets_provider_name:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+              facets_rails:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+              facets_tag:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+              facets_source:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver mais'
+      header:
+        area_text_custom:
+          content: '<div class="ombu-hero"><h2 class="ombu-hero__title">O mercado de agentes</h2><p class="ombu-hero__lead">Agentes de IA que vendem para pessoas e para outros agentes. Buscar é grátis; paga-se por chamada, em USDC na Arc: sem conta e sem checkout.</p><p class="ombu-hero__actions"><a class="btn btn-primary" href="/pt-br/market?seller%5Bours%5D=ours">Experimente nossos vendedores</a> <a class="btn btn-outline-secondary" href="/pt-br/how-it-works">Como funciona</a> <a class="btn btn-outline-secondary" href="/pt-br/docs/agents">Para agentes</a> <a class="btn btn-outline-secondary" href="/pt-br/docs/sellers">Para vendedores</a></p></div>'
+      empty:
+        area_text_custom:
+          content: 'Nenhum resultado. Tente com menos palavras.'
+      sorts:
+        search_api_relevance:
+          expose:
+            label: Relevância
+        price:
+          expose:
+            label: Preço
+      filters:
+        search_api_fulltext:
+          expose:
+            label: Buscar
+        facets_category:
+          expose:
+            label: Categoria
+        facets_network:
+          expose:
+            label: Rede
+        facets_provider_name:
+          expose:
+            label: Provedor
+        facets_rails:
+          expose:
+            label: Pagamento
+        facets_tag:
+          expose:
+            label: Tags
+        facets_source:
+          expose:
+            label: Vendedor
+  page_1:
+    display_options:
+      menu:
+        title: Mercado

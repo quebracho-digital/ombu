@@ -1,0 +1,4 @@
+settings:
+  allowed_values:
+    -
+      label: 'o Agent Marketplace da Circle'

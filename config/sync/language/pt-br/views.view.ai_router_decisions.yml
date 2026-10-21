@@ -1,0 +1,13 @@
+display:
+  default:
+    display_title: Padrão
+    display_options:
+      fields:
+        route_id:
+          label: Rota
+      filters:
+        route_id:
+          expose:
+            label: Rota
+  page_1:
+    display_title: Página

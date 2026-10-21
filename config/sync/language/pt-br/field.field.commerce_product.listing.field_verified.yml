@@ -1,0 +1,4 @@
+label: 'Vendedor verificado'
+settings:
+  on_label: Habilitado
+  off_label: Desligado

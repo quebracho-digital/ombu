@@ -1,0 +1,22 @@
+label: 'Meus anúncios'
+display:
+  default:
+    display_options:
+      title: 'Meus anúncios'
+      fields:
+        title:
+          label: Anúncio
+        field_source:
+          label: Origem
+        changed:
+          label: Atualizado
+      header:
+        area_text_custom:
+          content: 'Os anúncios que pagam a uma das suas carteiras. Edite um para adicionar uma nota, imagens, vídeos e arquivos, ou para traduzi-lo; os dados da Circle ficam sincronizados.'
+      empty:
+        area_text_custom:
+          content: 'Ainda nenhum anúncio paga a uma carteira sua. Entre com a carteira para a qual seu anúncio é pago, ou vincule-a: veja <a href="/pt-br/docs/sellers">Para vendedores</a>.'
+  page_1:
+    display_options:
+      menu:
+        title: 'Meus anúncios'

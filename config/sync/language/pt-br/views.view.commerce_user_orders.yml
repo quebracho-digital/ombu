@@ -1,0 +1,47 @@
+display:
+  default:
+    display_title: Principal
+    display_options:
+      exposed_form:
+        options:
+          submit_button: Aplicar
+          reset_button_label: Redefinir
+          exposed_sorts_label: 'Ordenar por'
+          sort_asc_label: Ascendente
+          sort_desc_label: Decrescente
+      pager:
+        options:
+          tags:
+            previous: '‹ Voltar'
+            next: 'Avançar ›'
+            first: '« Primeiro'
+            last: 'Último »'
+          expose:
+            items_per_page_label: 'Itens por página'
+            items_per_page_options_all_label: '- Todos -'
+            offset_label: Deslocamento
+      fields:
+        order_id:
+          label: ID
+          separator: ', '
+        order_number:
+          label: 'Número do pedido'
+          separator: ', '
+        placed:
+          label: Data
+          separator: ', '
+        total_price__number:
+          label: Total
+          separator: ', '
+        state:
+          label: Estado
+          separator: ', '
+      title: Pedidos
+      arguments:
+        uid:
+          exception:
+            title: Tudo
+  order_page:
+    display_options:
+      menu:
+        title: Pedidos

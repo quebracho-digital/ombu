@@ -1,0 +1,28 @@
+display:
+  default:
+    display_title: Principal
+    display_options:
+      exposed_form:
+        options:
+          submit_button: Aplicar
+          reset_button_label: Redefinir
+          exposed_sorts_label: 'Ordenar por'
+          sort_asc_label: Ascendente
+          sort_desc_label: Decrescente
+      fields:
+        purchased_entity:
+          separator: ', '
+        unit_price__number:
+          label: Preço
+          separator: ', '
+        edit_quantity:
+          label: Quantidade
+        remove_button:
+          label: Remover
+        total_price__number:
+          label: Total
+          separator: ', '
+      arguments:
+        order_id:
+          exception:
+            title: Tudo

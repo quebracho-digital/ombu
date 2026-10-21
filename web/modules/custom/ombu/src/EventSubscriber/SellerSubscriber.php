@@ -68,6 +68,7 @@ final class SellerSubscriber implements EventSubscriberInterface {
     // or the Circle API key settles for it.
     if ($address = $this->sellers->address($event->entity)) {
       $event->setPayTo($address);
+      $event->setNetwork(Sellers::network($event->entity));
     }
     elseif ($seller = $this->sellers->seller($event->entity)) {
       $event->setSeller($seller);

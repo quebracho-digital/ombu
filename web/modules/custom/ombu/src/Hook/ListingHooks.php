@@ -15,6 +15,7 @@ use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Rating;
 use Drupal\ombu\Sales;
+use Drupal\ombu\Sellers;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
 
@@ -124,11 +125,14 @@ final class ListingHooks {
           '#attributes' => [
             'class' => ['ombu-buy'],
             'data-ombu-buy' => Url::fromRoute('x402_pay.entity', ['entity_type' => 'commerce_product', 'entity' => $product->id(), 'view_mode' => 'full'])->toString(),
+            'data-ombu-solana' => Url::fromRoute('x402_pay.solana_transaction')->toString(),
           ],
           'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2><label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>'],
           'input' => ['#type' => 'html_tag', '#tag' => 'textarea', '#value' => $examples[$service], '#attributes' => ['id' => 'ombu-buy-input', 'rows' => 2, 'class' => ['form-control']]],
           'button' => ['#type' => 'html_tag', '#tag' => 'button', '#value' => $this->t('Pay @price USDC with your wallet', ['@price' => $price->get('amount')->getValue()]), '#attributes' => ['type' => 'submit', 'class' => ['btn', 'btn-primary']]],
-          'note' => ['#markup' => '<p><small>' . $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.') . '</small></p>'],
+          'note' => ['#markup' => '<p><small>' . (str_starts_with(Sellers::network($product), 'solana:')
+            ? $this->t('One signature in your wallet (Phantom, Solflare, Backpack), no fees; USDC on Solana. Charged only if the seller answers.')
+            : $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.')) . '</small></p>'],
           'result' => ['#markup' => '<pre class="ombu-buy__result" aria-live="polite"></pre>'],
           '#attached' => ['library' => ['ombu/buy']],
           '#weight' => 11.4,

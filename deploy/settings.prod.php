@@ -65,5 +65,15 @@ if ($brevo_key = getenv('OMBU_BREVO_SMTP_KEY')) {
   ];
 }
 
+// Solana sellers sell on mainnet (Sellers::network()), unless the env says
+// another network and its facilitator: dev, on devnet through x402.org's.
+if ($solana = getenv('OMBU_SOLANA_NETWORK')) {
+  $settings['ombu_solana_network'] = $solana;
+  $config['x402_pay.settings']['facilitator']['remote'][$solana] = [
+    'url' => getenv('OMBU_SOLANA_FACILITATOR') ?: 'https://x402.org/facilitator',
+    'key_id' => '',
+  ];
+}
+
 $settings['config_sync_directory'] = '../config/sync';
 $config['system.logging']['error_level'] = 'hide';

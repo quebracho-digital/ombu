@@ -3561,11 +3561,12 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/wallet_auth.git",
-                "reference": "4221e1469567ea54241b58c91544c5081497b201"
+                "reference": "66a0cbed48047633d8f411896d5dacdf4e896fca"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",
                 "ext-gmp": "*",
+                "ext-sodium": "*",
                 "kornrunner/keccak": "^1.1",
                 "kornrunner/secp256k1": "^0.4",
                 "php": "^8.3"
@@ -3576,8 +3577,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta1+13-dev",
-                    "datestamp": "1792153390",
+                    "version": "1.0.0-beta1+15-dev",
+                    "datestamp": "1792597220",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -3606,12 +3607,13 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/x402_pay.git",
-                "reference": "bda64384ce238f7b5a9c32c38a5e9349377436b9"
+                "reference": "7bd1d0d41000bdc1b961b3c66f8f26a6c3841036"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",
                 "drupal/key": "^1.18",
                 "ext-gmp": "*",
+                "ext-sodium": "*",
                 "kornrunner/keccak": "^1.1",
                 "kornrunner/secp256k1": "^0.4",
                 "league/html-to-markdown": "^5.1",
@@ -3623,8 +3625,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta1+12-dev",
-                    "datestamp": "1792091847",
+                    "version": "1.0.0-beta1+17-dev",
+                    "datestamp": "1792598255",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"

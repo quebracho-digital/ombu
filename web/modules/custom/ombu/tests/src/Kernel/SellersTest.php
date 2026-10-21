@@ -87,6 +87,21 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame($cold, $this->required($listing)['accepts'][0]['payTo']);
   }
 
+  public function testASolanaAddressSellsOnSolana(): void {
+    // cspell:disable-next-line
+    [$devnet, $seller, $fee_payer] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5'];
+    $this->setSetting('ombu_solana_network', $devnet);
+    // Devnet's facilitator, its /supported already cached: no request out.
+    $url = 'https://x402.org/facilitator';
+    $this->config('x402_pay.settings')->set('facilitator.remote', [$devnet => ['url' => $url, 'key_id' => '']])->save();
+    \Drupal::cache()->set('x402_pay.supported:' . hash('sha256', $url), [['x402Version' => 2, 'scheme' => 'exact', 'network' => $devnet, 'extra' => ['feePayer' => $fee_payer]]]);
+    $listing = $this->listing('ping', 'seller_ping', '0.0001');
+    $listing->set('field_seller_address', $seller)->save();
+    $accepts = $this->required($listing)['accepts'][0];
+    // cspell:disable-next-line
+    $this->assertSame([$devnet, '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', $seller, $fee_payer], [$accepts['network'], $accepts['asset'], $accepts['payTo'], $accepts['extra']['feePayer']]);
+  }
+
   public function testTheColdAddressWinsOverTheKey(): void {
     $cold = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
     $listing = $this->listing('ping', 'seller_ping', '0.0001');

@@ -9,7 +9,7 @@ field_name: field_seller_address
 entity_type: commerce_product
 type: string
 settings:
-  max_length: 42
+  max_length: 44
   case_sensitive: false
   is_ascii: true
 module: core

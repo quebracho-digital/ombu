@@ -1,7 +1,8 @@
 /**
  * @file
  * People pay a listing from the browser: the same x402 call an agent makes,
- * signed by their wallet (one EIP-3009 signature, no gas), then the result.
+ * signed by their wallet (one EIP-3009 signature, no gas; on Solana, one
+ * transaction the facilitator pays the fees of), then the result.
  */
 ((Drupal, once) => {
   const decode = (b64) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))));
@@ -14,6 +15,9 @@
     5042002: { chainName: 'Arc testnet', rpcUrls: ['https://rpc.testnet.arc.network'], blockExplorerUrls: ['https://testnet.arcscan.app'] },
   };
   const EXPLORER = { 5042: 'https://explorer.arc.io/tx/', 5042002: 'https://testnet.arcscan.app/tx/' };
+  // Wallet Standard's names for Solana's clusters, by genesis hash (CAIP-2).
+  // cspell:disable-next-line
+  const CLUSTERS = { '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': 'mainnet', EtWTRABZaYq6iMfeYKouRu166VU2xqa1: 'devnet' };
 
   async function useChain(ethereum, chainId) {
     try {
@@ -28,23 +32,12 @@
     }
   }
 
-  async function buy(url, input, status) {
+  // EVM: an EIP-3009 authorization for exactly that, to the seller.
+  async function evm(req, chainId, status) {
     const { ethereum } = window;
     if (!ethereum) {
       throw new Error(Drupal.t('No wallet in this browser: install MetaMask.'));
     }
-    const call = (headers = {}) => fetch(url, { method: 'POST', body: input, headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...headers } });
-
-    // 1. The 402 says what to pay, to whom, on which chain.
-    const first = await call();
-    if (first.status !== 402) {
-      throw new Error(`${first.status}: ${(await first.text()).slice(0, 300)}`);
-    }
-    const required = decode(first.headers.get('PAYMENT-REQUIRED'));
-    const req = required.accepts[0];
-    const chainId = Number(req.network.split(':')[1]);
-
-    // 2. One signature: a USDC transfer of exactly that, to the seller.
     status(Drupal.t('Sign the payment in your wallet…'));
     const [from] = await ethereum.request({ method: 'eth_requestAccounts' });
     await useChain(ethereum, chainId);
@@ -74,19 +67,69 @@
         message: authorization,
       })],
     });
+    return { accepted: { ...req, extra: { ...req.extra, assetTransferMethod: 'eip3009' } }, payload: { signature, authorization } };
+  }
+
+  // The browser's Solana wallets (Wallet Standard): those loaded answer
+  // app-ready at once; the first that signs transactions on the cluster.
+  function solanaWallet(chain) {
+    const wallets = [];
+    const api = { register: (...found) => { wallets.push(...found); return () => {}; } };
+    const late = ({ detail }) => detail(api);
+    window.addEventListener('wallet-standard:register-wallet', late);
+    window.dispatchEvent(new CustomEvent('wallet-standard:app-ready', { detail: api }));
+    window.removeEventListener('wallet-standard:register-wallet', late);
+    return wallets.find((w) => w.chains.includes(chain) && w.features['standard:connect'] && w.features['solana:signTransaction']);
+  }
+
+  // Solana: the site builds the transfer, the wallet signs it, the
+  // facilitator adds its signature as fee payer when it settles.
+  async function solana(req, cluster, builder, status) {
+    const chain = `solana:${cluster}`;
+    const wallet = solanaWallet(chain);
+    if (!wallet) {
+      throw new Error(Drupal.t('No Solana wallet in this browser: install Phantom, Solflare or Backpack.'));
+    }
+    status(Drupal.t('Sign the payment in your wallet…'));
+    const { accounts } = await wallet.features['standard:connect'].connect();
+    const account = accounts.find((a) => a.chains.includes(chain)) ?? accounts[0];
+    const built = await fetch(builder, { method: 'POST', body: JSON.stringify({ accepted: req, buyer: account.address }), headers: { 'Content-Type': 'application/json' } });
+    const { transaction, error } = await built.json();
+    if (!transaction) {
+      throw new Error(error);
+    }
+    const [{ signedTransaction }] = await wallet.features['solana:signTransaction'].signTransaction({
+      account, chain, transaction: Uint8Array.from(atob(transaction), (c) => c.charCodeAt(0)),
+    });
+    return { accepted: req, payload: { transaction: btoa(String.fromCharCode(...signedTransaction)) } };
+  }
+
+  async function buy(form, input, status) {
+    const call = (headers = {}) => fetch(form.dataset.ombuBuy, { method: 'POST', body: input, headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...headers } });
+
+    // 1. The 402 says what to pay, to whom, on which chain.
+    const first = await call();
+    if (first.status !== 402) {
+      throw new Error(`${first.status}: ${(await first.text()).slice(0, 300)}`);
+    }
+    const required = decode(first.headers.get('PAYMENT-REQUIRED'));
+    const req = required.accepts[0];
+    const [family, reference] = req.network.split(':');
+
+    // 2. One signature: a USDC transfer of exactly that, to the seller.
+    const { accepted, payload } = family === 'solana'
+      ? await solana(req, CLUSTERS[reference], form.dataset.ombuSolana, status)
+      : await evm(req, Number(reference), status);
 
     // 3. The same call, paid. Settled only if the seller answers.
     status(Drupal.t('Paid: waiting for the seller…'));
-    const paid = await call({
-      'PAYMENT-SIGNATURE': encode({
-        x402Version: 2,
-        resource: required.resource,
-        accepted: { ...req, extra: { ...req.extra, assetTransferMethod: 'eip3009' } },
-        payload: { signature, authorization },
-      }),
-    });
+    const paid = await call({ 'PAYMENT-SIGNATURE': encode({ x402Version: 2, resource: required.resource, accepted, payload }) });
     const receipt = paid.headers.get('PAYMENT-RESPONSE');
-    return { status: paid.status, body: await paid.text(), tx: receipt ? decode(receipt).transaction : null, explorer: EXPLORER[chainId] };
+    const tx = receipt ? decode(receipt).transaction : null;
+    const link = family === 'solana'
+      ? `https://explorer.solana.com/tx/${tx}${CLUSTERS[reference] === 'devnet' ? '?cluster=devnet' : ''}`
+      : EXPLORER[reference] + tx;
+    return { status: paid.status, body: await paid.text(), tx, link };
   }
 
   Drupal.behaviors.ombuBuy = {
@@ -101,7 +144,7 @@
           try {
             const input = form.querySelector('textarea').value;
             JSON.parse(input);
-            const result = await buy(form.dataset.ombuBuy, input, status);
+            const result = await buy(form, input, status);
             let body = result.body;
             try {
               body = JSON.stringify(JSON.parse(body), null, 2);
@@ -112,7 +155,7 @@
             output.textContent = body;
             if (result.tx) {
               const link = document.createElement('a');
-              link.href = result.explorer + result.tx;
+              link.href = result.link;
               link.textContent = Drupal.t('Paid: see the transaction');
               output.before(link);
               // Reviewing it is one step away: the purchase is filled in.

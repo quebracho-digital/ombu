@@ -411,3 +411,25 @@ function ombu_update_10026(): void {
   // Each listing is indexed once per language (with fallback): pt-br too.
   \Drupal\search_api\Entity\Index::load('listings')?->reindex();
 }
+
+/**
+ * Seller addresses on Solana: base58, up to 44 characters (EVM's are 42).
+ */
+function ombu_update_10027(): void {
+  $name = 'field_seller_address';
+  $column = "{$name}_value";
+  // The column, as the SQL storage recorded it, then the definitions it
+  // compares with: the field storage config and the last installed one.
+  $key_value = \Drupal::keyValue('entity.storage_schema.sql');
+  $key = "commerce_product.field_schema_data.$name";
+  $tables = $key_value->get($key);
+  foreach ($tables as $table => &$spec) {
+    $spec['fields'][$column]['length'] = 44;
+    \Drupal::database()->schema()->changeField($table, $column, $column, $spec['fields'][$column]);
+  }
+  $key_value->set($key, $tables);
+  \Drupal::configFactory()->getEditable("field.storage.commerce_product.$name")->set('settings.max_length', 44)->save(TRUE);
+  $repository = \Drupal::service('entity.last_installed_schema.repository');
+  $storage = $repository->getLastInstalledFieldStorageDefinitions('commerce_product')[$name];
+  $repository->setLastInstalledFieldStorageDefinition($storage->setSetting('max_length', 44));
+}

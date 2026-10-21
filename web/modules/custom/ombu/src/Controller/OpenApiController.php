@@ -9,6 +9,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
 use Drupal\ombu\Chains;
+use Drupal\ombu\Sellers;
 use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -137,7 +138,7 @@ final class OpenApiController implements ContainerInjectionInterface {
       'x-x402' => [
         'price' => $item->price(),
         'currency' => 'USDC',
-        'network' => (string) $item->getFieldDefinition()->getSetting('network'),
+        'network' => Sellers::network($listing),
       ],
     ];
   }

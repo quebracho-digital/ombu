@@ -12,6 +12,7 @@ use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\key\KeyRepositoryInterface;
 use Drupal\x402_pay\Eip712;
+use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Drupal\x402_pay\Signer;
 use GuzzleHttp\ClientInterface;
 use League\HTMLToMarkdown\HtmlConverter;
@@ -66,11 +67,23 @@ class Sellers {
   /**
    * The listing's seller address when it has no key here; NULL if none.
    *
-   * Selling to it needs a Circle API key (see x402_pay's settings).
+   * An EVM address needs a Circle API key or our facilitator; a Solana one
+   * (base58) sells on Solana, through its facilitator (x402_pay's settings).
    */
   public function address(ProductInterface $listing): ?string {
     $address = trim((string) $listing->get('field_seller_address')->value);
-    return preg_match('/^0x[0-9a-fA-F]{40}$/', $address) ? $address : NULL;
+    return preg_match('/^0x[0-9a-fA-F]{40}$/', $address) || X402PriceItem::isSolanaAddress($address) ? $address : NULL;
+  }
+
+  /**
+   * The network a listing sells on: its price field's, Solana's when its
+   * seller address is on Solana (mainnet; devnet where settings.php says).
+   */
+  public static function network(ProductInterface $listing): string {
+    return X402PriceItem::isSolanaAddress(trim((string) $listing->get('field_seller_address')->value))
+      // cspell:disable-next-line
+      ? Settings::get('ombu_solana_network', 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp')
+      : (string) $listing->get('field_x402_price')->getFieldDefinition()->getSetting('network');
   }
 
   /**

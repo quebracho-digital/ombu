@@ -37,7 +37,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
-    'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'wallet_auth',
+    'link', 'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'wallet_auth',
     'language',
   ];
 

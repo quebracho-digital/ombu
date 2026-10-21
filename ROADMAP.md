@@ -21,12 +21,20 @@ the cut line moves as we go.
 
 **Solana until 2026-11-18, then the Concordium hackathon only.**
 
-- **Work on `dev.ombu.quebracho.digital` from now on** (decided
-  2026-10-21): production stays as the Arc hackathons saw it. Not set up
-  yet: a second stack next to production on SER5 (its own compose project,
-  database copied from production, its own `.env` with testnet and devnet
-  keys only), and the hostname in Caddy and the tunnel. First task of the
-  next session.
+- **Work on a dev stack from now on** (decided 2026-10-21): production
+  stays as the Arc hackathons saw it. **Hostname: not
+  `dev.ombu.quebracho.digital`**: Cloudflare's universal certificate covers
+  `*.quebracho.digital`, one level only (checked 2026-10-21), so propose
+  `ombu-dev.quebracho.digital`. `deploy/` runs a second stack from another
+  checkout (642654d): its `.env` sets `OMBU_STACK=ombu-dev`,
+  `OMBU_PORT=8098`, `OMBU_HOST`, and for Solana `OMBU_SOLANA_NETWORK`
+  (devnet) and optionally `OMBU_SOLANA_FACILITATOR` (default x402.org's).
+  **To do, on SER5 with Leo's go-ahead:** clone into
+  `/data/docker/ombu-dev/src/`, copy production's DB and settings.php,
+  `.env` with testnet keys only (no Brevo: no mail to real users), the
+  tunnel rule on minisforum (`~/.cloudflared/config.yml`, back it up,
+  → `192.168.1.66:8098`), and the CNAME by hand in Cloudflare (`route dns`
+  does not work for this zone, PROC-M04).
 
 - **Concordium Trusted Agents Hackathon** (Encode,
   encodeclub.com/programmes/concordium-trusted-agents-hackathon): workshops
@@ -62,23 +70,27 @@ the cut line moves as we go.
     names), then Circle's. Solana mainnet and devnet are networks.
     Concordium plugs in here later.
   - [~] **E. Buyers**: `Buyer` and `drush x402:buy` pay on Solana with a
-    Solana key (eb49ad5; devnet's simulateTransaction runs it up to the
-    transfer). **To do:** *Try it* in the browser (the server builds the
-    unsigned transaction, the wallet signs it through the Wallet Standard's
-    `solana:signTransaction`, no `@solana/web3.js`), and a paid call end to
-    end on devnet (x402.org's facilitator), which needs a buyer wallet with
-    devnet USDC (faucet.circle.com).
-  - CI clean in both modules with drupal.org's own rulesets (phpcs,
-    phpstan, cspell; `x402_pay` had failed phpcs and phpstan since
-    2026-10-15): `wallet_auth` 66a0cbe, `x402_pay` eb096c3. **Pushed to
-    GitHub; drupal.org refused the push** ("Unable to contact Drupal.org",
-    their outage, 2026-10-21): push `1.0.x` to the `drupal` remote again.
-    Production's composer takes the modules from drupal.org, so deploying
-    Ombú (its new login strings) waits for that push.
-  - Still to do: E's *Try it* and a devnet end-to-end payment, F, the
-    `upfront` flow.
-  - [ ] **F. Around Ombú**: a review proved by a Solana USDC transfer,
-    explorer links, the sales view, `/market/sell` with a Solana `payTo`.
+    Solana key (eb49ad5). *Try it* in the browser: `/x402/solana/transaction`
+    builds the unsigned transaction (x402_pay 7bd1d0d), `buy.js` finds the
+    wallet through the Wallet Standard and signs with
+    `solana:signTransaction`, no `@solana/web3.js`. Checked on devnet
+    (2026-10-21): the local devnet listing (DDEV, product 2802) answers a
+    402 with x402.org's fee payer; the endpoint's transaction simulates up
+    to the transfer. **To do:** fund the test wallets at faucet.circle.com
+    (Solana devnet USDC) — buyer `E89CVpe2pUDYGDk1EzK4oYrubi419Vb5WAEfxuAuTqCL`,
+    seller `6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU`, keys in
+    `.spike-solana/` (git-excluded) — then a paid call with
+    `drush x402:buy`, and one with Phantom in the browser (Phantom may
+    alter the transaction; the facilitator would refuse it).
+  - CI clean in both modules with drupal.org's rulesets; **pushed to
+    drupal.org** (2026-10-21).
+  - [~] **F. Around Ombú**: a listing whose `field_seller_address` is a
+    Solana address sells on Solana (`Sellers::network()`,
+    `PriceEvent::setNetwork()`; the column widened to 44 characters,
+    `ombu_update_10027`). **To do:** a review proved by a Solana USDC
+    transfer (`ReviewVerifier` assumes eip155), explorer links and the
+    sales view (`Sales`, `SellerPageHooks` read the field's network),
+    `/market/sell` with a Solana address (`SellForm.php:69`).
   - [ ] **The `upfront` flow for slow sellers.** A Solana payment's
     blockhash lives ~60–90 s, too short for terms and fact-check, which
     settle after answering. x402 v2 has `paymentFlow: upfront` (settle,

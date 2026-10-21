@@ -13,7 +13,7 @@ _core:
 id: belgrade_social_navigation
 theme: belgrade
 region: navigation
-weight: 0
+weight: -8
 provider: null
 plugin: 'system_menu_block:social'
 settings:

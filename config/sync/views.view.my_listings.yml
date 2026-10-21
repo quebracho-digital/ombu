@@ -195,4 +195,3 @@ display:
         - commerce_product_list
         - 'config:field.storage.commerce_product.field_network'
         - 'config:field.storage.commerce_product.field_source'
-

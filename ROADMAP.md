@@ -124,16 +124,21 @@ the cut line moves as we go.
   - [~] **F. Around Ombú**: a listing whose `field_seller_address` is a
     Solana address sells on Solana (`Sellers::network()`,
     `PriceEvent::setNetwork()`; the column widened to 44 characters,
-    `ombu_update_10027`). **To do:** a review proved by a Solana USDC
-    transfer (`ReviewVerifier` assumes eip155), explorer links and the
-    sales view (`Sales`, `SellerPageHooks` read the field's network),
-    `/market/sell` with a Solana address (`SellForm.php:69`).
-  - [ ] **The `upfront` flow for slow sellers.** A Solana payment's
-    blockhash lives ~60–90 s, too short for terms and fact-check, which
-    settle after answering. x402 v2 has `paymentFlow: upfront` (settle,
-    then run): their input is checked first, so a 400/422 still costs
-    nothing, and a failing model is refunded by hand. Ping and markdown
-    keep `authorization`.
+    `ombu_update_10027`). A review can be backed by a Solana purchase
+    (23cd68f: `getTransaction` jsonParsed, a TransferChecked of the USDC
+    into the payee's token account by one of the reviewer's wallets;
+    signatures keep their case; devnet explorer links carry the cluster),
+    a seller's Solana wallets link to a Solana explorer, `/market/sell`
+    lists an endpoint paid to a Solana wallet (2bffee7). **To do:** the
+    sales view (`Sales` and the `ombu_sales` view filter by the field's
+    one network; Solana sales are not shown).
+  - [x] **The `upfront` flow** in `x402_pay` (7a41ef5):
+    `PriceEvent::settleFirst()`, the 402 announces `extra.paymentFlow:
+    "upfront"`, the gate settles before the handler, no `/verify`. **Not
+    wired in Ombú yet:** only our own sellers go through our gate, and they
+    sell on Arc; a slow seller of ours on Solana would need its input
+    checked before settling (today a 400 comes from the handler, which
+    under upfront runs after the buyer paid).
 - A and D serve Concordium too: its addresses are base58 as well, and its
   facilitator is one more network in the same setting.
 

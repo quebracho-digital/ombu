@@ -9,6 +9,11 @@ market:
   dependencies:
     - core/drupal
     - core/once
+# Listings as small cards (Cards.php).
+cards:
+  css:
+    theme:
+      css/cards.css: {}
 # A listing's page: one readable column, details as a two-column list.
 listing:
   css:

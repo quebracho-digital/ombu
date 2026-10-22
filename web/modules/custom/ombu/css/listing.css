@@ -258,3 +258,10 @@ article:has(h1.listing-title) .field--comment a[href*="explorer"] {
   color: #f5a623;
   letter-spacing: .05em;
 }
+
+/* Similar services: across both columns, under the listing and its reviews. */
+@media (min-width: 992px) {
+  .listing--no-images > .row > .col-md-7 > .ombu-similar {
+    grid-column: 1 / -1;
+  }
+}

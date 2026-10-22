@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ombu;
 
-use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\Unicode;
 
 /**
  * Listings like this one, by the category and tags they share.
@@ -68,30 +65,12 @@ final class Similar {
   }
 
   /**
-   * The block under a listing: links to the similar ones, with provider.
+   * The block under a listing: the similar ones, as cards.
    */
   public static function build(ProductInterface $product): array {
-    $cache = ['tags' => ['commerce_product_list']];
-    $items = [];
-    foreach (Product::loadMultiple(self::of($product)) as $similar) {
-      if (!$similar->access('view')) {
-        continue;
-      }
-      $provider = $similar->get('field_provider_term')->entity?->label();
-      $items[] = [
-        '#markup' => $similar->toLink(Unicode::truncate((string) $similar->label(), 90, TRUE, TRUE))->toString() . ($provider ? ' <small>' . Html::escape($provider) . '</small>' : ''),
-      ];
-    }
-    if (!$items) {
-      return ['#cache' => $cache];
-    }
-    return [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['ombu-similar']],
-      '#cache' => $cache,
-      'title' => ['#markup' => '<h2>' . t('Similar services') . '</h2>'],
-      'list' => ['#theme' => 'item_list', '#items' => $items],
-    ];
+    $build = Cards::build(self::of($product), (string) t('Similar services'));
+    $build['#attributes']['class'][] = 'ombu-similar';
+    return $build;
   }
 
 }

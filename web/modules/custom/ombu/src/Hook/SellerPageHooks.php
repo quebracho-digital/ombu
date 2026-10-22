@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Hook;
 
-use Drupal\commerce_product\Entity\Product;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -13,6 +12,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\ombu\Cards;
 use Drupal\ombu\Rating;
 use Drupal\ombu\ReviewVerifier;
 use Drupal\ombu\Sales;
@@ -82,28 +82,8 @@ final class SellerPageHooks {
       '#weight' => 10,
     ];
 
-    // Our own small cards: Belgrade's teaser is laid out for /market only.
-    $cards = [];
-    foreach (Product::loadMultiple($ids) as $listing) {
-      if (!$listing->access('view')) {
-        continue;
-      }
-      $price = $listing->getDefaultVariation()?->getPrice();
-      $stars = Rating::of($listing);
-      $cards[] = [
-        'title' => $listing->toLink()->toRenderable() + ['#attributes' => ['class' => ['seller-listing__title']]],
-        'meta' => ['#markup' => '<span class="seller-listing__meta">'
-          . ($price ? '<strong>' . \Drupal::service('commerce_price.currency_formatter')->format($price->getNumber(), $price->getCurrencyCode(), ['minimum_fraction_digits' => 0, 'maximum_fraction_digits' => 6]) . '</strong> ' : '')
-          . ($stars ? Rating::stars($stars['average']) . ' (' . $stars['count'] . ')' : '') . '</span>'],
-      ];
-    }
-    $build['ombu_listings'] = [
-      '#theme' => 'item_list',
-      '#title' => $this->t('Listings'),
-      '#items' => $cards,
-      '#attributes' => ['class' => ['seller-listings']],
-      '#weight' => 20,
-    ];
+    // The provider is the seller: their cards leave it out.
+    $build['ombu_listings'] = Cards::build($ids, (string) $this->t('Listings'), FALSE) + ['#weight' => 20];
     $build['ombu_sales'] = Sales::build($ids) + ['#weight' => 30];
   }
 

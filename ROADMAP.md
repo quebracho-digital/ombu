@@ -19,7 +19,12 @@ the cut line moves as we go.
 
 ## Where we left off — 2026-10-21
 
-**Solana until 2026-11-18.**
+**Solana paused** (decided 2026-10-22): its pending items (E, F below)
+wait until the dev.to hackathon ends (date to be noted). **Now: Meilisearch**
+(plan B under "B. Meilisearch"): related listings from `/similar` with our
+own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
+composer takes the issue fork's branch (a `vcs` repository, the lock pins
+the commit), not a patch nor a custom copy.
 
 - **Work on a dev stack from now on** (decided 2026-10-21): production
   stays as the Arc hackathons saw it. **Hostname: not

@@ -114,9 +114,8 @@
   }
 }
 
-/* As a slider: two cards in view and the next one peeking, so it shows
-   there is more (one and a peek on phones); buttons beside the title
-   (cards.js). */
+/* As a slider: two cards in view (one on phones), the arrows beside the
+   title move to the next ones (cards.js). */
 .ombu-cards-block--slider {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -159,7 +158,7 @@
 .ombu-cards--slider {
   grid-auto-flow: column;
   grid-template-columns: none;
-  grid-auto-columns: calc((100% - 2rem) / 2.25);
+  grid-auto-columns: calc((100% - 1rem) / 2);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -175,6 +174,6 @@
 }
 @media (max-width: 575.98px) {
   .ombu-cards--slider {
-    grid-auto-columns: 82%;
+    grid-auto-columns: 100%;
   }
 }

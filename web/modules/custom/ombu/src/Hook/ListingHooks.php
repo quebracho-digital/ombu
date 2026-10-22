@@ -16,6 +16,7 @@ use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Rating;
 use Drupal\ombu\Sales;
 use Drupal\ombu\Sellers;
+use Drupal\ombu\Similar;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
 
@@ -107,6 +108,8 @@ final class ListingHooks {
       // Its own sales: after the details (schemas, 11), above the legal
       // line and the reviews (12).
       $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
+      // Alternatives, under the reviews (12).
+      $build['similar'] = Similar::build($product) + ['#weight' => 13];
       // People buy it too: the agents' door, paid with their wallet.
       $examples = [
         'ping' => '{}',

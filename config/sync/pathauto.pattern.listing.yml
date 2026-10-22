@@ -9,7 +9,7 @@ dependencies:
 id: listing
 label: listing
 type: 'canonical_entities:commerce_product'
-pattern: '/service/[commerce_product:current_variation:title]--[commerce_product:current_variation:sku]'
+pattern: '/service/[commerce_product:current_variation:title]---[commerce_product:current_variation:sku]'
 selection_criteria:
   c37cfe41-8d6a-41b0-ae2d-c8e57fa090d0:
     id: 'entity_bundle:commerce_product'

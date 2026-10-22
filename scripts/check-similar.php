@@ -7,13 +7,15 @@
  * Run with: drush php:script scripts/check-similar.php
  *
  * The ombu_similar view returns Similar's order, at most per_provider per
- * provider, nearest() ranks vectors (three synthetic rows, removed after)
- * and the settings form builds. Needs the Circle catalogue and MariaDB
- * 11.7+; it calls no model.
+ * provider, nearest() ranks vectors (three synthetic rows, removed after),
+ * update() copies a vector whose text another listing already has, and the
+ * settings form builds. Needs the Circle catalogue and MariaDB 11.7+; it
+ * calls no model.
  */
 
 declare(strict_types=1);
 
+use Drupal\commerce_product\Entity\Product;
 use Drupal\ombu\Embeddings;
 use Drupal\ombu\Similar;
 use Drupal\views\Views;
@@ -23,9 +25,9 @@ $check = function (bool $ok, string $what) use (&$fail): void {
   echo ($ok ? 'ok   ' : 'FAIL ') . $what . "\n";
   $fail += (int) !$ok;
 };
-$ids = \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('type', 'listing')->condition('status', 1)->range(0, 3)->sort('product_id')->execute();
+$ids = \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('type', 'listing')->condition('status', 1)->range(0, 5)->sort('product_id')->execute();
 
-foreach ($ids as $id) {
+foreach (array_slice($ids, 0, 3) as $id) {
   $view = Views::getView('ombu_similar');
   $view->setDisplay('embed_1');
   $view->setArguments([$id]);
@@ -41,7 +43,7 @@ $max = (\Drupal::config('ombu.similar')->get('per_provider') ?: Similar::DEFAULT
 $check(!$per_provider || max($per_provider) <= $max, "at most $max per provider");
 
 if (Embeddings::available()) {
-  [$a, $b, $c] = array_values($ids);
+  [$a, $b, $c, $source, $copy] = array_values($ids);
   $db = \Drupal::database();
   $vector = fn (array $head) => json_encode(array_merge($head, array_fill(0, 4096 - count($head), 0.0)));
   $saved = $db->query('SELECT product_id FROM {' . Embeddings::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => [$a, $b, $c]])->fetchCol();
@@ -59,6 +61,30 @@ if (Embeddings::available()) {
     }
     finally {
       $db->delete(Embeddings::TABLE)->condition('hash', 'check')->execute();
+    }
+  }
+}
+
+// The copy path: a listing whose text another listing's row already has
+// takes that vector, and the model is not called.
+if (Embeddings::available() && ($hash = Embeddings::hash(Product::load($copy)))) {
+  $db = \Drupal::database();
+  if ($db->query('SELECT COUNT(*) FROM {' . Embeddings::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => [$source, $copy]])->fetchField()) {
+    echo "skip copy: these listings have real vectors\n";
+  }
+  else {
+    $db->query('INSERT INTO {' . Embeddings::TABLE . '} (product_id, hash, embedding) VALUES (:id, :hash, VEC_FromText(:v))', [
+      ':id' => $source,
+      ':hash' => $hash,
+      ':v' => json_encode(array_fill(0, 4096, 0.01)),
+    ]);
+    try {
+      $called = Embeddings::update(Product::load($copy));
+      $row = $db->query('SELECT hash FROM {' . Embeddings::TABLE . '} WHERE product_id = :id', [':id' => $copy])->fetchField();
+      $check(!$called && $row === $hash, "update(#$copy) copies #$source's vector without calling the model");
+    }
+    finally {
+      $db->delete(Embeddings::TABLE)->condition('product_id', [$source, $copy], 'IN')->condition('hash', $hash)->execute();
     }
   }
 }

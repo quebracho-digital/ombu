@@ -7,11 +7,14 @@ namespace Drupal\ombu\Hook;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\ombu\Embeddings;
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Utility\Utility;
 
 /**
- * Keeps the listings' vectors current (Embeddings).
+ * Keeps the listings' vectors current (Embeddings), and Meilisearch's.
  *
- * "More like this" itself is SimilarDatabase.
+ * "More like this" itself is SimilarDatabase on the database server, and
+ * Meilisearch's /similar on a Meilisearch one.
  */
 final class SimilarHooks {
 
@@ -33,6 +36,34 @@ final class SimilarHooks {
   public function delete(ProductInterface $product): void {
     if (Embeddings::available()) {
       \Drupal::database()->delete(Embeddings::TABLE)->condition('product_id', $product->id())->execute();
+    }
+  }
+
+  /**
+   * Meilisearch gets each listing's vector: the model is asked once, here.
+   *
+   * Only for servers whose embedder takes vectors from Drupal ("Vectors
+   * provided by Drupal"); a listing without one is sent without.
+   */
+  #[Hook('meilisearch_documents_alter')]
+  public function meilisearchDocuments(array &$documents, IndexInterface $index, array $items): void {
+    $config = $index->getServerInstance()->getBackendConfig();
+    if (empty($config['embedder_dimensions'])) {
+      return;
+    }
+    $ids = [];
+    foreach ($documents as $key => $document) {
+      // "entity:commerce_product/123:en".
+      [$datasource, $raw] = Utility::splitCombinedId($document['search_api_id']);
+      if ($datasource === 'entity:commerce_product') {
+        $ids[$key] = (int) $raw;
+      }
+    }
+    $vectors = Embeddings::vectors(array_unique($ids));
+    foreach ($ids as $key => $id) {
+      if (isset($vectors[$id])) {
+        $documents[$key]['_vectors'][$config['embedder']] = $vectors[$id];
+      }
     }
   }
 

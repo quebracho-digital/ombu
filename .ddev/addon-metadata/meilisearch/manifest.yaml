@@ -1,0 +1,8 @@
+name: meilisearch
+repository: kevinquillen/ddev-meilisearch
+version: v1.0.5
+install_date: "2026-10-22T18:41:45-03:00"
+project_files:
+    - docker-compose.meilisearch.yaml
+global_files: []
+removal_actions: []

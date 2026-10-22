@@ -7,6 +7,7 @@ namespace Drupal\ombu;
 use Drupal\ai\OperationType\Embeddings\EmbeddingsInput;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Cache\Cache;
+use Drupal\search_api\Plugin\search_api\datasource\ContentEntity;
 
 /**
  * Each listing's text as a vector, in ombu_listing_vector (MariaDB VECTOR).
@@ -90,7 +91,7 @@ final class Embeddings {
       ON DUPLICATE KEY UPDATE hash = VALUES(hash), embedding = VALUES(embedding)",
       [':id' => $listing->id(), ':hash' => $hash]);
     if ($db->query("SELECT hash FROM $table WHERE product_id = :id", [':id' => $listing->id()])->fetchField() === $hash) {
-      Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
+      self::changed($listing);
       return FALSE;
     }
     $model = self::model();
@@ -100,9 +101,36 @@ final class Embeddings {
     $db->query("INSERT INTO $table (product_id, hash, embedding) VALUES (:id, :hash, VEC_FromText(:v))
       ON DUPLICATE KEY UPDATE hash = VALUES(hash), embedding = VALUES(embedding)",
       [':id' => $listing->id(), ':hash' => $hash, ':v' => json_encode($vector)]);
-    // Similar listings shown before this vector are out of date.
-    Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
+    self::changed($listing);
     return TRUE;
+  }
+
+  /**
+   * The vectors of these listings: id => floats; none for those without.
+   *
+   * @param int[] $ids
+   *   Listing ids.
+   */
+  public static function vectors(array $ids): array {
+    if (!self::available() || !$ids) {
+      return [];
+    }
+    $rows = \Drupal::database()->query('SELECT product_id, VEC_ToText(embedding) FROM {' . self::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => array_values($ids)])->fetchAllKeyed();
+    return array_map(fn ($text) => json_decode($text), $rows);
+  }
+
+  /**
+   * A listing's vector changed.
+   *
+   * Similar listings shown before it are out of date, and indexes that send
+   * vectors along (Meilisearch's, SimilarHooks) must index it again.
+   */
+  private static function changed(ProductInterface $listing): void {
+    Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
+    $item_ids = array_map(fn ($langcode) => $listing->id() . ':' . $langcode, array_keys($listing->getTranslationLanguages()));
+    foreach (ContentEntity::getIndexesForEntity($listing) as $index) {
+      $index->trackItemsUpdated('entity:commerce_product', $item_ids);
+    }
   }
 
   /**

@@ -27,6 +27,19 @@ own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
 composer takes the issue fork's branch (a `vcs` repository, the lock pins
 the commit), not a patch nor a custom copy.
 
+- **Meilisearch** (2026-10-22, DDEV only; plan under "B. Meilisearch").
+  `drupal/meilisearch` branch `more-like-this-user-vectors` in
+  `~/Proyects/meilisearch` (6e1e38e, not pushed): vectors provided by
+  Drupal (a `userProvided` embedder declared by the server,
+  `hook_meilisearch_documents_alter()` adds `_vectors`), the
+  `meilisearch_vector` query option, and "More like this" through
+  `/similar`; 81 tests green against Meilisearch 1.54, phpcs (Drupal,
+  DrupalPractice) and phpstan clean. Issue and MR drafts:
+  `~/Proyects/meilisearch/DRAFT-issue-and-MR.md`. **To do, Leo:** open the
+  issue and its fork; then composer switches from the `path` repository
+  (local only: `composer.json`/`.lock` are not committed) to a `vcs` one
+  with `dev-<branch> as 1.0.0-alpha2`, and `config/meilisearch/` moves
+  into `config/sync` with `meilisearch` in `core.extension`.
 - **Work on a dev stack from now on** (decided 2026-10-21): production
   stays as the Arc hackathons saw it. **Hostname: not
   `dev.ombu.quebracho.digital`**: Cloudflare's universal certificate covers
@@ -1000,6 +1013,48 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
   Rust binary (MIT) on SER5. The `ombu_similar` view needs no change: it
   works on any backend with "More like this". **Done when** `/market`
   runs on Meilisearch and similar services come from its `/similar`.
+  - [x] **The module's part** (2026-10-22): see "Where we left off".
+  - [x] **In DDEV** (2026-10-22): Meilisearch from the
+    `kevinquillen/ddev-meilisearch` add-on (`http://meilisearch:7700`, key
+    `ddev` set in the local `settings.php`); the clone is mounted at
+    `/var/www/meilisearch` (`.ddev/docker-compose.dev-modules.yaml`) for
+    composer's `path` repository. A second server, `meilisearch`
+    (embedder `ombu`, 4096 dimensions from Drupal), and index,
+    `listings_meilisearch` (the `listings` fields, without `ignorecase`),
+    run next to `market_db`; `/market` is unchanged. `SimilarHooks` sends
+    each listing's row of `ombu_listing_vector`, and `Embeddings` marks a
+    listing for re-indexing when its vector changes. `ombu_similar_meilisearch`
+    is `ombu_similar` on the other index, untouched otherwise, and
+    `ListingHooks` prefers it when it is enabled: a listing's page in DDEV
+    shows similar services from Meilisearch. Their config waits in
+    `config/meilisearch/`, outside `config/sync`, until the module is in
+    `composer.json`. `drush php:script scripts/check-similar.php` checks
+    that `/similar` ranks by the same vectors as `Embeddings::nearest()`.
+  - **Compared on "Check domain availability and current registration
+    price"** (#2434, 2026-10-22). DDEV has no Fireworks key and production
+    was off limits, so the vectors are local: `BAAI/bge-base-en-v1.5`
+    (768 dimensions, zero-padded to 4096, which keeps cosines), computed
+    by a throwaway Meilisearch index; both sides use the same ones.
+    - *Similar on `search_api_db`* (terms + vector, 2 per provider):
+      Prices API, JSON-RPC passthrough, reservation slots, Resy search,
+      Search Messages… 8 providers in the top 12, nothing about domains
+      but #12 (an email subdomain). Shared terms dominate: bge's cosines
+      sit between 0.6 and 0.75 for everything, so the vector adds about
+      the same to every candidate.
+    - *Meilisearch `/similar`* (vector only): Verify / List / Create /
+      Update / Delete Domain (AgentMail, each twice: duplicate listings),
+      List Account Domains (AIsa), a Base identity check; 3 providers in
+      the top 12, 10 of them AgentMail. Same order as
+      `Embeddings::nearest()`, 2 ms. Domain Whois Overview (#362) comes
+      56th, our own Name check (#2806, unpublished in DDEV) not in the top
+      300.
+    - **So:** `/similar` finds the topic, Similar the variety. What
+      `/similar` lacks is Similar's cap per provider (it has no
+      `distinct`) and the terms; duplicates show too. Before `/market`
+      moves: repeat with the qwen3 vectors (FIREWORKS_API_KEY in DDEV, or
+      on the dev stack), and cap per provider after `/similar`: ask for
+      more and cut in ombu (`hook_views_post_execute()` on the view), so
+      the module stays generic.
 
 ## 🔭 Later
 

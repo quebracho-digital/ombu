@@ -9,8 +9,9 @@
  * The ombu_similar view returns Similar's order, at most per_provider per
  * provider, nearest() ranks vectors (three synthetic rows, removed after),
  * update() copies a vector whose text another listing already has, and the
- * settings form builds. Needs the Circle catalogue and MariaDB 11.7+; it
- * calls no model.
+ * settings form builds. With the listings_meilisearch index, Meilisearch's
+ * "More like this" ranks by the same vectors. Needs the Circle catalogue
+ * and MariaDB 11.7+; it calls no model.
  */
 
 declare(strict_types=1);
@@ -18,6 +19,7 @@ declare(strict_types=1);
 use Drupal\commerce_product\Entity\Product;
 use Drupal\ombu\Embeddings;
 use Drupal\ombu\Similar;
+use Drupal\search_api\Entity\Index;
 use Drupal\views\Views;
 
 $fail = 0;
@@ -87,6 +89,24 @@ if (Embeddings::available() && ($hash = Embeddings::hash(Product::load($copy))))
       $db->delete(Embeddings::TABLE)->condition('product_id', [$source, $copy], 'IN')->condition('hash', $hash)->execute();
     }
   }
+}
+
+// Meilisearch's /similar on the vectors SimilarHooks sends: nearest()'s
+// similarities, as Meilisearch's scores ((1 + cosine) / 2), best first.
+$meili = Index::load('listings_meilisearch');
+if ($meili?->status() && $meili->getServerInstance()->isAvailable() && Embeddings::available()) {
+  $id = (int) reset($ids);
+  $near = Embeddings::nearest($id);
+  $query = $meili->query()->range(0, 5);
+  $query->setOption('search_api_mlt', ['id' => (string) $id]);
+  $scores = [];
+  foreach ($query->execute()->getResultItems() as $item_id => $item) {
+    $other = (int) explode(':', explode('/', $item_id)[1])[0];
+    $scores[] = isset($near[$other]) && abs($item->getScore() - (1 + $near[$other]) / 2) < 0.001 ? $item->getScore() : -1;
+  }
+  $sorted = $scores;
+  rsort($sorted);
+  $check($scores && min($scores) >= 0 && $scores === $sorted, "Meilisearch's similar to #$id are nearest()'s, in order");
 }
 
 $form = \Drupal::formBuilder()->getForm('Drupal\ombu\Form\SimilarSettingsForm');

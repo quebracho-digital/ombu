@@ -117,10 +117,17 @@ final class ListingHooks {
       // line and the reviews (12).
       $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
       // Alternatives, under the reviews (12): the ombu_similar view, so
-      // admins can change it; Similar's own cards when the view is off.
-      $view = Views::getView('ombu_similar');
-      $build['similar'] = ($view?->storage->status()
-        ? ['#type' => 'view', '#name' => 'ombu_similar', '#display_id' => 'embed_1', '#arguments' => [$product->id()], '#attributes' => ['class' => ['ombu-similar']]]
+      // admins can change it, or its copy on the Meilisearch index where
+      // that is enabled; Similar's own cards when both are off.
+      $name = current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], fn ($name) => Views::getView($name)?->storage->status()));
+      $build['similar'] = ($name
+        ? [
+          '#type' => 'view',
+          '#name' => $name,
+          '#display_id' => 'embed_1',
+          '#arguments' => [$product->id()],
+          '#attributes' => ['class' => ['ombu-similar']],
+        ]
         : Similar::build($product)) + ['#weight' => 13];
       // People buy it too: the agents' door, paid with their wallet.
       $examples = [

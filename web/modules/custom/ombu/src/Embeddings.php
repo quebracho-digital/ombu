@@ -83,11 +83,13 @@ final class Embeddings {
     $hash = self::hash($listing);
     $table = '{' . self::TABLE . '}';
     // The same text on another listing: copy its vector.
-    $copied = $db->query("INSERT INTO $table (product_id, hash, embedding)
+    // Copied if the row now holds this hash. Not rowCount(): Drupal refuses it
+    // on a raw query.
+    $db->query("INSERT INTO $table (product_id, hash, embedding)
       SELECT :id, hash, embedding FROM $table WHERE hash = :hash LIMIT 1
       ON DUPLICATE KEY UPDATE hash = VALUES(hash), embedding = VALUES(embedding)",
-      [':id' => $listing->id(), ':hash' => $hash])->rowCount();
-    if ($copied) {
+      [':id' => $listing->id(), ':hash' => $hash]);
+    if ($db->query("SELECT hash FROM $table WHERE product_id = :id", [':id' => $listing->id()])->fetchField() === $hash) {
       Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
       return FALSE;
     }

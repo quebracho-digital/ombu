@@ -9,6 +9,7 @@ use Drupal\ai_provider_universal_factcheck\Service\FactChecker;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use Drupal\ai_provider_universal_terms\Service\TermsAnalyzer;
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\key\KeyRepositoryInterface;
 use Drupal\x402_pay\Eip712;
@@ -49,6 +50,7 @@ class Sellers {
     private readonly ?TermsAnalyzer $terms = NULL,
     private readonly ?FactChecker $factChecker = NULL,
     private readonly ?ClientInterface $http = NULL,
+    private readonly ?CacheBackendInterface $cache = NULL,
   ) {}
 
   /**
@@ -109,6 +111,7 @@ class Sellers {
       return match ($service) {
         'ping' => $this->ping($listing),
         'markdown' => $this->markdown($input),
+        'names' => $this->names($input),
         'terms' => $this->terms($input),
         'factcheck' => $this->factcheck($input),
         'aitext' => $this->remote('ai', $this->text($input)),
@@ -194,6 +197,36 @@ class Sellers {
       }
     }
     return array_slice(array_values($links), 0, 100);
+  }
+
+  /**
+   * A name's domains and the live trademarks that contain it (NameCheck).
+   *
+   * Input: name (one label: letters, digits, hyphens), and optionally tlds
+   * (at most 8), countries (ar, us) and Nice classes.
+   */
+  private function names(array $input): Response {
+    $usage = 'Send {"name": "acme", "tlds": ["com", "com.ar"], "countries": ["ar", "us"], "classes": [35, 42]}; only name is required.';
+    $name = is_string($input['name'] ?? NULL) ? strtolower(trim($input['name'])) : '';
+    $tlds = $input['tlds'] ?? NameCheck::DEFAULT_TLDS;
+    $countries = $input['countries'] ?? NameCheck::COUNTRIES;
+    $classes = $input['classes'] ?? [];
+    $ok = preg_match('/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/', $name) && strlen($name) >= 2
+      && is_array($tlds) && $tlds && count($tlds) <= 8
+      && array_filter($tlds, fn($t) => is_string($t) && preg_match('/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/', ltrim(strtolower($t), '.'))) === $tlds
+      && is_array($countries) && $countries && !array_diff($countries, NameCheck::COUNTRIES)
+      && is_array($classes) && array_filter($classes, fn($c) => is_int($c) && $c >= 1 && $c <= 45) === $classes;
+    if (!$ok) {
+      return new JsonResponse(['error' => $usage], 400);
+    }
+    if (!$this->http) {
+      return new JsonResponse(['error' => 'Not available right now.'], 503);
+    }
+    $tlds = array_values(array_unique(array_map(fn($t) => ltrim(strtolower($t), '.'), $tlds)));
+    $result = (new NameCheck($this->http, $this->cache))->check($name, $tlds, array_values(array_unique($countries)), $classes);
+    // Nothing answered: not worth paying for.
+    $answered = array_filter($result['domains'], fn($d) => $d['status'] !== 'unknown') || array_filter($result['trademarks'], fn($t) => !isset($t['error']));
+    return $answered ? new JsonResponse($result) : new JsonResponse(['error' => 'No registry answered; nothing was charged.'] + $result, 502);
   }
 
   /**

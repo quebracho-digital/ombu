@@ -20,6 +20,7 @@ Content pages also answer in markdown: send `Accept: text/markdown` to their URL
 - Web page to markdown (0.01 USDC): a public page's main content. Input `{"url": "https://…"}`.
 - Terms of service and privacy analysis (0.01 USDC): what matters in a policy, each point quoting its clause. Input `{"url": …}` or `{"text": …}`.
 - Fact-check a claim (0.02 USDC): supported, refuted or not enough information; says when the model judged without web sources. Input `{"claim": "…"}`.
+- Name check (0.005 USDC): which of a name's domains are free (any TLD, from the registry) and the live trademarks that contain it in Argentina (INPI) and the US (USPTO). Input `{"name": "acme", "tlds": ["com", "com.ar"], "countries": ["ar", "us"], "classes": [35, 42]}`; only name is required.
 
 Their URLs and payment requirements: [our sellers in the catalogue]([site:url]market.json?seller=ours).
 

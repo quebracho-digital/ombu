@@ -22,6 +22,7 @@ services:
       - '@?Drupal\ai_provider_universal_terms\Service\TermsAnalyzer'
       - '@?Drupal\ai_provider_universal_factcheck\Service\FactChecker'
       - '@http_client'
+      - '@cache.default'
   ombu.seller_subscriber:
     class: Drupal\ombu\EventSubscriber\SellerSubscriber
     arguments: ['@ombu.sellers']

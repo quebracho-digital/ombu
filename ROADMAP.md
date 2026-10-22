@@ -154,6 +154,16 @@ the cut line moves as we go.
   registered partner. Neither Circle's Agent Marketplace nor Agentic.Market
   pays across chains, verifies reviews against the purchase, or speaks
   more than one language (as far as their docs say).
+- **Name check, our fifth seller** (2026-10-22, DDEV only: production
+  untouched). `NameCheck` ports `urunday mcp` (quebracho-digital/urunday,
+  `src/registros.rs`): domains by RDAP or WHOIS (.ar straight to
+  whois.nic.ar: rdap.nic.ar hangs), trademarks from the INPI and the USPTO,
+  HTTP lookups in parallel. 0.005 USDC: a sale costs ~0.005 of gas on Arc,
+  so cheaper loses money; free would also leave no sale on chain. Page in
+  en, es and pt-br (`seed-listings.php names`), to be found by people and
+  by agents that search in their language. A fix to either copy goes to
+  both. **To do:** seed it on the dev stack, then production with Leo's
+  go-ahead; good pages for the other sellers in es and pt-br.
 - The Circle import already kept every chain of a service's `exact`
   offers (checked 2026-10-21: the 18 chains of the catalogue, the same
   counts as Circle's). It now keeps the other schemes' offers too; the

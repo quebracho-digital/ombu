@@ -20,7 +20,8 @@ the cut line moves as we go.
 ## Where we left off — 2026-10-21
 
 **Solana paused** (decided 2026-10-22): its pending items (E, F below)
-wait until the dev.to hackathon ends (date to be noted). **Now: Meilisearch**
+wait until the dev.to hackathon ends (Hacktoberfest Week 3, closes
+Sun 2026-10-25 23:59 PDT; Leo is on it until then), so from 2026-10-26. **Now: Meilisearch**
 (plan B under "B. Meilisearch"): related listings from `/similar` with our
 own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
 composer takes the issue fork's branch (a `vcs` repository, the lock pins

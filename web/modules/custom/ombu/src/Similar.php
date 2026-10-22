@@ -6,6 +6,8 @@ namespace Drupal\ombu;
 
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\search_api\Plugin\views\query\SearchApiQuery;
+use Drupal\views\Entity\View;
 use Drupal\views\Views;
 
 /**
@@ -49,12 +51,24 @@ final class Similar {
   /**
    * The view that lists them under a listing, NULL when both are off.
    *
-   * Its copy on the Meilisearch index where that is enabled, else
-   * ombu_similar, so admins can change what is shown.
+   * Its copy on the Meilisearch index where that is enabled and answers,
+   * else ombu_similar, so admins can change what is shown.
    */
   public static function view(): ?string {
-    return current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], fn ($name) => Views::getView($name)?->storage->status())) ?: NULL;
+    return self::$view ??= current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], function (string $name): bool {
+      $view = View::load($name);
+      if (!$view?->status()) {
+        return FALSE;
+      }
+      $index = SearchApiQuery::getIndexFromTable((string) $view->get('base_table'));
+      return (bool) $index?->status() && (bool) $index->getServerInstanceIfAvailable()?->isAvailable();
+    })) ?: NULL;
   }
+
+  /**
+   * The view's name, once per request: a Meilisearch server is asked.
+   */
+  private static ?string $view = NULL;
 
   /**
    * The ids the page shows: the view's results, or of()'s without a view.

@@ -20,3 +20,5 @@
 /web/sites/*/modules/
 /.ddev/docker-compose.dev-modules.yaml
 .env.*
+# The Meilisearch image tag (kevinquillen/ddev-meilisearch): no secret in it.
+!/.ddev/.env.meilisearch

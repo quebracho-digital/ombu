@@ -123,13 +123,16 @@ final class Embeddings {
    * A listing's vector changed.
    *
    * Similar listings shown before it are out of date, and indexes that send
-   * vectors along (Meilisearch's, SimilarHooks) must index it again.
+   * vectors along (on a server with "Vectors provided by Drupal", see
+   * SimilarHooks) must index it again; the others do not hold vectors.
    */
   private static function changed(ProductInterface $listing): void {
     Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
     $item_ids = array_map(fn ($langcode) => $listing->id() . ':' . $langcode, array_keys($listing->getTranslationLanguages()));
     foreach (ContentEntity::getIndexesForEntity($listing) as $index) {
-      $index->trackItemsUpdated('entity:commerce_product', $item_ids);
+      if (!empty($index->getServerInstanceIfAvailable()?->getBackendConfig()['embedder_dimensions'])) {
+        $index->trackItemsUpdated('entity:commerce_product', $item_ids);
+      }
     }
   }
 

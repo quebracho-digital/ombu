@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ * One listing as a card (Cards::card()); the whole card is its link.
+ *
+ * Variables:
+ * - url: The listing's URL.
+ * - title: Its title, shortened.
+ * - summary: What it does, when it says more than the title.
+ * - logo: The picture's URL (the listing's image or its seller's picture),
+ *   or NULL for the initial.
+ * - initial: The provider's initial.
+ * - hue: The provider's color, 0–360.
+ * - provider, category: Shown as pills; empty to leave one out.
+ * - price: Formatted, or empty.
+ * - stars: The rating as stars (Rating::stars()), or NULL without reviews.
+ * - reviews: How many verified reviews.
+ * - chains: Chain names it is paid on.
+ */
+#}
+<article class="ombu-card" style="--ombu-hue: {{ hue }}">
+  <header class="ombu-card__head">
+    {% if logo %}
+      <img class="ombu-card__avatar ombu-card__avatar--logo" src="{{ logo }}" alt="" width="40" height="40" loading="lazy">
+    {% else %}
+      <span class="ombu-card__avatar" aria-hidden="true">{{ initial }}</span>
+    {% endif %}
+    <a class="ombu-card__title stretched-link" href="{{ url }}">{{ title }}</a>
+  </header>
+  {% if summary %}
+    <p class="ombu-card__summary">{{ summary }}</p>
+  {% endif %}
+  {% if provider or category %}
+    <p class="ombu-card__pills">
+      {% if provider %}<span class="ombu-card__pill">{{ provider }}</span>{% endif %}
+      {% if category %}<span class="ombu-card__pill ombu-card__pill--muted">{{ category }}</span>{% endif %}
+    </p>
+  {% endif %}
+  <p class="ombu-card__meta">
+    {% if price %}<strong class="ombu-card__price">{{ price }}</strong>{% endif %}
+    {% if stars %}
+      {{ stars }} <small>({{ reviews }})</small>
+    {% else %}
+      <small>{{ 'No reviews yet'|t }}</small>
+    {% endif %}
+    {% if chains %}<small class="ombu-card__chains">{{ chains|join(' · ') }}</small>{% endif %}
+  </p>
+</article>

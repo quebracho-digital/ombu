@@ -20,6 +20,26 @@ final class ThemeHooks {
     return [
       'menu__account' => ['base hook' => 'menu'],
       'links__language_block' => ['base hook' => 'links'],
+      // Listings as cards (Cards): a theme can override either template.
+      'ombu_cards' => [
+        'variables' => ['title' => '', 'cards' => [], 'slider' => FALSE, 'attributes' => []],
+      ],
+      'ombu_card' => [
+        'variables' => [
+          'url' => NULL,
+          'title' => '',
+          'summary' => '',
+          'logo' => NULL,
+          'initial' => '',
+          'hue' => 0,
+          'provider' => '',
+          'category' => '',
+          'price' => '',
+          'stars' => NULL,
+          'reviews' => 0,
+          'chains' => [],
+        ],
+      ],
     ];
   }
 

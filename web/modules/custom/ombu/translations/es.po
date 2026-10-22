@@ -148,3 +148,15 @@ msgstr "Moderar esta reseña"
 
 msgid "Its text, rating and purchase stay as written. Unpublish it to hide it; to answer it, use Reply."
 msgstr "Su texto, calificación y compra quedan como se escribieron. Despublícala para ocultarla; para contestarla, usa Responder."
+
+msgid "Similar services"
+msgstr "Servicios similares"
+
+msgid "Listings"
+msgstr "Servicios"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Next"
+msgstr "Siguiente"

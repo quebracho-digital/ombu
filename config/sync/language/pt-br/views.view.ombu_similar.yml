@@ -1,0 +1,5 @@
+label: 'Serviços semelhantes'
+display:
+  default:
+    display_options:
+      title: 'Serviços semelhantes'

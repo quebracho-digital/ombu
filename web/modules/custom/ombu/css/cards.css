@@ -114,15 +114,15 @@
   }
 }
 
-/* As a slider: two cards in view (one and a bit on phones), the rest
-   scroll sideways; the buttons sit beside the title (cards.js). */
+/* As a slider: two cards in view and the next one peeking, so it shows
+   there is more (one and a peek on phones); buttons beside the title
+   (cards.js). */
 .ombu-cards-block--slider {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 1rem;
 }
-.ombu-cards-block--slider > .item-list,
 .ombu-cards-block--slider > .ombu-cards {
   grid-column: 1 / -1;
 }
@@ -131,26 +131,35 @@
   gap: .5rem;
 }
 .ombu-cards__nav button {
-  width: 2.25rem;
-  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 1px solid var(--bs-border-color, #dee2e6);
   border-radius: 50%;
   background: var(--bs-body-bg, #fff);
   color: inherit;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   line-height: 1;
+  cursor: pointer;
 }
-.ombu-cards__nav button:not(:disabled):hover {
+.ombu-cards__nav .ombu-cards__next:not(:disabled) {
+  border-color: var(--bs-primary, #0d6efd);
+  background: var(--bs-primary, #0d6efd);
+  color: #fff;
+}
+.ombu-cards__nav .ombu-cards__prev:not(:disabled):hover {
   border-color: var(--bs-primary, #0d6efd);
   color: var(--bs-primary, #0d6efd);
 }
 .ombu-cards__nav button:disabled {
   opacity: .35;
+  cursor: default;
 }
 .ombu-cards--slider {
   grid-auto-flow: column;
   grid-template-columns: none;
-  grid-auto-columns: calc((100% - 1rem) / 2);
+  grid-auto-columns: calc((100% - 2rem) / 2.25);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -166,6 +175,6 @@
 }
 @media (max-width: 575.98px) {
   .ombu-cards--slider {
-    grid-auto-columns: 85%;
+    grid-auto-columns: 82%;
   }
 }

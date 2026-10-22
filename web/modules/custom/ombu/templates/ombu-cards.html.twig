@@ -1,0 +1,28 @@
+{#
+/**
+ * @file
+ * Listings as cards under a title (Cards::build()).
+ *
+ * Variables:
+ * - title: The heading.
+ * - cards: Rendered ombu_card elements.
+ * - slider: Whether the cards slide sideways (cards.js) instead of wrapping.
+ * - attributes: The block's attributes.
+ */
+#}
+{% set classes = ['ombu-cards-block', slider ? 'ombu-cards-block--slider'] %}
+<section{{ attributes.addClass(classes) }}>
+  <h2>{{ title }}</h2>
+  {% if slider %}
+    {# Buttons for a pointer; the list scrolls by touch, wheel and keys too. #}
+    <div class="ombu-cards__nav">
+      <button type="button" class="ombu-cards__prev" aria-label="{{ 'Previous'|t }}">‹</button>
+      <button type="button" class="ombu-cards__next" aria-label="{{ 'Next'|t }}">›</button>
+    </div>
+  {% endif %}
+  <ul class="ombu-cards{{ slider ? ' ombu-cards--slider' }}"{% if slider %} tabindex="0" aria-label="{{ title }}"{% endif %}>
+    {% for card in cards %}
+      <li>{{ card }}</li>
+    {% endfor %}
+  </ul>
+</section>

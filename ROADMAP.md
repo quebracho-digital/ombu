@@ -1035,6 +1035,42 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
 - [ ] **Storefront look**: the seller's banner and colours on their page.
 - [ ] **Seller analytics**: calls, revenue, conversion from listing views.
 
+### Similar services and search
+
+- [x] **A. Similar services under each listing** (2026-10-22): the
+  `ombu_similar` view, Search API's "More like this" filter, as cards
+  (`Cards`, also the seller page's). `search_api_db` has no "More like
+  this", so `SimilarBackendSubscriber` runs it as `SimilarDatabase`, which
+  answers it with `Similar`: shared terms weighted by rarity (x402, on
+  every listing, adds nothing), cosine similarity of the texts
+  (`ombu_listing_vector`, MariaDB `VECTOR`), at most 2 per provider.
+  Weights at Configuration » Search » Similar services. `field_kind`, the
+  internal category, is there and empty. Check:
+  `drush php:script scripts/check-similar.php`. Deploy: `drush deploy`
+  (update 10028 creates the table; cim adds the view, the weights, the
+  field and AI's default embeddings model).
+- [ ] **Embed the catalogue**: `drush ombu:embed && drush queue:run
+  ombu_embed` (2.8k calls to Fireworks' qwen3-embedding-8b, cents; then
+  only listings whose text changed, on cron). Needs `FIREWORKS_API_KEY`
+  where it runs (DDEV has none). **Done when** "Check domain availability"
+  shows domain and naming services, not NFT metadata.
+- [ ] **`field_kind`**: our own vocabulary of what listings do, filled by
+  a small model at import (cached by sha256 of model, prompt version and
+  text, like the vectors). Its weight is ready (2).
+- [ ] **Bought together**: agents that bought this also bought, from
+  `x402_pay_log`, by wallet; a fourth weight in `Similar` once there are
+  sales (Amazon's item-to-item; ours verified on chain).
+- [ ] **B. Meilisearch** for `/market`: hybrid search (keywords and
+  vectors), typo tolerance, facets. Use the official module,
+  `drupal/meilisearch` (1.0.0-alpha2, by Meilisearch's CEO; facets and
+  hybrid search already, no "More like this"), not
+  `search_api_meilisearch`. Contribute to it: "More like this" through
+  `/similar`, and vectors we compute (`_vectors`, `userProvided`) so
+  Fireworks is asked once, as now; ask to co-maintain. Meilisearch is one
+  Rust binary (MIT) on SER5. The `ombu_similar` view needs no change: it
+  works on any backend with "More like this". **Done when** `/market`
+  runs on Meilisearch and similar services come from its `/similar`.
+
 ## 🔭 Later
 
 - [ ] Move from minisforum to a VPS.

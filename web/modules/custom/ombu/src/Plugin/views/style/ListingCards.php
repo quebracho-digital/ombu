@@ -33,7 +33,7 @@ final class ListingCards extends StylePluginBase {
    * {@inheritdoc}
    */
   protected function defineOptions(): array {
-    return parent::defineOptions() + ['show_provider' => ['default' => TRUE]];
+    return parent::defineOptions() + ['show_provider' => ['default' => TRUE], 'slider' => ['default' => FALSE]];
   }
 
   /**
@@ -46,6 +46,12 @@ final class ListingCards extends StylePluginBase {
       '#title' => $this->t('Show the provider'),
       '#description' => $this->t('Off when every listing has the same one, as on a seller’s page.'),
       '#default_value' => $this->options['show_provider'],
+    ];
+    $form['slider'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('As a slider'),
+      '#description' => $this->t('Two cards in view, the rest scroll sideways.'),
+      '#default_value' => $this->options['slider'],
     ];
   }
 
@@ -60,7 +66,7 @@ final class ListingCards extends StylePluginBase {
         $ids[] = (int) $entity->id();
       }
     }
-    return Cards::build($ids, (string) $this->view->getTitle(), (bool) $this->options['show_provider']);
+    return Cards::build($ids, (string) $this->view->getTitle(), (bool) $this->options['show_provider'], (bool) $this->options['slider']);
   }
 
 }

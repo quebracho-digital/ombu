@@ -273,6 +273,22 @@ final class ReviewVerifier {
   }
 
   /**
+   * The account that sells a listing, as sells() sees it, or NULL.
+   *
+   * The first account with a wallet the listing pays; none for most
+   * imported listings, whose sellers have not signed in.
+   */
+  public function sellerOf(ProductInterface $listing): ?int {
+    $paid = array_column(array_merge(...array_values($this->payees($listing)) ?: [[]]), 1);
+    if (!$paid) {
+      return NULL;
+    }
+    $uid = $this->database->select('wallet_auth_wallet', 'w')->fields('w', ['uid'])
+      ->condition('address', $paid, 'IN')->orderBy('uid')->range(0, 1)->execute()->fetchField();
+    return $uid ? (int) $uid : NULL;
+  }
+
+  /**
    * A purchase as stored: an EVM hash lowercase, a Solana signature as is.
    */
   public static function normalize(string $tx): string {

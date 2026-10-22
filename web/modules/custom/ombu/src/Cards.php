@@ -8,12 +8,16 @@ use Drupal\commerce_product\Entity\Product;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Render\Markup;
+use Drupal\image\Entity\ImageStyle;
+use Drupal\user\Entity\User;
 
 /**
  * Listings as small cards: a seller's listings, the similar ones.
  *
- * Belgrade's teaser is laid out for /market only. No listing has an image,
- * so a card shows its provider's initial on a color of their own.
+ * Belgrade's teaser is laid out for /market only. A card's picture is the
+ * listing's own image, else its seller's account picture (the account whose
+ * wallet it pays), else its provider's initial on a color of their own.
+ * As a slider, two cards show and the rest scroll sideways (cards.js).
  */
 final class Cards {
 
@@ -22,8 +26,8 @@ final class Cards {
    *
    * Those the visitor may not see are left out; empty when none is left.
    */
-  public static function build(array $ids, string $title, bool $provider = TRUE): array {
-    $cache = ['tags' => ['commerce_product_list', 'comment_list']];
+  public static function build(array $ids, string $title, bool $provider = TRUE, bool $slider = FALSE): array {
+    $cache = ['tags' => ['commerce_product_list', 'comment_list', 'user_list']];
     $cards = [];
     foreach (Product::loadMultiple($ids) as $listing) {
       if ($listing->access('view')) {
@@ -37,14 +41,24 @@ final class Cards {
     }
     return [
       '#type' => 'container',
-      '#attributes' => ['class' => ['ombu-cards-block']],
+      '#attributes' => ['class' => $slider ? ['ombu-cards-block', 'ombu-cards-block--slider'] : ['ombu-cards-block']],
       '#attached' => ['library' => ['ombu/cards']],
       '#cache' => $cache,
       'title' => ['#markup' => '<h2>' . Html::escape($title) . '</h2>'],
+      // Buttons for a pointer; the list scrolls by keyboard and touch too.
+      'nav' => $slider ? [
+        '#markup' => Markup::create(sprintf(
+        '<div class="ombu-cards__nav"><button type="button" class="ombu-cards__prev" aria-label="%s">‹</button><button type="button" class="ombu-cards__next" aria-label="%s">›</button></div>',
+        t('Previous'),
+        t('Next'),
+        )),
+      ] : [],
       'list' => [
         '#theme' => 'item_list',
         '#items' => $cards,
-        '#attributes' => ['class' => ['ombu-cards']],
+        '#attributes' => $slider
+          ? ['class' => ['ombu-cards', 'ombu-cards--slider'], 'tabindex' => 0, 'aria-label' => $title]
+          : ['class' => ['ombu-cards']],
       ],
     ];
   }
@@ -59,11 +73,14 @@ final class Cards {
     $rating = Rating::of($listing);
     $chains = array_map(fn ($n) => Chains::name((string) $n['value']), $listing->get('field_network')->getValue());
 
-    // The avatar's hue comes from the provider's name: the same provider
+    // The card's hue comes from the provider's name: the same provider
     // keeps its color on every page.
     $name = $provider ?: (string) $listing->label();
     $hue = hexdec(substr(md5($name), 0, 4)) % 360;
-    $avatar = sprintf('<span class="ombu-card__avatar" style="--ombu-hue:%d" aria-hidden="true">%s</span>', $hue, Html::escape(mb_strtoupper(mb_substr($name, 0, 1))));
+    $logo = self::logo($listing);
+    $avatar = $logo
+      ? sprintf('<img class="ombu-card__avatar ombu-card__avatar--logo" src="%s" alt="" width="40" height="40" loading="lazy">', Html::escape($logo))
+      : sprintf('<span class="ombu-card__avatar" aria-hidden="true">%s</span>', Html::escape(mb_strtoupper(mb_substr($name, 0, 1))));
 
     $pills = [];
     if ($show_provider && $provider) {
@@ -71,6 +88,12 @@ final class Cards {
     }
     if ($category) {
       $pills[] = '<span class="ombu-card__pill ombu-card__pill--muted">' . Html::escape($category) . '</span>';
+    }
+
+    // What it does, when it says more than the title.
+    $summary = Unicode::truncate(trim(strip_tags((string) $listing->get('body')->value)), 160, TRUE, TRUE);
+    if (str_starts_with(mb_strtolower((string) $listing->label()), mb_strtolower(rtrim($summary, '….')))) {
+      $summary = '';
     }
 
     $meta = [];
@@ -88,15 +111,32 @@ final class Cards {
       $meta[] = '<small class="ombu-card__chains">' . Html::escape(implode(' · ', array_unique($chains))) . '</small>';
     }
 
-    return '<article class="ombu-card">'
+    return '<article class="ombu-card" style="--ombu-hue:' . $hue . '">'
       . '<header class="ombu-card__head">' . $avatar
       . $listing->toLink(Unicode::truncate((string) $listing->label(), 90, TRUE, TRUE), 'canonical', [
         'attributes' => ['class' => ['ombu-card__title', 'stretched-link']],
       ])->toString()
       . '</header>'
+      . ($summary ? '<p class="ombu-card__summary">' . Html::escape($summary) . '</p>' : '')
       . ($pills ? '<p class="ombu-card__pills">' . implode('', $pills) . '</p>' : '')
       . '<p class="ombu-card__meta">' . implode(' ', $meta) . '</p>'
       . '</article>';
+  }
+
+  /**
+   * The URL of the card's picture, or NULL for the initial.
+   */
+  private static function logo(Product $listing): ?string {
+    $file = $listing->hasField('images') ? $listing->get('images')->entity : NULL;
+    if (!$file && ($uid = \Drupal::service('ombu.review_verifier')->sellerOf($listing))) {
+      $file = User::load($uid)?->get('user_picture')->entity;
+    }
+    if (!$file) {
+      return NULL;
+    }
+    // Thumbnail scales to 100 px, keeping a logo's proportions.
+    return ImageStyle::load('thumbnail')?->buildUrl($file->getFileUri())
+      ?? \Drupal::service('file_url_generator')->generateString($file->getFileUri());
   }
 
 }

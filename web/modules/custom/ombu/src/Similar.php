@@ -26,7 +26,7 @@ use Drupal\field\Entity\FieldStorageConfig;
  */
 final class Similar {
 
-  public const MAX = 8;
+  public const MAX = 12;
 
   /**
    * Used when ombu.similar is missing or lacks a key.
@@ -93,7 +93,7 @@ final class Similar {
    * The block under a listing: the similar ones, as cards.
    */
   public static function build(ProductInterface $product): array {
-    $build = Cards::build(self::of($product), (string) t('Similar services'));
+    $build = Cards::build(self::of($product), (string) t('Similar services'), TRUE, TRUE);
     $build['#cache']['tags'][] = 'config:ombu.similar';
     $build['#attributes']['class'][] = 'ombu-similar';
     return $build;

@@ -29,3 +29,6 @@ views.style.ombu_cards:
     show_provider:
       type: boolean
       label: 'Show the provider'
+    slider:
+      type: boolean
+      label: 'As a slider'

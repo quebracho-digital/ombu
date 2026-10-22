@@ -27,7 +27,7 @@ display:
         type: some
         options:
           offset: 0
-          items_per_page: 8
+          items_per_page: 12
       exposed_form:
         type: basic
         options: {  }
@@ -66,6 +66,7 @@ display:
         type: ombu_cards
         options:
           show_provider: true
+          slider: true
       row:
         type: fields
       query:

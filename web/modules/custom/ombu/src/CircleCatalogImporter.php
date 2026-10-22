@@ -8,6 +8,8 @@ use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
@@ -114,6 +116,7 @@ final class CircleCatalogImporter {
     if (!$max) {
       $counts['retired'] = $this->retireMissing($seen);
       $this->unmarkMissing();
+      $counts['logos'] = $this->logos();
       \Drupal::state()->set('ombu.circle_last', \Drupal::time()->getRequestTime());
     }
     $this->loggerFactory->get('ombu')->info('Circle catalogue import: @c', ['@c' => json_encode($counts)]);
@@ -272,6 +275,54 @@ final class CircleCatalogImporter {
       $term->save();
     }
     return $tid;
+  }
+
+  /**
+   * Gives each provider without a logo its site's icon; returns how many.
+   *
+   * Circle's catalogue has no logos: its marketplace shows the site's icon
+   * from Google's favicon service, and so do we, saved once, not hotlinked.
+   * Google answers 404 for a site without one.
+   */
+  private function logos(): int {
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term');
+    if (!$terms->create(['vid' => 'listing_provider'])->hasField('field_logo')) {
+      // Before ombu_update_10029.
+      return 0;
+    }
+    $ids = $terms->getQuery()->accessCheck(FALSE)
+      ->condition('vid', 'listing_provider')
+      ->exists('field_website')
+      ->notExists('field_logo')
+      ->execute();
+    $dir = 'public://providers';
+    \Drupal::service('file_system')->prepareDirectory($dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $n = 0;
+    // ponytail: a site without an icon is asked again every import (a few of
+    // ~45 providers); remember the misses if that grows.
+    foreach ($terms->loadMultiple($ids) as $term) {
+      $host = parse_url((string) $term->get('field_website')->value, PHP_URL_HOST);
+      if (!$host) {
+        continue;
+      }
+      try {
+        $response = $this->httpClient->request('GET', 'https://www.google.com/s2/favicons', [
+          'query' => ['domain' => $host, 'sz' => 64],
+          'timeout' => 10,
+        ]);
+      }
+      catch (\Exception) {
+        continue;
+      }
+      $png = (string) $response->getBody();
+      if (!str_starts_with($response->getHeaderLine('Content-Type'), 'image/png') || strlen($png) > 1048576) {
+        continue;
+      }
+      $file = \Drupal::service('file.repository')->writeData($png, "$dir/$host.png", FileExists::Replace);
+      $term->set('field_logo', ['target_id' => $file->id(), 'alt' => $term->label()])->save();
+      $n++;
+    }
+    return $n;
   }
 
   /**

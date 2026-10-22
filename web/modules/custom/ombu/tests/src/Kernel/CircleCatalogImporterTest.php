@@ -42,6 +42,11 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
   private int $fetches = 0;
 
   /**
+   * The last import's HTTP mock: what it was not asked for stays queued.
+   */
+  private MockHandler $http;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -51,6 +56,8 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->installEntitySchema('comment');
     $this->installEntitySchema('taxonomy_term');
     $this->installSchema('comment', ['comment_entity_statistics']);
+    $this->installEntitySchema('file');
+    $this->installSchema('file', ['file_usage']);
     $this->installConfig(['commerce_product', 'comment', 'ombu']);
   }
 
@@ -163,6 +170,22 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(['created' => 1], array_filter($this->import([$item])));
   }
 
+  public function testAProviderGetsItsSiteIconOnce(): void {
+    // A 1×1 PNG.
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    $icon = fn() => new Response(200, ['Content-Type' => 'image/png'], $png);
+
+    // A site without an icon: Google answers 404, no logo.
+    $this->assertSame(0, $this->import([$this->item('/v1/weather')], logo: new Response(404, ['Content-Type' => 'image/png'], $png))['logos']);
+    $this->assertSame(1, $this->import([$this->item('/v1/weather')], logo: $icon())['logos']);
+    $logo = $this->listing('/v1/weather')->get('field_provider_term')->entity->get('field_logo')->entity;
+    $this->assertSame('public://providers/example.com.png', $logo->getFileUri());
+
+    // It has one: not asked again.
+    $this->assertSame(0, $this->import([$this->item('/v1/weather')], logo: $icon())['logos']);
+    $this->assertCount(1, $this->http);
+  }
+
   /**
    * A listing of ours, "Mine".
    */
@@ -208,12 +231,15 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
   }
 
   /**
-   * Runs a full import of these items; $spec is what the fetch returns.
+   * Runs a full import of these items; $spec is what the fetch returns, $logo
+   * what Google's favicon service answers.
    */
-  private function import(array $items, ?string $spec = '{"paths": {"/v1/weather": {"get": {"summary": "Weather now"}}}}'): array {
-    $client = new Client(['handler' => HandlerStack::create(new MockHandler([
+  private function import(array $items, ?string $spec = '{"paths": {"/v1/weather": {"get": {"summary": "Weather now"}}}}', ?Response $logo = NULL): array {
+    $this->http = new MockHandler([
       new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => count($items)]])),
-    ]))]);
+      ...($logo ? [$logo] : []),
+    ]);
+    $client = new Client(['handler' => HandlerStack::create($this->http)]);
     $fetcher = $this->createMock(PageFetcher::class);
     $fetcher->method('fetch')->willReturnCallback(function () use ($spec) {
       $this->fetches++;

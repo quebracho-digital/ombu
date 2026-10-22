@@ -481,3 +481,10 @@ function ombu_update_10028(): string {
   }
   return 'Created ombu_listing_vector. Fill it with: drush ombu:embed && drush queue:run ombu_embed';
 }
+
+/**
+ * Providers get a logo: their site's icon, from the next Circle import.
+ */
+function ombu_update_10029(): void {
+  _ombu_config('install', ['field.storage.taxonomy_term.field_logo', 'field.field.taxonomy_term.listing_provider.field_logo']);
+}

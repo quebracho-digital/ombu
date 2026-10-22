@@ -15,7 +15,8 @@ use Drupal\user\Entity\User;
  *
  * Belgrade's teaser is laid out for /market only. A card's picture is the
  * listing's own image, else its seller's account picture (the account whose
- * wallet it pays), else its provider's initial on a color of their own.
+ * wallet it pays), else its provider's logo (its site's icon), else its
+ * provider's initial on a color of their own.
  * As a slider, two cards show and the rest scroll sideways (cards.js).
  * The markup is in ombu-cards.html.twig and ombu-card.html.twig.
  */
@@ -27,7 +28,7 @@ final class Cards {
    * Those the visitor may not see are left out; empty when none is left.
    */
   public static function build(array $ids, string $title, bool $provider = TRUE, bool $slider = FALSE): array {
-    $cache = ['tags' => ['commerce_product_list', 'comment_list', 'user_list']];
+    $cache = ['tags' => ['commerce_product_list', 'comment_list', 'user_list', 'taxonomy_term_list']];
     $cards = [];
     foreach (Product::loadMultiple($ids) as $listing) {
       if ($listing->access('view')) {
@@ -86,10 +87,14 @@ final class Cards {
   /**
    * The URL of the card's picture, or NULL for the initial.
    */
-  private static function logo(Product $listing): ?string {
+  public static function logo(Product $listing): ?string {
     $file = $listing->hasField('images') ? $listing->get('images')->entity : NULL;
     if (!$file && ($uid = \Drupal::service('ombu.review_verifier')->sellerOf($listing))) {
       $file = User::load($uid)?->get('user_picture')->entity;
+    }
+    $provider = $listing->get('field_provider_term')->entity;
+    if (!$file && $provider?->hasField('field_logo')) {
+      $file = $provider->get('field_logo')->entity;
     }
     if (!$file) {
       return NULL;

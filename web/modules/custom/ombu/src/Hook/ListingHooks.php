@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\ombu\Hook;
 
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ombu\Cards;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Rating;
@@ -62,6 +64,11 @@ final class ListingHooks {
     if (isset($build['title']) && ($tag = ['full' => 'h1', 'teaser' => 'h2'][$view_mode] ?? NULL)) {
       $build['title']['#prefix'] = "<$tag class=\"listing-title\">";
       $build['title']['#suffix'] = "</$tag>";
+    }
+    // Its logo before the page's title, as on the cards (Cards::logo()).
+    if ($view_mode === 'full' && isset($build['title']) && ($logo = Cards::logo($product))) {
+      $build['title']['#prefix'] .= '<img class="listing-logo" src="' . Html::escape($logo) . '" alt="" width="48" height="48">';
+      $build['#cache']['tags'] = [...$build['#cache']['tags'] ?? [], 'taxonomy_term_list', 'user_list'];
     }
 
     $rating = Rating::of($product);

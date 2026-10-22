@@ -1,0 +1,38 @@
+uuid: 85e6d612-0f07-4b6e-8a15-ad2f3c66a9e5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_logo
+    - taxonomy.vocabulary.listing_provider
+  module:
+    - image
+id: taxonomy_term.listing_provider.field_logo
+field_name: field_logo
+entity_type: taxonomy_term
+bundle: listing_provider
+label: Logo
+description: "The icon of the provider's site, imported with Circle's catalogue."
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:file'
+  handler_settings: {  }
+  file_directory: providers
+  file_extensions: 'png jpg jpeg webp gif'
+  max_filesize: '1 MB'
+  max_resolution: ''
+  min_resolution: ''
+  alt_field: false
+  alt_field_required: false
+  title_field: false
+  title_field_required: false
+  default_image:
+    uuid: null
+    alt: ''
+    title: ''
+    width: null
+    height: null
+field_type: image

@@ -6,6 +6,7 @@ namespace Drupal\ombu;
 
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\views\Views;
 
 /**
  * Listings like this one: the terms they share, how close their texts are.
@@ -43,6 +44,34 @@ final class Similar {
    */
   public static function of(ProductInterface $product): array {
     return array_slice(array_keys(self::scores((int) $product->id())), 0, self::MAX);
+  }
+
+  /**
+   * The view that lists them under a listing, NULL when both are off.
+   *
+   * Its copy on the Meilisearch index where that is enabled, else
+   * ombu_similar, so admins can change what is shown.
+   */
+  public static function view(): ?string {
+    return current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], fn ($name) => Views::getView($name)?->storage->status())) ?: NULL;
+  }
+
+  /**
+   * The ids the page shows: the view's results, or of()'s without a view.
+   */
+  public static function ids(ProductInterface $product): array {
+    $name = self::view();
+    if (!$name) {
+      return self::of($product);
+    }
+    $view = Views::getView($name);
+    $view->setDisplay('embed_1');
+    $view->setArguments([$product->id()]);
+    $view->execute();
+    // A listing's translations are items of their own: list it once.
+    // Search API's rows carry the item as a dynamic property.
+    // @phpstan-ignore property.notFound
+    return array_values(array_unique(array_map(fn ($row) => (int) $row->_object->getValue()->id(), $view->result)));
   }
 
   /**

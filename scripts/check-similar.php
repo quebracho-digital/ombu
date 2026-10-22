@@ -9,18 +9,24 @@
  * The ombu_similar view returns Similar's order, at most per_provider per
  * provider, nearest() ranks vectors (three synthetic rows, removed after),
  * update() copies a vector whose text another listing already has, and the
- * settings form builds. With the listings_meilisearch index, Meilisearch's
- * "More like this" ranks by the same vectors. Needs the Circle catalogue
- * and MariaDB 11.7+; it calls no model.
+ * settings form builds, and a listing's markdown links its similar
+ * services. With the listings_meilisearch index, Meilisearch's "More like
+ * this" ranks by the same vectors. Needs the Circle catalogue and MariaDB
+ * 11.7+; it calls no model.
  */
 
 declare(strict_types=1);
 
 use Drupal\commerce_product\Entity\Product;
 use Drupal\ombu\Embeddings;
+use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
 use Drupal\ombu\Similar;
 use Drupal\search_api\Entity\Index;
 use Drupal\views\Views;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 $fail = 0;
 $check = function (bool $ok, string $what) use (&$fail): void {
@@ -108,6 +114,16 @@ if ($meili?->status() && $meili->getServerInstance()->isAvailable() && Embedding
   rsort($sorted);
   $check($scores && min($scores) >= 0 && $scores === $sorted, "Meilisearch's similar to #$id are nearest()'s, in order");
 }
+
+// Agents reading a listing as markdown get the same similar services, as
+// links to follow.
+$listing = Product::load((int) reset($ids));
+$request = new Request();
+$request->attributes->set('commerce_product', $listing);
+$response = new Response("# Listing\n", 200, ['Content-Type' => 'text/markdown; charset=utf-8']);
+(new ListingMarkdownSubscriber())->onResponse(new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MAIN_REQUEST, $response));
+$first = Product::load(Similar::ids($listing)[0] ?? 0);
+$check($first && str_contains($response->getContent(), "## Similar services\n\n- [") && str_contains($response->getContent(), $first->toUrl()->setAbsolute()->toString()), "the markdown of #{$listing->id()} links its similar services");
 
 $form = \Drupal::formBuilder()->getForm('Drupal\ombu\Form\SimilarSettingsForm');
 $check(isset($form['fields']['field_kind'], $form['fields']['field_tags']), 'the settings form lists field_kind and field_tags');

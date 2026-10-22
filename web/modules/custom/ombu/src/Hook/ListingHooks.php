@@ -21,7 +21,6 @@ use Drupal\ombu\Sellers;
 use Drupal\ombu\Similar;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
-use Drupal\views\Views;
 
 /**
  * The listing pages, the market, the Circle sync and the legal notices.
@@ -116,10 +115,9 @@ final class ListingHooks {
       // Its own sales: after the details (schemas, 11), above the legal
       // line and the reviews (12).
       $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
-      // Alternatives, under the reviews (12): the ombu_similar view, so
-      // admins can change it, or its copy on the Meilisearch index where
-      // that is enabled; Similar's own cards when both are off.
-      $name = current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], fn ($name) => Views::getView($name)?->storage->status()));
+      // Alternatives, under the reviews (12): Similar's view, or its own
+      // cards when the views are off.
+      $name = Similar::view();
       $build['similar'] = ($name
         ? [
           '#type' => 'view',

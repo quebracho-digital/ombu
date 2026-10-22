@@ -1,0 +1,97 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - search_api.index.listings
+  module:
+    - ombu
+    - search_api
+id: ombu_similar
+label: 'Similar services'
+module: views
+description: 'Listings like the one shown, by Search API''s "More like this" (Similar on the database server). ListingHooks embeds it under each listing.'
+tag: ''
+base_table: search_api_index_listings
+base_field: search_api_id
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    position: 0
+    display_options:
+      title: 'Similar services'
+      fields: {  }
+      pager:
+        type: some
+        options:
+          offset: 0
+          items_per_page: 8
+      exposed_form:
+        type: basic
+        options: {  }
+      access:
+        type: none
+        options: {  }
+      cache:
+        type: search_api_tag
+        options: {  }
+      empty: {  }
+      sorts: {  }
+      arguments:
+        search_api_more_like_this:
+          id: search_api_more_like_this
+          table: search_api_index_listings
+          field: search_api_more_like_this
+          plugin_id: search_api_more_like_this
+          default_action: empty
+          fields: {  }
+      filters:
+        status:
+          id: status
+          table: search_api_index_listings
+          field: status
+          plugin_id: search_api_boolean
+          operator: '='
+          value: '1'
+        retired:
+          id: retired
+          table: search_api_index_listings
+          field: retired
+          plugin_id: search_api_boolean
+          operator: '='
+          value: '0'
+      style:
+        type: ombu_cards
+        options:
+          show_provider: true
+      row:
+        type: fields
+      query:
+        type: search_api_query
+        options:
+          skip_access: false
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+      tags:
+        - 'config:ombu.similar'
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'
+  embed_1:
+    id: embed_1
+    display_title: 'Under a listing'
+    display_plugin: embed
+    position: 1
+    display_options:
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+      tags:
+        - 'config:ombu.similar'
+        - 'config:search_api.index.listings'
+        - 'search_api_list:listings'

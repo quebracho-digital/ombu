@@ -12,6 +12,7 @@ dependencies:
     - field.field.commerce_product.listing.field_files
     - field.field.commerce_product.listing.field_http_method
     - field.field.commerce_product.listing.field_input_schema
+    - field.field.commerce_product.listing.field_kind
     - field.field.commerce_product.listing.field_markets
     - field.field.commerce_product.listing.field_network
     - field.field.commerce_product.listing.field_openapi
@@ -119,6 +120,16 @@ content:
     region: content
     settings:
       rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+  field_kind:
+    type: entity_reference_autocomplete_tags
+    weight: 100
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
       placeholder: ''
     third_party_settings: {  }
   field_network:

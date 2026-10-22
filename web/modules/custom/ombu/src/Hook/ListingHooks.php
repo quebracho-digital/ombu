@@ -19,6 +19,7 @@ use Drupal\ombu\Sellers;
 use Drupal\ombu\Similar;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
 
 /**
  * The listing pages, the market, the Circle sync and the legal notices.
@@ -108,8 +109,12 @@ final class ListingHooks {
       // Its own sales: after the details (schemas, 11), above the legal
       // line and the reviews (12).
       $build['sales'] = Sales::build($product) + ['#weight' => 11.5];
-      // Alternatives, under the reviews (12).
-      $build['similar'] = Similar::build($product) + ['#weight' => 13];
+      // Alternatives, under the reviews (12): the ombu_similar view, so
+      // admins can change it; Similar's own cards when the view is off.
+      $view = Views::getView('ombu_similar');
+      $build['similar'] = ($view?->storage->status()
+        ? ['#type' => 'view', '#name' => 'ombu_similar', '#display_id' => 'embed_1', '#arguments' => [$product->id()], '#attributes' => ['class' => ['ombu-similar']]]
+        : Similar::build($product)) + ['#weight' => 13];
       // People buy it too: the agents' door, paid with their wallet.
       $examples = [
         'ping' => '{}',

@@ -433,3 +433,51 @@ function ombu_update_10027(): void {
   $storage = $repository->getLastInstalledFieldStorageDefinitions('commerce_product')[$name];
   $repository->setLastInstalledFieldStorageDefinition($storage->setSetting('max_length', 44));
 }
+
+/**
+ * Implements hook_schema().
+ *
+ * Each listing's text as a vector (Embeddings), on MariaDB 11.7+ only:
+ * elsewhere the table is not created and similar listings use their terms.
+ */
+function ombu_schema(): array {
+  $db = \Drupal::database();
+  $version = $db->version();
+  if ($db->databaseType() !== 'mysql' || !str_contains(strtolower($version), 'mariadb') || version_compare($version, '11.7', '<')) {
+    return [];
+  }
+  return [
+    'ombu_listing_vector' => [
+      'description' => "Each listing's text as a vector, for similar listings.",
+      'fields' => [
+        'product_id' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+        'hash' => [
+          'description' => 'sha256 of the model and the text: unchanged, not asked again.',
+          'type' => 'char',
+          'length' => 64,
+          'not null' => TRUE,
+        ],
+        // qwen3-embedding-8b's 4096 dimensions; another model with other
+        // dimensions needs the column changed.
+        'embedding' => ['type' => 'blob', 'mysql_type' => 'vector(4096)', 'not null' => TRUE],
+      ],
+      'primary key' => ['product_id'],
+      'indexes' => ['hash' => ['hash']],
+    ],
+  ];
+}
+
+/**
+ * Creates ombu_listing_vector, the listings' texts as vectors.
+ */
+function ombu_update_10028(): string {
+  $schema = \Drupal::database()->schema();
+  $tables = ombu_schema();
+  if (!$tables) {
+    return 'Not MariaDB 11.7+: similar listings use their terms only.';
+  }
+  if (!$schema->tableExists('ombu_listing_vector')) {
+    $schema->createTable('ombu_listing_vector', $tables['ombu_listing_vector']);
+  }
+  return 'Created ombu_listing_vector. Fill it with: drush ombu:embed && drush queue:run ombu_embed';
+}

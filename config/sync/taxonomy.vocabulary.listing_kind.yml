@@ -1,0 +1,9 @@
+uuid: 34193756-ea49-4ed7-a667-7cf1b7822f21
+langcode: en
+status: true
+dependencies: {  }
+name: 'Listing kind (internal)'
+vid: listing_kind
+description: 'What a listing really does, in our words: never shown, weighed by similar services.'
+weight: 0
+new_revision: false

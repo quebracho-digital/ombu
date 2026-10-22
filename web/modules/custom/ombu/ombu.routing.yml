@@ -41,3 +41,11 @@ ombu.sell:
     _title: 'Sell on Ombú'
   requirements:
     _user_is_logged_in: 'TRUE'
+
+ombu.similar_settings:
+  path: '/admin/config/search/similar-services'
+  defaults:
+    _form: '\Drupal\ombu\Form\SimilarSettingsForm'
+    _title: 'Similar services'
+  requirements:
+    _permission: 'administer search_api'

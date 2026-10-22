@@ -1,3 +1,31 @@
 plugin.plugin_configuration.facets_processor.ombu_chain_name:
   type: mapping
   label: 'Chain names (no settings)'
+
+ombu.similar:
+  type: config_object
+  label: 'Similar services'
+  mapping:
+    terms:
+      type: float
+      label: 'Weight of the terms two listings share'
+    vector:
+      type: float
+      label: 'Weight of how similar their texts are'
+    per_provider:
+      type: integer
+      label: 'At most this many from one provider'
+    fields:
+      type: sequence
+      label: 'Weight of each term field'
+      sequence:
+        type: float
+        label: 'Weight'
+
+views.style.ombu_cards:
+  type: views_style
+  label: 'Ombú listing cards'
+  mapping:
+    show_provider:
+      type: boolean
+      label: 'Show the provider'

@@ -40,3 +40,7 @@ services:
     class: Drupal\ombu\ReviewVerifier
     arguments: ['@http_client', '@database', '@ombu.sellers']
   Drupal\ombu\ReviewVerifier: '@ombu.review_verifier'
+  ombu.similar_backend_subscriber:
+    class: Drupal\ombu\EventSubscriber\SimilarBackendSubscriber
+    tags:
+      - { name: event_subscriber }

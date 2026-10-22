@@ -4,3 +4,8 @@ ombu.sell:
   route_name: ombu.sell
   menu_name: account
   weight: -4
+ombu.similar_settings:
+  title: 'Similar services'
+  description: 'How listings are matched with similar ones: shared terms, similar texts.'
+  route_name: ombu.similar_settings
+  parent: system.admin_config_search

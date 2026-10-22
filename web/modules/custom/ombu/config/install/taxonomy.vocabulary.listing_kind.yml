@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'Listing kind (internal)'
+vid: listing_kind
+description: 'What a listing really does, in our words: never shown, weighed by similar services.'
+weight: 0
+new_revision: false

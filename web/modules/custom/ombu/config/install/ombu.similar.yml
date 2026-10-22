@@ -1,0 +1,7 @@
+terms: 1.0
+vector: 1.0
+per_provider: 2
+fields:
+  field_category: 1.0
+  field_tags: 1.0
+  field_kind: 2.0

@@ -1,0 +1,23 @@
+uuid: 124719c4-d9d4-4afb-9466-e71c08b85035
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+  module:
+    - commerce_product
+id: listing
+label: listing
+type: 'canonical_entities:commerce_product'
+pattern: '/service/[commerce_product:current_variation:title]--[commerce_product:current_variation:sku]'
+selection_criteria:
+  c37cfe41-8d6a-41b0-ae2d-c8e57fa090d0:
+    id: 'entity_bundle:commerce_product'
+    negate: false
+    context_mapping:
+      commerce_product: commerce_product
+    bundles:
+      listing: listing
+selection_logic: and
+weight: -5
+relationships: {  }

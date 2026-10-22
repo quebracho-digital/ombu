@@ -31,6 +31,7 @@
         "drupal/gin_toolbar": "^3.0",
         "drupal/key": "^1.22",
         "drupal/llms_txt": "^1.1",
+        "drupal/pathauto": "^1.15",
         "drupal/search_api": "^1.41",
         "drupal/wallet_auth": "1.0.x-dev@dev",
         "drupal/x402_pay": "1.0.x-dev@dev",
@@ -47,14 +48,15 @@
     "config": {
         "allow-plugins": {
             "composer/installers": true,
-            "drupal/core-composer-scaffold": true,
-            "drupal/core-recipe-unpack": true,
-            "drupal/core-project-message": true,
-            "phpstan/extension-installer": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "drupal/core-recipe-unpack": true,
             "php-http/discovery": true,
             "php-tuf/composer-integration": true,
-            "symfony/runtime": true
+            "phpstan/extension-installer": true,
+            "symfony/runtime": true,
+            "tbachert/spi": true
         },
         "sort-packages": true
     },

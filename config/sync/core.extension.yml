@@ -74,6 +74,7 @@ module:
   views_ui: 0
   wallet_auth: 0
   x402_pay: 0
+  pathauto: 1
   content_translation: 10
   views: 10
   standard: 1000

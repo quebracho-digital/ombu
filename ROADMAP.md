@@ -19,7 +19,7 @@ the cut line moves as we go.
 
 ## Where we left off — 2026-10-21
 
-**Solana until 2026-11-18, then the Concordium hackathon only.**
+**Solana until 2026-11-18.**
 
 - **Work on a dev stack from now on** (decided 2026-10-21): production
   stays as the Arc hackathons saw it. **Hostname: not
@@ -36,68 +36,8 @@ the cut line moves as we go.
   → `192.168.1.66:8098`), and the CNAME by hand in Cloudflare (`route dns`
   does not work for this zone, PROC-M04).
 
-- **Concordium Trusted Agents Hackathon** (Encode,
-  encodeclub.com/programmes/concordium-trusted-agents-hackathon): workshops
-  2–18 Nov, build window 19 Nov – 9 Dec, Checkpoint 1 on **22 Nov**
-  (project, team, idea), submissions close **9 Dec 23:59 UTC**. Judged on
-  depth of Concordium integration (identity, Agent Registry, agent
-  payments), path to production, a working demo, usefulness. It must run
-  on Concordium testnet and use at least one of: Concordium ID or Verify
-  and Access, the Agent Registry and *Verified by Concordium* badge, x402
-  payments, Protocol-Level Tokens, sponsored transactions, the Agent
-  Registry MCP server. Submit: what it does and which components, a public
-  repo, a demo video of at most 3 minutes, a CCDExplorer link (agent,
-  contract or transactions), and the path to mainnet. Plan (2026-10-19),
-  one project in two layers:
-  1. Ombú's Arc agent in the Agent Registry with its *Verified by
-     Concordium* badge, and Ombú checking a buyer agent's badge before
-     selling. The safe base, for the checkpoint.
-  2. An x402 facilitator for Concordium **in PHP** (the official one is
-     TypeScript only, and no npm here): Ombú also charges in CCD or a PLT,
-     with sponsored transactions. Spike in `.spike-concordium/`
-     (git-excluded): reads the node over gRPC-web from PHP, builds, signs
-     and sends a sponsored V1 transfer. **Proven on testnet (2026-10-21):**
-     our own sign hash, signed from PHP by sender and sponsor, finalized
-     (tx `a8537a106de3d3bebd0c418e76ac56b83fd407c124834fa6c96dc1d83bf538ce`):
-     the sender paid only the 1 microCCD sent, the sponsor the fee
-     (~4.36 CCD for 635 NRG). Testnet accounts, keys in `keys/` (mode
-     600; `check-keys.php` checks each matches its account): sender
-     `45ZDXdW1ZiBLQ2MjGywk2RZRoXQDi5duGCGZGx1rHAUJ1KHF6r`, sponsor
-     `4sH3aazuQSnjNPYC7KWjMvpcHmnhFtL2GwWyvPKWwuXM1UQQad`, ~20,000 CCD
-     each.
-     **The scheme (read 2026-10-21):** x402 has an official spec,
-     `specs/schemes/exact/scheme_exact_concordium.md` (x402-foundation,
-     May 2026), and a TypeScript mechanism `@x402/concordium` 2.28.0 on
-     `@concordium/web-sdk` ^12. Networks `ccd:4221332d34e1694168c2a0c0b3fd0f27`
-     (testnet), `ccd:9dd9ca4d19e9393877d2c44b70f89acb` (mainnet). `asset` is
-     `"CCD"` or a PLT's symbol; **the default is USDR** (StablR, 6
-     decimals), on testnet too. `extra.feePayer` is the sponsor. The
-     payload is `{signedTransaction}`: the SDK's `Transaction.toJSON` of a
-     V1 sponsored transaction, sender-signed, sponsor slot `{}`:
-     `{version: 1, header: {sender, nonce, expiry, executionEnergyAmount,
-     numSignatures, sponsor: {account, numSignatures}}, payload: {type:
-     "transfer", toAddress, amount} | {type: "tokenUpdate", tokenId,
-     operations: <CBOR hex>}, signatures: {sender: {"0": {"0": hex}},
-     sponsor: {}}}`. `executionEnergyAmount` is the base cost (300 for a
-     transfer, 300 + 100 per PLT transfer operation); the signed energy
-     adds 100 per signature (sender's and sponsor's) and 1 per byte of
-     header and payload — what the spike already computes. The
-     facilitator's MUST rules: V1, sponsor = feePayer, exact amount and
-     recipient, one transfer only, expiry in the future and within
-     maxTimeoutSeconds (TS caps at 600 s), sender signature verified
-     against the account's on-chain keys, preflight (nonce, balance), then
-     sponsor-sign, submit, wait for finalization, check the on-chain
-     outcome. Testnet has USDR and EURR; **our accounts hold neither**
-     (no faucet found). Explorer: `ccdexplorer.io/testnet/transaction/<hash>`.
-     **Open:** whether the hackathon accepts code written before the build
-     window (19 Nov); the page renders with JavaScript, rules not read.
-     Plan once that is clear: a PHP codec (SDK JSON ↔ bytes, sign hash,
-     energy, the PLT transfer's CBOR), tested against the SDK's fixtures
-     and the spike's finalized transaction; then the facilitator plugged
-     into x402_pay's per-network choice, likely as its own module
-     (`x402_concordium`, protobuf over gRPC-web).
 - **Solana, remote facilitator only** (decided 2026-10-21: no facilitator
-  of our own for Solana; Concordium gets ours). Estimate 10.5–15 days; what
+  of our own for Solana). Estimate 10.5–15 days; what
   is done by 18 Nov ships as is.
   - [x] **A. Addresses by namespace** and **B. Solana sign-in (SIWS)** in
     `wallet_auth` (cd3749d) and Ombú's login page (8720948).
@@ -105,7 +45,6 @@ the cut line moves as we go.
     then any x402 facilitator by URL (`RemoteFacilitator`: `/verify`,
     `/settle`; `/supported` gives Solana's `feePayer`, which the 402
     names), then Circle's. Solana mainnet and devnet are networks.
-    Concordium plugs in here later.
   - [~] **E. Buyers**: `Buyer` and `drush x402:buy` pay on Solana with a
     Solana key (eb49ad5). *Try it* in the browser: `/x402/solana/transaction`
     builds the unsigned transaction (x402_pay 7bd1d0d), `buy.js` finds the
@@ -139,21 +78,6 @@ the cut line moves as we go.
     sell on Arc; a slow seller of ours on Solana would need its input
     checked before settling (today a 400 comes from the handler, which
     under upfront runs after the buyer paid).
-- A and D serve Concordium too: its addresses are base58 as well, and its
-  facilitator is one more network in the same setting.
-- **Pay on any chain, the seller paid on theirs** (talked 2026-10-21; a
-  new site, likely **shuk.trade**: ombu.quebracho.digital is not touched).
-  In order: (1) a listing sold through our gate offers every wallet its
-  seller linked, one `accepts` entry each (1–2 days; today one
-  `field_seller_address`, one network); (2) launch shuk with it;
-  (3) cross-chain through intent bridges (LI.FI's REST API, with an
-  integrator fee on top: our revenue), accepted by our gate as a
-  transfer verified on chain (`ReviewVerifier` already checks them);
-  (4) a float of our own per chain, so imported sellers can be paid
-  too, only once the PSAV question (CNV) is answered or with a
-  registered partner. Neither Circle's Agent Marketplace nor Agentic.Market
-  pays across chains, verifies reviews against the purchase, or speaks
-  more than one language (as far as their docs say).
 - **Name check, our fifth seller** (2026-10-22, DDEV only: production
   untouched). `NameCheck` ports `urunday mcp` (quebracho-digital/urunday,
   `src/registros.rs`): domains by RDAP or WHOIS (.ar straight to

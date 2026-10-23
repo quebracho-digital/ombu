@@ -23,9 +23,9 @@ use Drupal\views\ViewExecutableFactory;
  *   (field_kind, the internal category, counts once it is filled).
  * - Texts: cosine similarity of their embeddings (Embeddings), 0 to 1.
  *
- * The terms' score is scaled to 0–1 by the best candidate's, then both are
- * weighted and added. At most a few per provider: one provider has more
- * than half the catalogue, and similar listings are for alternatives.
+ * The two lists are fused by their places (Reciprocal Rank Fusion), each
+ * times its weight. At most a few per provider: one provider has more than
+ * half the catalogue, and similar listings are for alternatives.
  *
  * The weights live in ombu.similar (Configuration » Search » Similar
  * services). Views reach this through Search API's "More like this" on the
@@ -38,6 +38,14 @@ final class Similar {
   use StringTranslationTrait;
 
   public const MAX = 12;
+
+  /**
+   * Reciprocal Rank Fusion's constant.
+   *
+   * A list's first place adds weight / 61, its tenth weight / 70, so no
+   * single list decides.
+   */
+  public const RRF_K = 60;
 
   /**
    * Used when ombu.similar is missing or lacks a key.
@@ -101,43 +109,65 @@ final class Similar {
 
   /**
    * Published, not retired listings like this one: id => score, best first.
+   */
+  public function scores(int $id): array {
+    return array_map(fn (array $why) => $why['score'], $this->explain($id));
+  }
+
+  /**
+   * Why each listing is like this one: id => reasons, best first.
+   *
+   * - score: the lists' Reciprocal Rank Fusion, each list times its weight:
+   *   weight / (RRF_K + place in it). Places, not raw scores, so lists on
+   *   different scales (rarity sums, cosines) add up fairly.
+   * - terms, terms_rank: the shared terms' weighted rarity and its place,
+   *   NULL when none is shared.
+   * - vector, vector_rank: the texts' similarity and its place, NULL
+   *   without vectors.
+   * - provider: who sells it (its term id; NULL for none).
    *
    * Cached until a listing, its vector or the weights change: computing
    * them reads every listing sharing a term and every vector.
    */
-  public function scores(int $id): array {
-    $cid = "ombu.similar:scores:$id";
+  public function explain(int $id): array {
+    $cid = "ombu.similar:explain:$id";
     if ($cached = $this->cache->get($cid)) {
       return $cached->data;
     }
-    $scores = $this->compute($id);
+    $explain = $this->compute($id);
     $tags = ['commerce_product_list', 'config:ombu.similar'];
-    $this->cache->set($cid, $scores, CacheBackendInterface::CACHE_PERMANENT, $tags);
-    return $scores;
+    $this->cache->set($cid, $explain, CacheBackendInterface::CACHE_PERMANENT, $tags);
+    return $explain;
   }
 
   /**
-   * Computes scores().
+   * Computes explain().
    */
   private function compute(int $id): array {
     $settings = ($this->configFactory->get('ombu.similar')->get() ?: []) + self::DEFAULTS;
     $per_provider = max(1, (int) $settings['per_provider']);
-    $terms = $this->termScores($id, $settings['fields'], $per_provider);
-    $best = $terms ? max($terms) : 0;
-    $scores = [];
-    foreach ($terms as $other => $score) {
-      $scores[$other] = $settings['terms'] * $score / $best;
+    $why = [];
+    $place = 0;
+    foreach ($this->termScores($id, $settings['fields'], $per_provider) as $other => $score) {
+      $why[$other] = ['terms' => (float) $score, 'terms_rank' => ++$place];
     }
     if ($settings['vector'] > 0) {
+      $place = 0;
       foreach ($this->vectorScores($id, $per_provider) as $other => $similarity) {
-        $scores[$other] = ($scores[$other] ?? 0) + $settings['vector'] * $similarity;
+        $why[$other] = ($why[$other] ?? []) + ['vector' => $similarity, 'vector_rank' => ++$place];
       }
     }
-    if (!$scores) {
+    if (!$why) {
       return [];
     }
+    foreach ($why as &$reasons) {
+      $reasons += ['terms' => NULL, 'terms_rank' => NULL, 'vector' => NULL, 'vector_rank' => NULL];
+      $reasons['score'] = ($reasons['terms_rank'] ? $settings['terms'] / (self::RRF_K + $reasons['terms_rank']) : 0)
+        + ($reasons['vector_rank'] ? $settings['vector'] / (self::RRF_K + $reasons['vector_rank']) : 0);
+    }
+    unset($reasons);
     // Best first; ties by id, so every caller cuts the same list.
-    uksort($scores, fn ($a, $b) => [$scores[$b], $a] <=> [$scores[$a], $b]);
+    uksort($why, fn ($a, $b) => [$why[$b]['score'], $a] <=> [$why[$a]['score'], $b]);
 
     // Who sells each, and only those people can buy.
     $providers = $this->database->query(
@@ -145,17 +175,17 @@ final class Similar {
        LEFT JOIN {commerce_product__field_retired} r ON r.entity_id = l.product_id
        LEFT JOIN {commerce_product__field_provider_term} p ON p.entity_id = l.product_id
        WHERE l.product_id IN (:ids[]) AND l.status = 1 AND COALESCE(r.field_retired_value, 0) = 0",
-      [':ids[]' => array_keys($scores)],
+      [':ids[]' => array_keys($why)],
     )->fetchAllKeyed();
     $out = [];
     $count = [];
-    foreach ($scores as $other => $score) {
+    foreach ($why as $other => $reasons) {
       if (!array_key_exists($other, $providers)) {
         continue;
       }
       $key = $providers[$other] ?? "none:$other";
       if (($count[$key] = ($count[$key] ?? 0) + 1) <= $per_provider) {
-        $out[$other] = $score;
+        $out[$other] = $reasons + ['provider' => $providers[$other] === NULL ? NULL : (int) $providers[$other]];
       }
     }
     return $out;
@@ -163,23 +193,27 @@ final class Similar {
 
   /**
    * The block under a listing: the first view that answers, else cards.
+   *
+   * Wrapped with the listing's id and the engine, for similar.js to report
+   * what was shown and clicked (SimilarLog).
    */
   public function build(ProductInterface $product): array {
-    [$view, $fell_back] = $this->executedView($product);
-    if ($view) {
-      $build = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['ombu-similar']],
-        'view' => $view->render() ?? [],
-      ];
-    }
-    else {
-      $build = Cards::build($this->of($product), (string) $this->t('Similar services'), TRUE, TRUE);
-      $build['#cache']['tags'][] = 'config:ombu.similar';
-      $build['#attributes']['class'][] = 'ombu-similar';
-    }
+    $suggestion = $this->suggest($product);
+    $build = [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['ombu-similar'],
+        'data-ombu-similar' => $product->id(),
+        'data-ombu-engine' => $suggestion['engine'],
+      ],
+      '#attached' => ['library' => ['ombu/similar']],
+      'similar' => $suggestion['view']
+        ? ($suggestion['view']->render() ?? [])
+        : Cards::build(array_keys($suggestion['items']), (string) $this->t('Similar services'), TRUE, TRUE),
+      '#cache' => ['tags' => ['config:ombu.similar']],
+    ];
     // A fallback lasts until the view it stands in for answers again.
-    if ($fell_back) {
+    if ($suggestion['fell_back']) {
       $build['#cache']['max-age'] = self::PING_TTL;
     }
     return $build;
@@ -189,17 +223,36 @@ final class Similar {
    * The ids the block shows, in its order.
    */
   public function ids(ProductInterface $product): array {
-    [$view] = $this->executedView($product);
+    return array_keys($this->suggest($product)['items']);
+  }
+
+  /**
+   * What the block under a listing shows, and who chose it.
+   *
+   * @return array
+   *   - engine: the view that answered (one of VIEWS), or "scores" for
+   *     Similar's own cards.
+   *   - fell_back: whether a preferred view was skipped, its server down.
+   *   - items: listing id => the engine's score, in order. A listing's
+   *     translations are items of their own in a view: listed once.
+   *   - view: the executed view, NULL for the cards.
+   */
+  public function suggest(ProductInterface $product): array {
+    [$view, $fell_back] = $this->executedView($product);
     if (!$view) {
-      return $this->of($product);
+      return [
+        'engine' => 'scores',
+        'fell_back' => $fell_back,
+        'items' => array_slice($this->scores((int) $product->id()), 0, self::MAX, TRUE),
+        'view' => NULL,
+      ];
     }
-    $ids = [];
+    $items = [];
     foreach ($view->result as $row) {
-      // Search API's rows carry the item as a dynamic property.
-      $ids[] = (int) $row->_object->getValue()->id();
+      // Search API's rows carry the item as dynamic properties.
+      $items[(int) $row->_object->getValue()->id()] ??= (float) $row->_item->getScore();
     }
-    // A listing's translations are items of their own: list it once.
-    return array_values(array_unique($ids));
+    return ['engine' => $view->storage->id(), 'fell_back' => $fell_back, 'items' => $items, 'view' => $view];
   }
 
   /**

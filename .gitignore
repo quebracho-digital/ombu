@@ -22,3 +22,4 @@
 .env.*
 # The Meilisearch image tag (kevinquillen/ddev-meilisearch): no secret in it.
 !/.ddev/.env.meilisearch
+scripts/eval/similar-pool.json

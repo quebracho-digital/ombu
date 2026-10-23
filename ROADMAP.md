@@ -1099,11 +1099,27 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
 
 ### Evaluating and deciding recommendations
 
-- [ ] **A labelled set:** 50 listings, for each the services a buyer
-  could use instead (and those that work with it), by hand. The yardstick
-  every engine is measured against (precision at 5, at 12), small enough
-  to label in an afternoon. **Done when** `scripts/eval-similar.php` scores
-  every engine on it.
+- [x] **A labelled set** (2026-10-23): 50 listings (at most 8 per
+  provider), each with the union of three engines' top 12 (1,433 pairs)
+  labelled *alternative* (same job on the same platform or data: a buyer
+  could swap it in), *works with* (the step before or after) or
+  *unrelated*: 248, 206 and 979; 11 listings have no alternative in the
+  pool. Labelled by Claude (another model family than the engines), **to
+  be reviewed by Leo**: `scripts/eval/similar-labels.json`; `drush
+  php:script ../scripts/eval-similar.php pool` rebuilds the candidates
+  with titles (git-ignored), without `pool` it scores:
+
+  | engine | P@5 | P@12 | MRR | other provider's alternatives in top 12 | providers per list |
+  |---|---|---|---|---|---|
+  | Similar (database, in production) | 0.14 | 0.07 | 0.27 | 0.48 | 9.5 |
+  | Vector only (`Embeddings::nearest`) | 0.39 | 0.34 | 0.56 | 1.04 | 1.8 |
+  | Meilisearch `/similar` | 0.38 | 0.31 | 0.57 | 0.76 | 1.4 |
+
+  **What production shows is the worst list**: the cap per provider makes
+  room for variety, and what fills it is the hub listings, not other
+  providers' alternatives (vector only finds twice as many of those).
+  Bias to keep in mind: most alternatives are a provider's sibling
+  endpoints, which the cap hides on purpose.
 - [ ] **An LLM judge** while there is no traffic: for each listing of a
   sample, two engines' lists, unlabelled and shuffled, and a model picks
   the better. Cents on Fireworks; a model of another family than any used

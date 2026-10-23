@@ -49,3 +49,15 @@ ombu.similar_settings:
     _title: 'Similar services'
   requirements:
     _permission: 'administer search_api'
+
+# similar.js reports what similar services a person saw and clicked
+# (SimilarLog). Anyone may report; Flood caps a visitor's reports.
+ombu.similar_event:
+  path: '/similar/event'
+  defaults:
+    _controller: '\Drupal\ombu\Controller\SimilarEventController::post'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE

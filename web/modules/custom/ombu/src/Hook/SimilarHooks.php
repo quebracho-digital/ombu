@@ -9,6 +9,7 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\ombu\Embeddings;
 use Drupal\ombu\Similar;
+use Drupal\ombu\SimilarLog;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Utility\Utility;
 
@@ -26,7 +27,16 @@ final class SimilarHooks {
     private readonly Embeddings $embeddings,
     private readonly QueueFactory $queueFactory,
     private readonly Similar $similar,
+    private readonly SimilarLog $log,
   ) {}
+
+  /**
+   * The log of similar services keeps a year.
+   */
+  #[Hook('cron')]
+  public function cron(): void {
+    $this->log->purge();
+  }
 
   /**
    * Alternatives under a listing, after its reviews (12).

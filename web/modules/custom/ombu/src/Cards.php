@@ -65,6 +65,7 @@ final class Cards {
     }
     return [
       '#theme' => 'ombu_card',
+      '#id' => (int) $listing->id(),
       '#url' => $listing->toUrl()->toString(),
       '#title' => Unicode::truncate((string) $listing->label(), 90, TRUE, TRUE),
       '#summary' => $summary,

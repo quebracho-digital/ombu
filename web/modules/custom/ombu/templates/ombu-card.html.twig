@@ -4,6 +4,7 @@
  * One listing as a card (Cards::card()); the whole card is its link.
  *
  * Variables:
+ * - id: The listing's id, for similar.js.
  * - url: The listing's URL.
  * - title: Its title, shortened.
  * - summary: What it does, when it says more than the title.
@@ -18,7 +19,7 @@
  * - chains: Chain names it is paid on.
  */
 #}
-<article class="ombu-card" style="--ombu-hue: {{ hue }}">
+<article class="ombu-card" data-listing="{{ id }}" style="--ombu-hue: {{ hue }}">
   <header class="ombu-card__head">
     {% if logo %}
       <img class="ombu-card__avatar ombu-card__avatar--logo" src="{{ logo }}" alt="" width="40" height="40" loading="lazy">

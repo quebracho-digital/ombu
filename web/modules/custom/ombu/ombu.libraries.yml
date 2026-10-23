@@ -19,6 +19,13 @@ cards:
   dependencies:
     - core/drupal
     - core/once
+# Reports what similar services a person saw and clicked (SimilarLog).
+similar:
+  js:
+    js/similar.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
 # A listing's page: one readable column, details as a two-column list.
 listing:
   css:

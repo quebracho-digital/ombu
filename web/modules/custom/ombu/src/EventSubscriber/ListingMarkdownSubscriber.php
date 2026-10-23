@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\ombu\Similar;
+use Drupal\ombu\SimilarLog;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -22,6 +23,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * block under the page (Similar::build()). Agents follow these links as
  * people follow the cards: the same listings, in the page's language. The
  * markdown page is not page-cached (x402_pay).
+ *
+ * What was shown, and which link an agent followed (the links carry
+ * ombu_from and ombu_pos), go to SimilarLog.
  */
 final class ListingMarkdownSubscriber implements EventSubscriberInterface {
 
@@ -29,6 +33,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
 
   public function __construct(
     private readonly Similar $similar,
+    private readonly SimilarLog $log,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly EntityRepositoryInterface $entityRepository,
     TranslationInterface $string_translation,
@@ -69,14 +74,25 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
       || !str_starts_with((string) $response->headers->get('Content-Type'), 'text/markdown')) {
       return;
     }
+    $from = $request->query->get('ombu_from');
+    if (is_numeric($from)) {
+      $this->log->event('follow', (int) $from, (int) $product->id(), max(0, (int) $request->query->get('ombu_pos')), 'markdown');
+    }
+    $suggestion = $this->similar->suggest($product);
     $lines = [];
-    foreach ($this->entityTypeManager->getStorage('commerce_product')->loadMultiple($this->similar->ids($product)) as $other) {
+    $shown = [];
+    foreach ($this->entityTypeManager->getStorage('commerce_product')->loadMultiple(array_keys($suggestion['items'])) as $id => $other) {
       $other = $this->entityRepository->getTranslationFromContext($other);
       if (!$other->access('view')) {
         continue;
       }
-      $title = $this->linkText((string) $other->label());
-      $lines[] = sprintf('- [%s](%s)', $title, $other->toUrl()->setAbsolute()->toString());
+      $query = ['ombu_from' => $product->id(), 'ombu_pos' => count($shown)];
+      $url = $other->toUrl()->setAbsolute()->setOption('query', $query);
+      $lines[] = sprintf('- [%s](%s)', $this->linkText((string) $other->label()), $url->toString());
+      $shown[$id] = $suggestion['items'][$id];
+    }
+    if ($shown) {
+      $this->log->shown((int) $product->id(), $shown, 'markdown', $suggestion['engine'], $suggestion['fell_back']);
     }
     if ($lines) {
       $response->setContent(sprintf("%s\n\n## %s\n\n%s\n", rtrim((string) $response->getContent()), $this->t('Similar services'), implode("\n", $lines)));

@@ -437,16 +437,44 @@ function ombu_update_10027(): void {
 /**
  * Implements hook_schema().
  *
- * Each listing's text as a vector (Embeddings), on MariaDB 11.7+ only:
- * elsewhere the table is not created and similar listings use their terms.
+ * What similar services were shown and done with (SimilarLog); and each
+ * listing's text as a vector (Embeddings), on MariaDB 11.7+ only:
+ * elsewhere that table is not created and similar listings use their terms.
  */
 function ombu_schema(): array {
+  $tables = [
+    'ombu_similar_log' => [
+      'description' => 'Similar services shown under listings, why, and what visitors did with them.',
+      'fields' => [
+        'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+        'created' => ['type' => 'int', 'not null' => TRUE],
+        'kind' => ['description' => 'shown, click or follow.', 'type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+        'channel' => ['description' => 'page or markdown.', 'type' => 'varchar_ascii', 'length' => 16, 'not null' => TRUE],
+        'listing_id' => ['description' => 'The listing they were suggested under.', 'type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+        'target_id' => ['description' => 'The suggestion clicked or followed.', 'type' => 'int', 'unsigned' => TRUE],
+        'position' => ['description' => 'Its place among the suggestions, from 0.', 'type' => 'int', 'unsigned' => TRUE],
+        'engine' => ['description' => 'Who chose them: a view, or scores.', 'type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE, 'default' => ''],
+        'visitor' => ['description' => 'sha256 of a monthly salt, the IP and the user agent.', 'type' => 'varchar_ascii', 'length' => 64, 'not null' => TRUE],
+        'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0],
+        'user_agent' => ['type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''],
+        'langcode' => ['type' => 'varchar_ascii', 'length' => 12, 'not null' => TRUE, 'default' => ''],
+        'referer' => ['description' => 'The referring page, without its query.', 'type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''],
+        'data' => ['description' => 'shown: the suggestions, their scores and reasons, as JSON.', 'type' => 'text', 'size' => 'big'],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'created' => ['created'],
+        'listing' => ['listing_id', 'kind'],
+        'visitor' => ['visitor'],
+      ],
+    ],
+  ];
   $db = \Drupal::database();
   $version = $db->version();
   if ($db->databaseType() !== 'mysql' || !str_contains(strtolower($version), 'mariadb') || version_compare($version, '11.7', '<')) {
-    return [];
+    return $tables;
   }
-  return [
+  return $tables + [
     'ombu_listing_vector' => [
       'description' => "Each listing's text as a vector, for similar listings.",
       'fields' => [
@@ -473,7 +501,7 @@ function ombu_schema(): array {
 function ombu_update_10028(): string {
   $schema = \Drupal::database()->schema();
   $tables = ombu_schema();
-  if (!$tables) {
+  if (!isset($tables['ombu_listing_vector'])) {
     return 'Not MariaDB 11.7+: similar listings use their terms only.';
   }
   if (!$schema->tableExists('ombu_listing_vector')) {
@@ -494,4 +522,14 @@ function ombu_update_10029(): void {
  */
 function ombu_update_10030(): void {
   _ombu_llms_txt();
+}
+
+/**
+ * Creates ombu_similar_log: what similar services were shown, and why.
+ */
+function ombu_update_10031(): void {
+  $schema = \Drupal::database()->schema();
+  if (!$schema->tableExists('ombu_similar_log')) {
+    $schema->createTable('ombu_similar_log', ombu_schema()['ombu_similar_log']);
+  }
 }

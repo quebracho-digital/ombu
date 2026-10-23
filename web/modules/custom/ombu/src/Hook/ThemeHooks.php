@@ -26,6 +26,7 @@ final class ThemeHooks {
       ],
       'ombu_card' => [
         'variables' => [
+          'id' => NULL,
           'url' => NULL,
           'title' => '',
           'summary' => '',

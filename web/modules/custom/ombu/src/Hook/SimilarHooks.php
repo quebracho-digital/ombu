@@ -64,9 +64,8 @@ final class SimilarHooks {
    * provided by Drupal"); a listing without one is sent without.
    */
   #[Hook('meilisearch_documents_alter')]
-  public function meilisearchDocuments(array &$documents, IndexInterface $index, array $items): void {
-    $config = $index->getServerInstance()->getBackendConfig();
-    if (empty($config['embedder_dimensions'])) {
+  public function meilisearchDocuments(array &$documents, IndexInterface $index, array $context): void {
+    if ($context['embedder'] === NULL) {
       return;
     }
     $ids = [];
@@ -80,7 +79,7 @@ final class SimilarHooks {
     $vectors = $this->embeddings->vectors(array_unique($ids));
     foreach ($ids as $key => $id) {
       if (isset($vectors[$id])) {
-        $documents[$key]['_vectors'][$config['embedder']] = $vectors[$id];
+        $documents[$key]['_vectors'][$context['embedder']] = $vectors[$id];
       }
     }
   }

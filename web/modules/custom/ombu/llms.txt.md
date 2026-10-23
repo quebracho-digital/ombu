@@ -4,7 +4,7 @@
 
 Searching is free. Buying is per call: POST to a listing's resource URL, get a 402 with the payment requirements (PAYMENT-REQUIRED header), sign the EIP-3009 transfer it asks for, and send the same request again with a PAYMENT-SIGNATURE header. Our sellers are settled only when they deliver: a failing call costs nothing.
 
-Content pages also answer in markdown: send `Accept: text/markdown` to their URL (the guides, the [terms]([site:url]terms) and [privacy]([site:url]privacy) policy). Listings are read from the catalogue as JSON, below, and bought at their x402 URL, which answers 402 until paid.
+Content pages also answer in markdown: send `Accept: text/markdown` to their URL (the guides, the [terms]([site:url]terms) and [privacy]([site:url]privacy) policy). Listings are read from the catalogue as JSON, below, and bought at their x402 URL, which answers 402 until paid. A listing's own page in markdown ends with its similar services, as links, to compare alternatives.
 
 ## Search
 

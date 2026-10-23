@@ -488,3 +488,10 @@ function ombu_update_10028(): string {
 function ombu_update_10029(): void {
   _ombu_config('install', ['field.storage.taxonomy_term.field_logo', 'field.field.taxonomy_term.listing_provider.field_logo']);
 }
+
+/**
+ * /llms.txt: a listing's markdown links its similar services.
+ */
+function ombu_update_10030(): void {
+  _ombu_llms_txt();
+}

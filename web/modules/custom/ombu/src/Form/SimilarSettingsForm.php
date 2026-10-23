@@ -21,7 +21,12 @@ final class SimilarSettingsForm extends ConfigFormBase {
   /**
    * Lists the listing's taxonomy fields.
    */
-  private EntityFieldManagerInterface $fieldManager;
+  protected EntityFieldManagerInterface $fieldManager;
+
+  /**
+   * Whether texts can be compared at all (the vector table exists).
+   */
+  protected Embeddings $embeddings;
 
   /**
    * {@inheritdoc}
@@ -29,6 +34,7 @@ final class SimilarSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): static {
     $form = parent::create($container);
     $form->fieldManager = $container->get('entity_field.manager');
+    $form->embeddings = $container->get('ombu.embeddings');
     return $form;
   }
 
@@ -73,7 +79,7 @@ final class SimilarSettingsForm extends ConfigFormBase {
         $form['fields'][$name] = $weight((string) $field->getLabel(), $settings['fields'][$name] ?? 0);
       }
     }
-    $form['vector'] = $weight($this->t('Similar texts'), $settings['vector'], Embeddings::available()
+    $form['vector'] = $weight($this->t('Similar texts'), $settings['vector'], $this->embeddings->available()
       ? $this->t('Cosine similarity of the listings’ embeddings. Listings without one count by terms only.')
       : $this->t('Needs MariaDB 11.7+: off on this site.'));
     $form['per_provider'] = [

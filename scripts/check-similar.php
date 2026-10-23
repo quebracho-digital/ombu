@@ -19,7 +19,6 @@ declare(strict_types=1);
 
 use Drupal\commerce_product\Entity\Product;
 use Drupal\ombu\Embeddings;
-use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
 use Drupal\ombu\Similar;
 use Drupal\search_api\Entity\Index;
 use Drupal\views\Views;
@@ -28,6 +27,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
+$similar = \Drupal::service('ombu.similar');
+$embeddings = \Drupal::service('ombu.embeddings');
 $fail = 0;
 $check = function (bool $ok, string $what) use (&$fail): void {
   echo ($ok ? 'ok   ' : 'FAIL ') . $what . "\n";
@@ -41,16 +42,16 @@ foreach (array_slice($ids, 0, 3) as $id) {
   $view->setArguments([$id]);
   $view->execute();
   $got = array_map(fn ($row) => (int) $row->_object->getValue()->id(), $view->result);
-  $want = array_slice(array_keys(Similar::scores((int) $id)), 0, count($got));
+  $want = array_slice(array_keys($similar->scores((int) $id)), 0, count($got));
   $check($got && $got === $want, "the view returns Similar's order for #$id (" . count($got) . ')');
 }
 
-$scores = Similar::scores((int) reset($ids));
+$scores = $similar->scores((int) reset($ids));
 $per_provider = \Drupal::database()->query('SELECT COUNT(*) FROM {commerce_product__field_provider_term} WHERE entity_id IN (:ids[]) GROUP BY field_provider_term_target_id', [':ids[]' => array_keys($scores) ?: [0]])->fetchCol();
 $max = (\Drupal::config('ombu.similar')->get('per_provider') ?: Similar::DEFAULTS['per_provider']);
 $check(!$per_provider || max($per_provider) <= $max, "at most $max per provider");
 
-if (Embeddings::available()) {
+if ($embeddings->available()) {
   [$a, $b, $c, $source, $copy] = array_values($ids);
   $db = \Drupal::database();
   $vector = fn (array $head) => json_encode(array_merge($head, array_fill(0, 4096 - count($head), 0.0)));
@@ -63,9 +64,9 @@ if (Embeddings::available()) {
       $db->query('INSERT INTO {' . Embeddings::TABLE . "} (product_id, hash, embedding) VALUES (:id, 'check', VEC_FromText(:v))", [':id' => $id, ':v' => $vector($head)]);
     }
     try {
-      $near = Embeddings::nearest((int) $a);
+      $near = $embeddings->nearest((int) $a);
       $check(array_key_first($near) === (int) $b && $near[$b] > 0.99 && abs($near[$c]) < 0.01, "nearest(#$a): #$b first, #$c orthogonal");
-      $check(isset(Similar::scores((int) $a)[$b]), "#$b counts by its text too");
+      $check(isset($similar->scores((int) $a)[$b]), "#$b counts by its text too");
     }
     finally {
       $db->delete(Embeddings::TABLE)->condition('hash', 'check')->execute();
@@ -75,7 +76,7 @@ if (Embeddings::available()) {
 
 // The copy path: a listing whose text another listing's row already has
 // takes that vector, and the model is not called.
-if (Embeddings::available() && ($hash = Embeddings::hash(Product::load($copy)))) {
+if ($embeddings->available() && ($hash = $embeddings->hash(Product::load($copy)))) {
   $db = \Drupal::database();
   if ($db->query('SELECT COUNT(*) FROM {' . Embeddings::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => [$source, $copy]])->fetchField()) {
     echo "skip copy: these listings have real vectors\n";
@@ -87,7 +88,7 @@ if (Embeddings::available() && ($hash = Embeddings::hash(Product::load($copy))))
       ':v' => json_encode(array_fill(0, 4096, 0.01)),
     ]);
     try {
-      $called = Embeddings::update(Product::load($copy));
+      $called = $embeddings->update(Product::load($copy));
       $row = $db->query('SELECT hash FROM {' . Embeddings::TABLE . '} WHERE product_id = :id', [':id' => $copy])->fetchField();
       $check(!$called && $row === $hash, "update(#$copy) copies #$source's vector without calling the model");
     }
@@ -100,9 +101,9 @@ if (Embeddings::available() && ($hash = Embeddings::hash(Product::load($copy))))
 // Meilisearch's /similar on the vectors SimilarHooks sends: nearest()'s
 // similarities, as Meilisearch's scores ((1 + cosine) / 2), best first.
 $meili = Index::load('listings_meilisearch');
-if ($meili?->status() && $meili->getServerInstance()->isAvailable() && Embeddings::available()) {
+if ($meili?->status() && $meili->getServerInstance()->isAvailable() && $embeddings->available()) {
   $id = (int) reset($ids);
-  $near = Embeddings::nearest($id);
+  $near = $embeddings->nearest($id);
   $query = $meili->query()->range(0, 5);
   $query->setOption('search_api_mlt', ['id' => (string) $id]);
   $scores = [];
@@ -119,11 +120,19 @@ if ($meili?->status() && $meili->getServerInstance()->isAvailable() && Embedding
 // links to follow.
 $listing = Product::load((int) reset($ids));
 $request = new Request();
+$request->attributes->set('_route', 'entity.commerce_product.canonical');
 $request->attributes->set('commerce_product', $listing);
 $response = new Response("# Listing\n", 200, ['Content-Type' => 'text/markdown; charset=utf-8']);
-(new ListingMarkdownSubscriber())->onResponse(new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MAIN_REQUEST, $response));
-$first = Product::load(Similar::ids($listing)[0] ?? 0);
+\Drupal::service('ombu.listing_markdown_subscriber')->onResponse(new ResponseEvent(\Drupal::service('http_kernel'), $request, HttpKernelInterface::MAIN_REQUEST, $response));
+$first = Product::load($similar->ids($listing)[0] ?? 0);
 $check($first && str_contains($response->getContent(), "## Similar services\n\n- [") && str_contains($response->getContent(), $first->toUrl()->setAbsolute()->toString()), "the markdown of #{$listing->id()} links its similar services");
+
+// A listing the visitor may not view has no similar services: the views
+// validate their argument. Drush runs as anonymous.
+$hidden = \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('type', 'listing')->condition('status', 0)->range(0, 1)->execute();
+if ($hidden && \Drupal::currentUser()->isAnonymous()) {
+  $check($similar->ids(Product::load((int) reset($hidden))) === [], 'an unpublished listing has no similar services for anonymous');
+}
 
 $form = \Drupal::formBuilder()->getForm('Drupal\ombu\Form\SimilarSettingsForm');
 $check(isset($form['fields']['field_kind'], $form['fields']['field_tags']), 'the settings form lists field_kind and field_tags');

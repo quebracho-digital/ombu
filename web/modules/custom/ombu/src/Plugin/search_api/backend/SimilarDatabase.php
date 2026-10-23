@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Plugin\search_api\backend;
 
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\ombu\Similar;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_db\Plugin\search_api\backend\Database;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Search API's database backend, plus "More like this" by Similar.
@@ -21,6 +23,26 @@ use Drupal\search_api_db\Plugin\search_api\backend\Database;
  * changes.
  */
 class SimilarDatabase extends Database {
+
+  /**
+   * Scores the listings like the one asked about.
+   */
+  protected Similar $similar;
+
+  /**
+   * Lists the site's languages, for a query that names none.
+   */
+  protected LanguageManagerInterface $languageManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $backend = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $backend->similar = $container->get('ombu.similar');
+    $backend->languageManager = $container->get('language_manager');
+    return $backend;
+  }
 
   /**
    * {@inheritdoc}
@@ -44,11 +66,11 @@ class SimilarDatabase extends Database {
       [, $raw] = Utility::splitCombinedId($id);
       $id = strtok((string) $raw, ':');
     }
-    $scores = Similar::scores((int) $id);
+    $scores = $this->similar->scores((int) $id);
     $rank = array_flip(array_keys($scores));
     $item_ids = [];
     foreach (array_keys($scores) as $other) {
-      foreach ($query->getLanguages() ?? array_keys(\Drupal::languageManager()->getLanguages()) as $langcode) {
+      foreach ($query->getLanguages() ?? array_keys($this->languageManager->getLanguages()) as $langcode) {
         $item_ids[] = "entity:commerce_product/$other:$langcode";
       }
     }

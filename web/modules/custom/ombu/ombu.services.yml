@@ -40,8 +40,18 @@ services:
     class: Drupal\ombu\ReviewVerifier
     arguments: ['@http_client', '@database', '@ombu.sellers']
   Drupal\ombu\ReviewVerifier: '@ombu.review_verifier'
+  ombu.embeddings:
+    class: Drupal\ombu\Embeddings
+    # Without the AI module there is no model: nothing is embedded.
+    arguments: ['@database', '@?ai.provider', '@cache_tags.invalidator']
+  Drupal\ombu\Embeddings: '@ombu.embeddings'
+  ombu.similar:
+    class: Drupal\ombu\Similar
+    arguments: ['@config.factory', '@database', '@ombu.embeddings', '@entity_type.manager', '@views.executable', '@cache.default', '@datetime.time']
+  Drupal\ombu\Similar: '@ombu.similar'
   ombu.listing_markdown_subscriber:
     class: Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber
+    arguments: ['@ombu.similar', '@entity_type.manager', '@entity.repository', '@string_translation']
     tags:
       - { name: event_subscriber }
   ombu.similar_backend_subscriber:

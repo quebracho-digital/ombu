@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Drupal\ombu;
 
 use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
-use Drupal\views\Entity\View;
-use Drupal\views\Views;
+use Drupal\views\ViewEntityInterface;
+use Drupal\views\ViewExecutable;
+use Drupal\views\ViewExecutableFactory;
 
 /**
  * Listings like this one: the terms they share, how close their texts are.
@@ -23,11 +29,14 @@ use Drupal\views\Views;
  * than half the catalogue, and similar listings are for alternatives.
  *
  * The weights live in ombu.similar (Configuration » Search » Similar
- * services). Views reach this through Search API's "More like this"
- * (SimilarHooks); the block under a listing calls it directly when the
- * ombu_similar view is off.
+ * services). Views reach this through Search API's "More like this" on the
+ * database server (SimilarDatabase); on Meilisearch, its /similar answers.
+ * Under a listing: the first of VIEWS that answers, else these scores as
+ * cards. Service: ombu.similar.
  */
 final class Similar {
+
+  use StringTranslationTrait;
 
   public const MAX = 12;
 
@@ -42,65 +51,54 @@ final class Similar {
   ];
 
   /**
+   * The views that list them under a listing, preferred first.
+   *
+   * Their "embed_1" display takes the listing's id.
+   */
+  public const VIEWS = ['ombu_similar_meilisearch', 'ombu_similar'];
+
+  /**
+   * How long a server's answer to a ping is trusted, in seconds.
+   */
+  private const PING_TTL = 60;
+
+  /**
+   * Whether each server answers, within this request: server id => bool.
+   *
+   * @var array<string, bool>
+   */
+  private array $answers = [];
+
+  public function __construct(
+    private readonly ConfigFactoryInterface $configFactory,
+    private readonly Connection $database,
+    private readonly Embeddings $embeddings,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly ViewExecutableFactory $viewExecutableFactory,
+    private readonly CacheBackendInterface $cache,
+    private readonly TimeInterface $time,
+  ) {}
+
+  /**
    * The ids of the listings most like this one, best first.
    */
-  public static function of(ProductInterface $product): array {
-    return array_slice(array_keys(self::scores((int) $product->id())), 0, self::MAX);
-  }
-
-  /**
-   * The view that lists them under a listing, NULL when both are off.
-   *
-   * Its copy on the Meilisearch index where that is enabled and answers,
-   * else ombu_similar, so admins can change what is shown.
-   */
-  public static function view(): ?string {
-    return self::$view ??= current(array_filter(['ombu_similar_meilisearch', 'ombu_similar'], function (string $name): bool {
-      $view = View::load($name);
-      if (!$view?->status()) {
-        return FALSE;
-      }
-      $index = SearchApiQuery::getIndexFromTable((string) $view->get('base_table'));
-      return (bool) $index?->status() && (bool) $index->getServerInstanceIfAvailable()?->isAvailable();
-    })) ?: NULL;
-  }
-
-  /**
-   * The view's name, once per request: a Meilisearch server is asked.
-   */
-  private static ?string $view = NULL;
-
-  /**
-   * The ids the page shows: the view's results, or of()'s without a view.
-   */
-  public static function ids(ProductInterface $product): array {
-    $name = self::view();
-    if (!$name) {
-      return self::of($product);
-    }
-    $view = Views::getView($name);
-    $view->setDisplay('embed_1');
-    $view->setArguments([$product->id()]);
-    $view->execute();
-    // A listing's translations are items of their own: list it once.
-    // Search API's rows carry the item as a dynamic property.
-    // @phpstan-ignore property.notFound
-    return array_values(array_unique(array_map(fn ($row) => (int) $row->_object->getValue()->id(), $view->result)));
+  public function of(ProductInterface $product): array {
+    return array_slice(array_keys($this->scores((int) $product->id())), 0, self::MAX);
   }
 
   /**
    * Published, not retired listings like this one: id => score, best first.
    */
-  public static function scores(int $id): array {
-    $settings = (\Drupal::config('ombu.similar')->get() ?: []) + self::DEFAULTS;
-    $terms = self::termScores($id, $settings['fields']);
+  public function scores(int $id): array {
+    $settings = ($this->configFactory->get('ombu.similar')->get() ?: []) + self::DEFAULTS;
+    $terms = $this->termScores($id, $settings['fields']);
     $best = $terms ? max($terms) : 0;
     $scores = [];
     foreach ($terms as $other => $score) {
       $scores[$other] = $settings['terms'] * $score / $best;
     }
     if ($settings['vector'] > 0) {
-      foreach (Embeddings::nearest($id) as $other => $similarity) {
+      foreach ($this->embeddings->nearest($id) as $other => $similarity) {
         $scores[$other] = ($scores[$other] ?? 0) + $settings['vector'] * $similarity;
       }
     }
@@ -111,7 +109,7 @@ final class Similar {
     uksort($scores, fn ($a, $b) => [$scores[$b], $a] <=> [$scores[$a], $b]);
 
     // Who sells each, and only those people can buy.
-    $providers = \Drupal::database()->query(
+    $providers = $this->database->query(
       "SELECT l.product_id, p.field_provider_term_target_id FROM {commerce_product_field_data} l
        LEFT JOIN {commerce_product__field_retired} r ON r.entity_id = l.product_id
        LEFT JOIN {commerce_product__field_provider_term} p ON p.entity_id = l.product_id
@@ -133,13 +131,96 @@ final class Similar {
   }
 
   /**
-   * The block under a listing: the similar ones, as cards.
+   * The block under a listing: the first view that answers, else cards.
    */
-  public static function build(ProductInterface $product): array {
-    $build = Cards::build(self::of($product), (string) t('Similar services'), TRUE, TRUE);
+  public function build(ProductInterface $product): array {
+    $view = $this->executedView($product);
+    if ($view) {
+      return [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ombu-similar']],
+        'view' => $view->render() ?? [],
+      ];
+    }
+    $build = Cards::build($this->of($product), (string) $this->t('Similar services'), TRUE, TRUE);
     $build['#cache']['tags'][] = 'config:ombu.similar';
     $build['#attributes']['class'][] = 'ombu-similar';
     return $build;
+  }
+
+  /**
+   * The ids the block shows, in its order.
+   */
+  public function ids(ProductInterface $product): array {
+    $view = $this->executedView($product);
+    if (!$view) {
+      return $this->of($product);
+    }
+    $ids = [];
+    foreach ($view->result as $row) {
+      // Search API's rows carry the item as a dynamic property.
+      // @phpstan-ignore property.notFound
+      $ids[] = (int) $row->_object->getValue()->id();
+    }
+    // A listing's translations are items of their own: list it once.
+    return array_values(array_unique($ids));
+  }
+
+  /**
+   * The first of VIEWS that answers for this listing, executed.
+   *
+   * A view answers when it is enabled, its server answered a ping in the
+   * last minute and its search did not fail; a search that fails marks the
+   * server down for that minute, and the next view is tried. A view whose
+   * argument validation refuses the listing answers too, with nothing.
+   */
+  private function executedView(ProductInterface $product): ?ViewExecutable {
+    foreach (self::VIEWS as $name) {
+      $storage = $this->entityTypeManager->getStorage('view')->load($name);
+      if (!$storage instanceof ViewEntityInterface || !$storage->status() || !($server = $this->server($storage)) || !$this->answers($server)) {
+        continue;
+      }
+      $view = $this->viewExecutableFactory->get($storage);
+      $view->setDisplay('embed_1');
+      $view->setArguments([(string) $product->id()]);
+      $view->execute();
+      if (!empty($view->build_info['fail']) || !$view->query instanceof SearchApiQuery || !$view->query->shouldAbort()) {
+        return $view;
+      }
+      $this->remember($server, FALSE);
+    }
+    return NULL;
+  }
+
+  /**
+   * The id of the Search API server under a view, NULL if it has none.
+   */
+  private function server(ViewEntityInterface $view): ?string {
+    $index = SearchApiQuery::getIndexFromTable((string) $view->get('base_table'), $this->entityTypeManager);
+    return $index?->status() ? $index->getServerId() : NULL;
+  }
+
+  /**
+   * Whether a server answers: asked once a minute, not on every page.
+   */
+  private function answers(string $server_id): bool {
+    if (isset($this->answers[$server_id])) {
+      return $this->answers[$server_id];
+    }
+    $cached = $this->cache->get("ombu.similar:answers:$server_id");
+    if ($cached) {
+      return $this->answers[$server_id] = (bool) $cached->data;
+    }
+    $server = $this->entityTypeManager->getStorage('search_api_server')->load($server_id);
+    return $this->remember($server_id, (bool) $server?->status() && $server->isAvailable());
+  }
+
+  /**
+   * Keeps whether a server answers, for this request and the next minute.
+   */
+  private function remember(string $server_id, bool $answers): bool {
+    $this->cache->set("ombu.similar:answers:$server_id", $answers, $this->time->getRequestTime() + self::PING_TTL);
+    return $this->answers[$server_id] = $answers;
   }
 
   /**
@@ -150,10 +231,12 @@ final class Similar {
    * @param array $fields
    *   Term reference field => weight; fields not on the site are skipped.
    */
-  private static function termScores(int $id, array $fields): array {
+  private function termScores(int $id, array $fields): array {
+    $storage = $this->entityTypeManager->getStorage('field_storage_config');
     $selects = [];
     foreach (array_filter($fields) as $field => $weight) {
-      if (FieldStorageConfig::loadByName('commerce_product', $field)) {
+      // Only fields that exist: their names go into the SQL.
+      if ($storage->load("commerce_product.$field")) {
         $selects[] = sprintf('SELECT entity_id, %s_target_id tid, %F w FROM {commerce_product__%s} WHERE deleted = 0', $field, $weight, $field);
       }
     }
@@ -164,7 +247,7 @@ final class Similar {
     // ponytail: scores every listing sharing a term on each uncached view
     // (23k term rows, ~2026-10); keep the scores in a table if it gets slow.
     // Ties by id: the cut at 100 must not change from one call to the next.
-    return \Drupal::database()->query(
+    return $this->database->query(
       "SELECT t.entity_id, SUM(t.w * LOG(n.n / d.df)) score
        FROM ($terms) t
        JOIN (SELECT tid, COUNT(*) df FROM ($terms) x

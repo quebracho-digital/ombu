@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\ombu;
 
+use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\Embeddings\EmbeddingsInput;
 use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\search_api\Plugin\search_api\datasource\ContentEntity;
 
 /**
@@ -17,7 +19,7 @@ use Drupal\search_api\Plugin\search_api\datasource\ContentEntity;
  * whose text did not change is skipped, and the same text on another
  * listing is copied, not asked again. It is a table, not a cache bin, so
  * clearing caches costs nothing. Calls run from the ombu_embed queue on
- * cron, never while a page is built.
+ * cron, never while a page is built. Service: ombu.embeddings.
  */
 final class Embeddings {
 
@@ -26,12 +28,23 @@ final class Embeddings {
   public const QUEUE = 'ombu_embed';
 
   /**
+   * Whether the table exists, once per request.
+   */
+  private ?bool $exists = NULL;
+
+  public function __construct(
+    private readonly Connection $database,
+    private readonly ?AiProviderPluginManager $aiProvider,
+    private readonly CacheTagsInvalidatorInterface $cacheTagsInvalidator,
+  ) {}
+
+  /**
    * The text that stands for a listing: what it does, not who sells it.
    *
    * The provider is left out on purpose: similar listings are for
    * alternatives from other sellers.
    */
-  public static function text(ProductInterface $listing): string {
+  public function text(ProductInterface $listing): string {
     $terms = fn (string $field) => $listing->hasField($field)
       ? implode(', ', array_map(fn ($t) => $t->label(), $listing->get($field)->referencedEntities()))
       : '';
@@ -46,8 +59,8 @@ final class Embeddings {
   /**
    * AI's default embeddings provider and model, or NULL when none is set.
    */
-  public static function model(): ?array {
-    return \Drupal::service('ai.provider')->getDefaultProviderForOperationType('embeddings') ?: NULL;
+  public function model(): ?array {
+    return $this->aiProvider?->getDefaultProviderForOperationType('embeddings') ?: NULL;
   }
 
   /**
@@ -55,19 +68,19 @@ final class Embeddings {
    *
    * NULL without a model.
    */
-  public static function hash(ProductInterface $listing): ?string {
-    $model = self::model();
-    return $model ? hash('sha256', $model['provider_id'] . ':' . $model['model_id'] . "\n" . self::text($listing)) : NULL;
+  public function hash(ProductInterface $listing): ?string {
+    $model = $this->model();
+    return $model ? hash('sha256', $model['provider_id'] . ':' . $model['model_id'] . "\n" . $this->text($listing)) : NULL;
   }
 
   /**
    * Whether the listing's row is missing or out of date.
    */
-  public static function stale(ProductInterface $listing): bool {
-    if (!self::available() || !($hash = self::hash($listing))) {
+  public function stale(ProductInterface $listing): bool {
+    if (!$this->available() || !($hash = $this->hash($listing))) {
       return FALSE;
     }
-    return \Drupal::database()->query('SELECT hash FROM {' . self::TABLE . '} WHERE product_id = :id', [':id' => $listing->id()])->fetchField() !== $hash;
+    return $this->database->query('SELECT hash FROM {' . self::TABLE . '} WHERE product_id = :id', [':id' => $listing->id()])->fetchField() !== $hash;
   }
 
   /**
@@ -76,33 +89,42 @@ final class Embeddings {
    * @return bool
    *   TRUE if the model was called.
    */
-  public static function update(ProductInterface $listing): bool {
-    $db = \Drupal::database();
-    if (!self::stale($listing)) {
+  public function update(ProductInterface $listing): bool {
+    if (!$this->stale($listing)) {
       return FALSE;
     }
-    $hash = self::hash($listing);
+    $hash = $this->hash($listing);
     $table = '{' . self::TABLE . '}';
     // The same text on another listing: copy its vector.
     // Copied if the row now holds this hash. Not rowCount(): Drupal refuses it
     // on a raw query.
-    $db->query("INSERT INTO $table (product_id, hash, embedding)
+    $this->database->query("INSERT INTO $table (product_id, hash, embedding)
       SELECT :id, hash, embedding FROM $table WHERE hash = :hash LIMIT 1
       ON DUPLICATE KEY UPDATE hash = VALUES(hash), embedding = VALUES(embedding)",
       [':id' => $listing->id(), ':hash' => $hash]);
-    if ($db->query("SELECT hash FROM $table WHERE product_id = :id", [':id' => $listing->id()])->fetchField() === $hash) {
-      self::changed($listing);
+    if ($this->database->query("SELECT hash FROM $table WHERE product_id = :id", [':id' => $listing->id()])->fetchField() === $hash) {
+      $this->changed($listing);
       return FALSE;
     }
-    $model = self::model();
-    $vector = \Drupal::service('ai.provider')->createInstance($model['provider_id'])
-      ->embeddings(new EmbeddingsInput(self::text($listing)), $model['model_id'], ['ombu', 'ombu_similar'])
+    // stale() is FALSE without a model, so there is one, and the AI module.
+    $model = $this->model();
+    $vector = $this->aiProvider->createInstance($model['provider_id'])
+      ->embeddings(new EmbeddingsInput($this->text($listing)), $model['model_id'], ['ombu', 'ombu_similar'])
       ->getNormalized();
-    $db->query("INSERT INTO $table (product_id, hash, embedding) VALUES (:id, :hash, VEC_FromText(:v))
+    $this->database->query("INSERT INTO $table (product_id, hash, embedding) VALUES (:id, :hash, VEC_FromText(:v))
       ON DUPLICATE KEY UPDATE hash = VALUES(hash), embedding = VALUES(embedding)",
       [':id' => $listing->id(), ':hash' => $hash, ':v' => json_encode($vector)]);
-    self::changed($listing);
+    $this->changed($listing);
     return TRUE;
+  }
+
+  /**
+   * Removes a listing's vector.
+   */
+  public function delete(int $id): void {
+    if ($this->available()) {
+      $this->database->delete(self::TABLE)->condition('product_id', $id)->execute();
+    }
   }
 
   /**
@@ -111,29 +133,12 @@ final class Embeddings {
    * @param int[] $ids
    *   Listing ids.
    */
-  public static function vectors(array $ids): array {
-    if (!self::available() || !$ids) {
+  public function vectors(array $ids): array {
+    if (!$this->available() || !$ids) {
       return [];
     }
-    $rows = \Drupal::database()->query('SELECT product_id, VEC_ToText(embedding) FROM {' . self::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => array_values($ids)])->fetchAllKeyed();
+    $rows = $this->database->query('SELECT product_id, VEC_ToText(embedding) FROM {' . self::TABLE . '} WHERE product_id IN (:ids[])', [':ids[]' => array_values($ids)])->fetchAllKeyed();
     return array_map(fn ($text) => json_decode($text), $rows);
-  }
-
-  /**
-   * A listing's vector changed.
-   *
-   * Similar listings shown before it are out of date, and indexes that send
-   * vectors along (on a server with "Vectors provided by Drupal", see
-   * SimilarHooks) must index it again; the others do not hold vectors.
-   */
-  private static function changed(ProductInterface $listing): void {
-    Cache::invalidateTags(['search_api_list:listings', 'commerce_product_list']);
-    $item_ids = array_map(fn ($langcode) => $listing->id() . ':' . $langcode, array_keys($listing->getTranslationLanguages()));
-    foreach (ContentEntity::getIndexesForEntity($listing) as $index) {
-      if (!empty($index->getServerInstanceIfAvailable()?->getBackendConfig()['embedder_dimensions'])) {
-        $index->trackItemsUpdated('entity:commerce_product', $item_ids);
-      }
-    }
   }
 
   /**
@@ -141,8 +146,8 @@ final class Embeddings {
    *
    * Id => similarity (1 - cosine distance); empty until it has a vector.
    */
-  public static function nearest(int $id): array {
-    if (!self::available()) {
+  public function nearest(int $id): array {
+    if (!$this->available()) {
       return [];
     }
     $table = '{' . self::TABLE . '}';
@@ -150,7 +155,7 @@ final class Embeddings {
     // one); 2.8k rows of 4096 floats take milliseconds. Add
     // "VECTOR INDEX (embedding) DISTANCE=cosine" by hand past ~100k rows.
     // Ties by id (listings with the same text): the same cut every time.
-    return array_map('floatval', \Drupal::database()->query(
+    return array_map('floatval', $this->database->query(
       "SELECT v.product_id, 1 - VEC_DISTANCE_COSINE(v.embedding, me.embedding) similarity
        FROM $table v JOIN $table me ON me.product_id = :id
        WHERE v.product_id <> :id
@@ -163,13 +168,25 @@ final class Embeddings {
   /**
    * Whether the table exists: only MariaDB 11.7+ has VECTOR.
    */
-  public static function available(): bool {
-    return self::$exists ??= \Drupal::database()->schema()->tableExists(self::TABLE);
+  public function available(): bool {
+    return $this->exists ??= $this->database->schema()->tableExists(self::TABLE);
   }
 
   /**
-   * Whether the table exists, once per request.
+   * A listing's vector changed.
+   *
+   * Similar listings shown before it are out of date, and indexes that send
+   * vectors along (on a server with "Vectors provided by Drupal", see
+   * SimilarHooks) must index it again; the others do not hold vectors.
    */
-  private static ?bool $exists = NULL;
+  private function changed(ProductInterface $listing): void {
+    $this->cacheTagsInvalidator->invalidateTags(['search_api_list:listings', 'commerce_product_list']);
+    $item_ids = array_map(fn ($langcode) => $listing->id() . ':' . $langcode, array_keys($listing->getTranslationLanguages()));
+    foreach (ContentEntity::getIndexesForEntity($listing) as $index) {
+      if (!empty($index->getServerInstanceIfAvailable()?->getBackendConfig()['embedder_dimensions'])) {
+        $index->trackItemsUpdated('entity:commerce_product', $item_ids);
+      }
+    }
+  }
 
 }

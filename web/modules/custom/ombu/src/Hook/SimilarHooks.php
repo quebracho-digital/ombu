@@ -6,6 +6,7 @@ namespace Drupal\ombu\Hook;
 
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Queue\QueueFactory;
 use Drupal\ombu\Embeddings;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Utility\Utility;
@@ -18,14 +19,19 @@ use Drupal\search_api\Utility\Utility;
  */
 final class SimilarHooks {
 
+  public function __construct(
+    private readonly Embeddings $embeddings,
+    private readonly QueueFactory $queueFactory,
+  ) {}
+
   /**
    * A listing's text changed: embed it again, on cron.
    */
   #[Hook('commerce_product_insert')]
   #[Hook('commerce_product_update')]
   public function save(ProductInterface $product): void {
-    if ($product->bundle() === 'listing' && Embeddings::stale($product)) {
-      \Drupal::queue(Embeddings::QUEUE)->createItem($product->id());
+    if ($product->bundle() === 'listing' && $this->embeddings->stale($product)) {
+      $this->queueFactory->get(Embeddings::QUEUE)->createItem($product->id());
     }
   }
 
@@ -34,9 +40,7 @@ final class SimilarHooks {
    */
   #[Hook('commerce_product_delete')]
   public function delete(ProductInterface $product): void {
-    if (Embeddings::available()) {
-      \Drupal::database()->delete(Embeddings::TABLE)->condition('product_id', $product->id())->execute();
-    }
+    $this->embeddings->delete((int) $product->id());
   }
 
   /**
@@ -59,7 +63,7 @@ final class SimilarHooks {
         $ids[$key] = (int) $raw;
       }
     }
-    $vectors = Embeddings::vectors(array_unique($ids));
+    $vectors = $this->embeddings->vectors(array_unique($ids));
     foreach ($ids as $key => $id) {
       if (isset($vectors[$id])) {
         $documents[$key]['_vectors'][$config['embedder']] = $vectors[$id];

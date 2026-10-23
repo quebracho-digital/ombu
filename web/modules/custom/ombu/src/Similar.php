@@ -163,6 +163,7 @@ final class Similar {
     $terms = implode(' UNION ALL ', $selects);
     // ponytail: scores every listing sharing a term on each uncached view
     // (23k term rows, ~2026-10); keep the scores in a table if it gets slow.
+    // Ties by id: the cut at 100 must not change from one call to the next.
     return \Drupal::database()->query(
       "SELECT t.entity_id, SUM(t.w * LOG(n.n / d.df)) score
        FROM ($terms) t
@@ -172,7 +173,7 @@ final class Similar {
        WHERE t.entity_id <> :id
        GROUP BY t.entity_id
        HAVING score > 0
-       ORDER BY score DESC
+       ORDER BY score DESC, t.entity_id
        LIMIT 100",
       [':id' => $id],
     )->fetchAllKeyed();

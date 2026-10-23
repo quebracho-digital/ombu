@@ -149,11 +149,12 @@ final class Embeddings {
     // ponytail: a full scan, no vector index (Schema API cannot declare
     // one); 2.8k rows of 4096 floats take milliseconds. Add
     // "VECTOR INDEX (embedding) DISTANCE=cosine" by hand past ~100k rows.
+    // Ties by id (listings with the same text): the same cut every time.
     return array_map('floatval', \Drupal::database()->query(
       "SELECT v.product_id, 1 - VEC_DISTANCE_COSINE(v.embedding, me.embedding) similarity
        FROM $table v JOIN $table me ON me.product_id = :id
        WHERE v.product_id <> :id
-       ORDER BY VEC_DISTANCE_COSINE(v.embedding, me.embedding)
+       ORDER BY VEC_DISTANCE_COSINE(v.embedding, me.embedding), v.product_id
        LIMIT 100",
       [':id' => $id],
     )->fetchAllKeyed());

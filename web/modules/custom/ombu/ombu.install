@@ -533,3 +533,70 @@ function ombu_update_10031(): void {
     $schema->createTable('ombu_similar_log', ombu_schema()['ombu_similar_log']);
   }
 }
+
+/**
+ * Privacy policy: declares the similar services log (ombu_similar_log).
+ *
+ * The page is edited in Drupal after seed-legal.php created it, so its text
+ * is not replaced: each paragraph goes after the one it follows in the
+ * seeds. A language whose text no longer has that paragraph is left as it
+ * is, and named in the result, for a person to edit.
+ */
+function ombu_update_10032(): string {
+  // ponytail: the same paragraphs as scripts/seed-legal.php and seed-pt-br.php, which only create the page.
+  $changes = [
+    'en' => [
+      'since' => ['/In force since [^.]+\\./', 'In force since October 23, 2026.'],
+      'after' => [
+        '<li><strong>Technical data.</strong>' => '<li><strong>Similar services.</strong> Under each listing, and in its markdown for agents, we suggest similar services. We record which ones were shown, in what order and why, and which one a person clicked or an agent followed; with it, the browser or agent (its user agent), the language, the page you came from (without its query) and whether you were signed in, not who. To count the same visitor once, we keep an identifier that changes every month, computed with a secret key from the IP address (for IPv6, its network part) and the browser; the IP address itself is not kept. This data is pseudonymous, not anonymous. If your browser sends Global Privacy Control or Do Not Track, nothing is recorded.</li>',
+        '<li>To answer what you write to us' => '<li>To improve the suggestions of similar services and find errors and abuse in them: our legitimate interest in a useful service that works (art. 6.1.f GDPR). You can object at any time; Global Privacy Control or Do Not Track stops it.</li>',
+        '<li>Reports and messages: for as long' => '<li>Similar services log: 12 months, then deleted automatically.</li>',
+      ],
+    ],
+    'es' => [
+      'since' => ['/Vigente desde el [^.]+\\./', 'Vigente desde el 23 de octubre de 2026.'],
+      'after' => [
+        '<li><strong>Datos técnicos.</strong>' => '<li><strong>Servicios similares.</strong> Debajo de cada anuncio, y en su markdown para agentes, sugerimos servicios similares. Registramos cuáles se mostraron, en qué orden y por qué, y cuál cliqueó una persona o siguió un agente; con eso, el navegador o agente (su user agent), el idioma, la página de la que vienes (sin su query) y si habías ingresado, no quién eres. Para contar una sola vez al mismo visitante, guardamos un identificador que cambia cada mes, calculado con una clave secreta a partir de la dirección IP (en IPv6, su parte de red) y del navegador; la dirección IP en sí no se guarda. Son datos seudónimos, no anónimos. Si tu navegador envía Global Privacy Control o Do Not Track, no se registra nada.</li>',
+        '<li>Para responder lo que nos escribes' => '<li>Para mejorar las sugerencias de servicios similares y encontrar errores y abusos en ellas: nuestro interés legítimo en un servicio útil y que funcione (art. 6.1.f RGPD). Puedes oponerte en cualquier momento; Global Privacy Control o Do Not Track lo detienen.</li>',
+        '<li>Denuncias y mensajes: el tiempo' => '<li>Registro de servicios similares: 12 meses, y después se borra solo.</li>',
+      ],
+    ],
+    'pt-br' => [
+      'since' => ['/Em vigor desde [^.]+\\./', 'Em vigor desde 23 de outubro de 2026.'],
+      'after' => [
+        '<li><strong>Dados técnicos.</strong>' => '<li><strong>Serviços similares.</strong> Abaixo de cada anúncio, e no seu markdown para agentes, sugerimos serviços similares. Registramos quais foram mostrados, em que ordem e por quê, e qual uma pessoa clicou ou um agente seguiu; junto com isso, o navegador ou agente (seu user agent), o idioma, a página de onde você veio (sem a query) e se você estava conectado, não quem você é. Para contar uma só vez o mesmo visitante, guardamos um identificador que muda todo mês, calculado com uma chave secreta a partir do endereço IP (em IPv6, a parte de rede) e do navegador; o endereço IP em si não é guardado. São dados pseudonimizados, não anônimos. Se o seu navegador envia Global Privacy Control ou Do Not Track, nada é registrado.</li>',
+        '<li>Para responder ao que você nos escreve' => '<li>Para melhorar as sugestões de serviços similares e encontrar erros e abusos nelas: nosso interesse legítimo em um serviço útil e que funcione (art. 6.1.f RGPD). Você pode se opor a qualquer momento; Global Privacy Control ou Do Not Track o interrompem.</li>',
+        '<li>Denúncias e mensagens:' => '<li>Registro de serviços similares: 12 meses, e depois é apagado automaticamente.</li>',
+      ],
+    ],
+  ];
+  $path = \Drupal::service('path_alias.repository')->lookupByAlias('/privacy', 'en');
+  $node = $path ? \Drupal::entityTypeManager()->getStorage('node')->load((int) basename($path['path'])) : NULL;
+  if (!$node) {
+    return 'No /privacy page: nothing to change.';
+  }
+  $done = $skipped = [];
+  foreach ($changes as $langcode => $change) {
+    if (!$node->hasTranslation($langcode)) {
+      continue;
+    }
+    $translation = $node->getTranslation($langcode);
+    $body = (string) $translation->get('body')->value;
+    if (str_contains($body, reset($change['after']))) {
+      continue;
+    }
+    foreach ($change['after'] as $anchor => $paragraph) {
+      $start = strpos($body, $anchor);
+      if ($start === FALSE) {
+        $skipped[] = $langcode;
+        continue 2;
+      }
+      $end = strpos($body, '</li>', $start) + strlen('</li>');
+      $body = substr($body, 0, $end) . "\n  " . $paragraph . substr($body, $end);
+    }
+    $body = preg_replace($change['since'][0], $change['since'][1], $body, 1);
+    $translation->set('body', ['value' => $body, 'format' => $translation->get('body')->format])->save();
+    $done[] = $langcode;
+  }
+  return 'Privacy policy, the similar services log: added in ' . ($done ? implode(', ', $done) : 'none') . ($skipped ? '; edit by hand in ' . implode(', ', $skipped) : '') . '.';
+}

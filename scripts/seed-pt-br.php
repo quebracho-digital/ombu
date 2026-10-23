@@ -258,6 +258,8 @@ $name = htmlspecialchars($name);
 $address = htmlspecialchars($address);
 $mail = '<a href="mailto:' . htmlspecialchars($email) . '">' . htmlspecialchars($email) . '</a>';
 $date = '13 de outubro de 2026';
+// The privacy policy changed on its own: the similar services log.
+$privacy = '23 de outubro de 2026';
 
 $page('/terms', 'Termos de uso', <<<HTML
 <p><em>Em vigor desde {$date}. Esta página também está em espanhol e em inglês; se as versões divergirem, prevalece a versão em espanhol.</em></p>
@@ -339,7 +341,7 @@ $page('/terms', 'Termos de uso', <<<HTML
 HTML, FALSE);
 
 $page('/privacy', 'Política de privacidade', <<<HTML
-<p><em>Em vigor desde {$date}. Esta página também está em espanhol e em inglês; se as versões divergirem, prevalece a versão em espanhol.</em></p>
+<p><em>Em vigor desde {$privacy}. Esta página também está em espanhol e em inglês; se as versões divergirem, prevalece a versão em espanhol.</em></p>
 <p><strong>O Ombú é uma demo</strong>, construída para um hackathon e ainda em teste; esta política pode mudar antes da abertura definitiva.</p>
 
 <h2>1. Quem é o responsável</h2>
@@ -354,6 +356,7 @@ $page('/privacy', 'Política de privacidade', <<<HTML
   <li><strong>O que você envia aos nossos serviços.</strong> A URL, o texto ou a afirmação que você envia aos nossos serviços, para processá-los. O resultado de uma análise de termos é guardado, para responder ao mesmo texto sem processá-lo duas vezes; ele pode citar o texto analisado.</li>
   <li><strong>Denúncias e mensagens.</strong> Seu nome, seu e-mail e a mensagem, se você nos escreve ou usa o formulário de denúncias.</li>
   <li><strong>Dados técnicos.</strong> Endereço IP, navegador e páginas visitadas, nos registros do servidor e de segurança, e os eventos recentes do registro do próprio site.</li>
+  <li><strong>Serviços similares.</strong> Abaixo de cada anúncio, e no seu markdown para agentes, sugerimos serviços similares. Registramos quais foram mostrados, em que ordem e por quê, e qual uma pessoa clicou ou um agente seguiu; junto com isso, o navegador ou agente (seu user agent), o idioma, a página de onde você veio (sem a query) e se você estava conectado, não quem você é. Para contar uma só vez o mesmo visitante, guardamos um identificador que muda todo mês, calculado com uma chave secreta a partir do endereço IP (em IPv6, a parte de rede) e do navegador; o endereço IP em si não é guardado. São dados pseudonimizados, não anônimos. Se o seu navegador envia Global Privacy Control ou Do Not Track, nada é registrado.</li>
 </ul>
 <p><strong>Cookies.</strong> O Ombú usa um único cookie, o de sessão, e só quando você entra ou começa a entrar: ele é estritamente necessário para o serviço que você pede, por isso não exige consentimento. Não usamos cookies de análise, de publicidade nem de rastreamento de terceiros, não vendemos nem compartilhamos dados pessoais para fins publicitários, e não tomamos decisões automatizadas com efeitos jurídicos ou significativos sobre você.</p>
 
@@ -366,6 +369,7 @@ $page('/privacy', 'Política de privacidade', <<<HTML
   <li>Para manter registros de vendas: para cumprir obrigações legais (art. 6.1.c RGPD).</li>
   <li>Para manter o Ombú seguro, prevenir fraudes e abusos, e tratar denúncias: nosso interesse legítimo em proteger o serviço e seus usuários, e obrigações legais (art. 6.1.f e 6.1.c RGPD).</li>
   <li>Para responder ao que você nos escreve: seu pedido, e nosso interesse legítimo em respondê-lo (art. 6.1.b e 6.1.f RGPD).</li>
+  <li>Para melhorar as sugestões de serviços similares e encontrar erros e abusos nelas: nosso interesse legítimo em um serviço útil e que funcione (art. 6.1.f RGPD). Você pode se opor a qualquer momento; Global Privacy Control ou Do Not Track o interrompem.</li>
 </ul>
 
 <h2>5. Quem mais os recebe</h2>
@@ -383,6 +387,7 @@ $page('/privacy', 'Política de privacidade', <<<HTML
   <li>Registros de compras: pelo prazo que a lei exige para guardar registros contábeis e fiscais.</li>
   <li>Avaliações: enquanto estiverem publicadas; você pode nos pedir para remover as suas.</li>
   <li>Denúncias e mensagens: pelo tempo necessário para tratá-las e, depois, para responder a qualquer reclamação relacionada.</li>
+  <li>Registro de serviços similares: 12 meses, e depois é apagado automaticamente.</li>
   <li>Registros técnicos: por pouco tempo, conforme a rotação de cada sistema.</li>
 </ul>
 

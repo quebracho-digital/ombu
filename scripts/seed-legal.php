@@ -31,6 +31,9 @@ $address = htmlspecialchars($address);
 $mail = '<a href="mailto:' . htmlspecialchars($email) . '">' . htmlspecialchars($email) . '</a>';
 $date_en = 'October 13, 2026';
 $date_es = '13 de octubre de 2026';
+// The privacy policy changed on its own: the similar services log.
+$privacy_en = 'October 23, 2026';
+$privacy_es = '23 de octubre de 2026';
 
 // The forms: core contact, site-wide only, no personal forms.
 if (!\Drupal::moduleHandler()->moduleExists('contact')) {
@@ -245,7 +248,7 @@ $es['/terms'] = ['Términos de uso', <<<HTML
 HTML];
 
 $pages['/privacy'] = ['Privacy policy', <<<HTML
-<p><em>In force since {$date_en}. This page is also in Spanish; if the two differ, the Spanish version prevails.</em></p>
+<p><em>In force since {$privacy_en}. This page is also in Spanish; if the two differ, the Spanish version prevails.</em></p>
 <p><strong>Ombú is a demo</strong>, built for a hackathon and still being tested; this policy may change before it opens for real.</p>
 
 <h2>1. Who is responsible</h2>
@@ -260,6 +263,7 @@ $pages['/privacy'] = ['Privacy policy', <<<HTML
   <li><strong>What you send to our services.</strong> The URL, text or claim you send to our services, to process it. The result of a terms analysis is kept, to answer the same text again without processing it twice; it can quote the text analysed.</li>
   <li><strong>Reports and messages.</strong> Your name, email and the message, if you write to us or use the report form.</li>
   <li><strong>Technical data.</strong> IP address, browser and pages visited, in server and security logs, and the recent events of the site's own log.</li>
+  <li><strong>Similar services.</strong> Under each listing, and in its markdown for agents, we suggest similar services. We record which ones were shown, in what order and why, and which one a person clicked or an agent followed; with it, the browser or agent (its user agent), the language, the page you came from (without its query) and whether you were signed in, not who. To count the same visitor once, we keep an identifier that changes every month, computed with a secret key from the IP address (for IPv6, its network part) and the browser; the IP address itself is not kept. This data is pseudonymous, not anonymous. If your browser sends Global Privacy Control or Do Not Track, nothing is recorded.</li>
 </ul>
 <p><strong>Cookies.</strong> Ombú sets one cookie only, the session cookie, and only when you sign in or start signing in: it is strictly necessary for the service you ask for, so it needs no consent. We do not use analytics, advertising or third-party tracking cookies, we do not sell or share personal data for advertising, and we make no automated decisions with legal or similarly significant effects on you.</p>
 
@@ -272,6 +276,7 @@ $pages['/privacy'] = ['Privacy policy', <<<HTML
   <li>To keep records of sales: to comply with legal obligations (art. 6.1.c GDPR).</li>
   <li>To keep Ombú secure, prevent fraud and abuse, and handle reports: our legitimate interest in protecting the service and its users, and legal obligations (art. 6.1.f and 6.1.c GDPR).</li>
   <li>To answer what you write to us: your request, and our legitimate interest in answering it (art. 6.1.b and 6.1.f GDPR).</li>
+  <li>To improve the suggestions of similar services and find errors and abuse in them: our legitimate interest in a useful service that works (art. 6.1.f GDPR). You can object at any time; Global Privacy Control or Do Not Track stops it.</li>
 </ul>
 
 <h2>5. Who else receives it</h2>
@@ -289,6 +294,7 @@ $pages['/privacy'] = ['Privacy policy', <<<HTML
   <li>Purchase records: for as long as the law requires accounting and tax records to be kept.</li>
   <li>Reviews: while they are published; you can ask us to remove yours.</li>
   <li>Reports and messages: for as long as needed to handle them and, afterwards, to answer any related claim.</li>
+  <li>Similar services log: 12 months, then deleted automatically.</li>
   <li>Technical logs: for a short time, as rotated by each system.</li>
 </ul>
 
@@ -307,7 +313,7 @@ $pages['/privacy'] = ['Privacy policy', <<<HTML
 HTML];
 
 $es['/privacy'] = ['Política de privacidad', <<<HTML
-<p><em>Vigente desde el {$date_es}. Esta página también está en inglés; si las dos versiones difieren, prevalece la versión en español.</em></p>
+<p><em>Vigente desde el {$privacy_es}. Esta página también está en inglés; si las dos versiones difieren, prevalece la versión en español.</em></p>
 <p><strong>Ombú es una demo</strong>, construida para una hackatón y todavía en prueba; esta política puede cambiar antes de su apertura definitiva.</p>
 
 <h2>1. Quién es responsable</h2>
@@ -322,6 +328,7 @@ $es['/privacy'] = ['Política de privacidad', <<<HTML
   <li><strong>Lo que envías a nuestros servicios.</strong> La URL, el texto o la afirmación que envías a nuestros servicios, para procesarlos. El resultado de un análisis de términos se conserva, para responder al mismo texto sin procesarlo dos veces; puede citar el texto analizado.</li>
   <li><strong>Denuncias y mensajes.</strong> Tu nombre, tu email y el mensaje, si nos escribes o usas el formulario de denuncias.</li>
   <li><strong>Datos técnicos.</strong> Dirección IP, navegador y páginas visitadas, en registros del servidor y de seguridad, y los eventos recientes del registro propio del sitio.</li>
+  <li><strong>Servicios similares.</strong> Debajo de cada anuncio, y en su markdown para agentes, sugerimos servicios similares. Registramos cuáles se mostraron, en qué orden y por qué, y cuál cliqueó una persona o siguió un agente; con eso, el navegador o agente (su user agent), el idioma, la página de la que vienes (sin su query) y si habías ingresado, no quién eres. Para contar una sola vez al mismo visitante, guardamos un identificador que cambia cada mes, calculado con una clave secreta a partir de la dirección IP (en IPv6, su parte de red) y del navegador; la dirección IP en sí no se guarda. Son datos seudónimos, no anónimos. Si tu navegador envía Global Privacy Control o Do Not Track, no se registra nada.</li>
 </ul>
 <p><strong>Cookies.</strong> Ombú usa una sola cookie, la de sesión, y solo cuando ingresas o empiezas a ingresar: es estrictamente necesaria para el servicio que pides, por lo que no requiere consentimiento. No usamos cookies de analítica, publicitarias ni de seguimiento de terceros, no vendemos ni compartimos datos personales con fines publicitarios, y no tomamos decisiones automatizadas con efectos jurídicos o significativos sobre ti.</p>
 
@@ -334,6 +341,7 @@ $es['/privacy'] = ['Política de privacidad', <<<HTML
   <li>Para conservar registros de ventas: para cumplir obligaciones legales (art. 6.1.c RGPD).</li>
   <li>Para mantener Ombú seguro, prevenir fraudes y abusos, y atender denuncias: nuestro interés legítimo en proteger el servicio y a sus usuarios, y obligaciones legales (art. 6.1.f y 6.1.c RGPD).</li>
   <li>Para responder lo que nos escribes: tu pedido, y nuestro interés legítimo en responderlo (art. 6.1.b y 6.1.f RGPD).</li>
+  <li>Para mejorar las sugerencias de servicios similares y encontrar errores y abusos en ellas: nuestro interés legítimo en un servicio útil y que funcione (art. 6.1.f RGPD). Puedes oponerte en cualquier momento; Global Privacy Control o Do Not Track lo detienen.</li>
 </ul>
 
 <h2>5. Quién más los recibe</h2>
@@ -351,6 +359,7 @@ $es['/privacy'] = ['Política de privacidad', <<<HTML
   <li>Registros de compras: durante el plazo que la ley exige conservar registros contables e impositivos.</li>
   <li>Reseñas: mientras estén publicadas; puedes pedirnos que eliminemos las tuyas.</li>
   <li>Denuncias y mensajes: el tiempo necesario para atenderlos y, después, para responder a cualquier reclamo relacionado.</li>
+  <li>Registro de servicios similares: 12 meses, y después se borra solo.</li>
   <li>Registros técnicos: por poco tiempo, según la rotación de cada sistema.</li>
 </ul>
 

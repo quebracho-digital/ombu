@@ -997,10 +997,12 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
   `drush php:script scripts/check-similar.php`. Deploy: `drush deploy`
   (update 10028 creates the table; cim adds the view, the weights, the
   field and AI's default embeddings model).
-- [ ] **Embed the catalogue**: `drush ombu:embed && drush queue:run
-  ombu_embed` (2.8k calls to Fireworks' qwen3-embedding-8b, cents; then
-  only listings whose text changed, on cron). Needs `FIREWORKS_API_KEY`
-  where it runs (DDEV has none). **Done when** "Check domain availability"
+- [x] **Embed the catalogue** (production 2026-10-22: 2,803 vectors;
+  DDEV 2026-10-23, copied from production): `drush ombu:embed && drush
+  queue:run ombu_embed` (2.8k calls to Fireworks' qwen3-embedding-8b,
+  cents; then only listings whose text changed, on cron). Needs
+  `FIREWORKS_API_KEY` where it runs. DDEV's earlier bge vectors are kept
+  in `ombu_listing_vector_bge_orig`. **Done when** "Check domain availability"
   shows domain and naming services, not NFT metadata.
 - [ ] **`field_kind`**: our own vocabulary of what listings do, filled by
   a small model at import (cached by sha256 of model, prompt version and
@@ -1064,8 +1066,10 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
     - **Logging (aa39b43):** `ombu_similar_log` keeps every block shown
       (page via `similar.js`, markdown as served), clicks and agents'
       follows, with the engine and each suggestion's reasons; visitors as
-      a monthly-salted hash, no IP; a year. Privacy policy to update
-      (2do.txt). Next: Solr-like "interesting terms" from titles and
+      a monthly-salted hash, no IP; a year. In production since 2026-10-23
+      (967efcc, updates 10030 and 10031). Declared in the privacy policy
+      (en, es, pt-br): update 10032 adds the paragraphs to the existing
+      page, the seeds have them for new sites. Next: Solr-like "interesting terms" from titles and
       bodies; MMR instead of the hard cap; vectors kept per model in
       `ombu_listing_vector`; compare engines with the clicks once there are
       qwen3 vectors in DDEV.
@@ -1076,6 +1080,48 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
       on the dev stack), and cap per provider after `/similar`: ask for
       more and cut in ombu (`hook_views_post_execute()` on the view), so
       the module stays generic.
+    - **Repeated with qwen3 (2026-10-23)**, DDEV with production's
+      vectors (2,799 copied, 5 embedded), 300 random listings, top 12
+      each: the two lists share 1% (Jaccard); in their top 3, 0.26
+      listings of 3. Meilisearch: 1.3 providers per list (the vectors
+      cluster by provider, whose boilerplate every text repeats), 1,686
+      distinct listings reached. Similar on the database: 9.5 providers per
+      list, but 154 distinct listings reached: the same few (Instagram
+      influencers, Orthogonal's proxy, EarnFi's human job) under unrelated
+      listings, hubs pulled in by the cap's room for small providers. Neither
+      is right: MMR (relevance minus similarity to what is already chosen)
+      instead of the cap, and the provider's boilerplate out of the
+      embedded text. Script: kept out of the repo for now.
+    - **The click log cannot judge yet:** production has 1 row; dblog
+      keeps 1,000 rows (a day) and Docker's access log restarts with each
+      rebuild (38 listing views since 2026-10-22, mostly bots). Our table is
+      the record; it needs traffic, not another log.
+
+### Evaluating and deciding recommendations
+
+- [ ] **A labelled set:** 50 listings, for each the services a buyer
+  could use instead (and those that work with it), by hand. The yardstick
+  every engine is measured against (precision at 5, at 12), small enough
+  to label in an afternoon. **Done when** `scripts/eval-similar.php` scores
+  every engine on it.
+- [ ] **An LLM judge** while there is no traffic: for each listing of a
+  sample, two engines' lists, unlabelled and shuffled, and a model picks
+  the better. Cents on Fireworks; a model of another family than any used
+  to rank, or it grades itself.
+- [ ] **A decision engine picks what is shown.** Retrieval stays as it is
+  (terms, vectors, Meilisearch: cheap, broad, about 50 candidates); a
+  decision model (Laya on our hardware, Jev or OpenAI's Luna) answers typed
+  questions about each pair through `ai_provider_universal`'s `decide()`:
+  a choice of *alternative / works with it / unrelated*, and the
+  probability that a buyer of A could use B instead. The state holds both
+  listings' texts: decision models judge what they are given, not the
+  world. Diversity (MMR, a few per provider) after. Computed offline, per
+  pair, cached by the hash of both texts and the model, re-asked when one
+  changes, never on a page view: 2.8k × 50 pairs is about 84M input tokens,
+  $8 on Luna, nothing on Laya. "Works with it" is the "Bought together"
+  block before there are sales. The log records `decision` as the engine,
+  so clicks compare it with the others. **Done when** it beats both
+  engines on the labelled set and production shows it.
 
 ## 🔭 Later
 

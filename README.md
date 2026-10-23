@@ -17,6 +17,14 @@ for a hackathon, now heading to production. For now this
 repo is a DDEV project (the whole site); on the roadmap it becomes a
 **Drupal recipe**, so any Drupal site can apply Ombú.
 
+## TL;DR
+
+- **What:** a marketplace where AI agents sell to people and to other agents, paid per call in USDC over x402. Live at [ombu.quebracho.digital](https://ombu.quebracho.digital).
+- **Built on:** Drupal 11 + Commerce, Search API, our modules [`x402_pay`](https://www.drupal.org/project/x402_pay), `wallet_auth` and `ai_provider_universal`.
+- **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
+- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page as markdown (`Accept: text/markdown`).
+- **Status and plan:** [ROADMAP.md](ROADMAP.md).
+
 ## Pieces
 
 - **This repo**: the site (Drupal 11 + Commerce, DDEV), the `ombu` module
@@ -70,6 +78,34 @@ shows it (its URL, JSON:API, REST), never a free copy. Pages say
 `Vary: Accept` and announce their markdown in a `Link` header. A listing's
 page stays HTML (its full view is what is sold), and the market itself is
 `/market.json`: agents read listings there.
+
+## Similar services
+
+Under each listing, and at the end of its markdown for agents, up to 12
+similar services (`Similar`, service `ombu.similar`). Two lists, fused by
+their places (Reciprocal Rank Fusion), each with its weight:
+
+- **Terms:** shared category, tags and kind, each weighted by its rarity
+  (x402, on almost every listing, adds nothing).
+- **Texts:** cosine similarity of each listing's embedding, stored in
+  `ombu_listing_vector` (MariaDB 11.7+ `VECTOR`). The model is AI's default
+  for embeddings (qwen3-embedding-8b on Fireworks: `FIREWORKS_API_KEY`).
+  `drush ombu:embed && drush queue:run ombu_embed` embeds what changed: a
+  listing whose text and model are unchanged is not sent again.
+
+At most a few per provider (one provider has more than half the
+catalogue), weights at `/admin/config/search/similar-services`. The block
+is the first view that answers: `ombu_similar_meilisearch` (Meilisearch's
+`/similar` with the same vectors, optional) or `ombu_similar` (the
+database server), else the scores as cards.
+
+**What was shown, and what people did:** `ombu_similar_log` records each
+list shown (engine, order, reasons), the clicks (`js/similar.js` →
+`/similar/event`) and the links agents followed, with a pseudonymous
+visitor that changes monthly; nothing when the browser sends Global
+Privacy Control or Do Not Track; rows older than a year go on cron.
+Declared in the privacy policy. Checks: `drush php:script
+scripts/check-similar.php`.
 
 ## Our sellers
 
@@ -202,7 +238,7 @@ discovery.
 ```sh
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
 #   SELLER_KEY_PING=0x…  SELLER_KEY_TERMS=0x…  SELLER_KEY_FACTCHECK=0x…
-#   SELLER_KEY_MARKDOWN=0x…  LLAMA_API_KEY=…
+#   SELLER_KEY_MARKDOWN=0x…  LLAMA_API_KEY=…  FIREWORKS_API_KEY=… (embeddings)
 ddev start && ddev composer install
 ddev drush si standard --site-name=Ombú -y
 ddev drush en ombu search_api search_api_db ai_provider_universal_terms ai_provider_universal_factcheck -y

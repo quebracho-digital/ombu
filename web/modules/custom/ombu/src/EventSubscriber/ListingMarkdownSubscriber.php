@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ombu\EventSubscriber;
 
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -43,6 +44,18 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * A seller's title as the text of a markdown link, as long as on a card.
+   *
+   * No brackets to break the link, no line breaks or control characters to
+   * start a block, no HTML or code spans for the reader to interpret.
+   */
+  private function linkText(string $title): string {
+    $title = preg_replace('/[\p{Cc}\s]+/u', ' ', $title);
+    $title = strtr($title, ['[' => '(', ']' => ')', '<' => '‹', '>' => '›', '`' => "'"]);
+    return Unicode::truncate(trim($title), 90, TRUE, TRUE);
+  }
+
+  /**
    * Adds the "Similar services" section to a listing's markdown.
    */
   public function onResponse(ResponseEvent $event): void {
@@ -62,8 +75,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
       if (!$other->access('view')) {
         continue;
       }
-      // A title is the seller's text: no brackets to break the link.
-      $title = strtr((string) $other->label(), ['[' => '(', ']' => ')', "\n" => ' ']);
+      $title = $this->linkText((string) $other->label());
       $lines[] = sprintf('- [%s](%s)', $title, $other->toUrl()->setAbsolute()->toString());
     }
     if ($lines) {

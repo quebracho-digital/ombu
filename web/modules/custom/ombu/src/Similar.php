@@ -13,7 +13,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Plugin\views\query\SearchApiQuery;
 use Drupal\views\ViewEntityInterface;
-use Drupal\views\ViewExecutable;
 use Drupal\views\ViewExecutableFactory;
 
 /**
@@ -58,6 +57,20 @@ final class Similar {
   public const VIEWS = ['ombu_similar_meilisearch', 'ombu_similar'];
 
   /**
+   * Published, not retired listings and who sells each, as SQL.
+   *
+   * A listing without a provider is its own. Both candidate lists cut at
+   * 100 after keeping at most per_provider of each: one provider has more
+   * than half the catalogue, and cut first, its listings would fill the 100
+   * and leave two after the cap.
+   */
+  private const LIVE = "SELECT l.product_id, COALESCE(p.field_provider_term_target_id, -l.product_id) provider
+    FROM {commerce_product_field_data} l
+    LEFT JOIN {commerce_product__field_retired} r ON r.entity_id = l.product_id AND r.deleted = 0
+    LEFT JOIN {commerce_product__field_provider_term} p ON p.entity_id = l.product_id AND p.deleted = 0
+    WHERE l.type = 'listing' AND l.status = 1 AND l.default_langcode = 1 AND COALESCE(r.field_retired_value, 0) = 0";
+
+  /**
    * How long a server's answer to a ping is trusted, in seconds.
    */
   private const PING_TTL = 60;
@@ -88,17 +101,35 @@ final class Similar {
 
   /**
    * Published, not retired listings like this one: id => score, best first.
+   *
+   * Cached until a listing, its vector or the weights change: computing
+   * them reads every listing sharing a term and every vector.
    */
   public function scores(int $id): array {
+    $cid = "ombu.similar:scores:$id";
+    if ($cached = $this->cache->get($cid)) {
+      return $cached->data;
+    }
+    $scores = $this->compute($id);
+    $tags = ['commerce_product_list', 'config:ombu.similar'];
+    $this->cache->set($cid, $scores, CacheBackendInterface::CACHE_PERMANENT, $tags);
+    return $scores;
+  }
+
+  /**
+   * Computes scores().
+   */
+  private function compute(int $id): array {
     $settings = ($this->configFactory->get('ombu.similar')->get() ?: []) + self::DEFAULTS;
-    $terms = $this->termScores($id, $settings['fields']);
+    $per_provider = max(1, (int) $settings['per_provider']);
+    $terms = $this->termScores($id, $settings['fields'], $per_provider);
     $best = $terms ? max($terms) : 0;
     $scores = [];
     foreach ($terms as $other => $score) {
       $scores[$other] = $settings['terms'] * $score / $best;
     }
     if ($settings['vector'] > 0) {
-      foreach ($this->embeddings->nearest($id) as $other => $similarity) {
+      foreach ($this->vectorScores($id, $per_provider) as $other => $similarity) {
         $scores[$other] = ($scores[$other] ?? 0) + $settings['vector'] * $similarity;
       }
     }
@@ -117,13 +148,13 @@ final class Similar {
       [':ids[]' => array_keys($scores)],
     )->fetchAllKeyed();
     $out = [];
-    $per_provider = [];
+    $count = [];
     foreach ($scores as $other => $score) {
       if (!array_key_exists($other, $providers)) {
         continue;
       }
       $key = $providers[$other] ?? "none:$other";
-      if (($per_provider[$key] = ($per_provider[$key] ?? 0) + 1) <= $settings['per_provider']) {
+      if (($count[$key] = ($count[$key] ?? 0) + 1) <= $per_provider) {
         $out[$other] = $score;
       }
     }
@@ -134,17 +165,23 @@ final class Similar {
    * The block under a listing: the first view that answers, else cards.
    */
   public function build(ProductInterface $product): array {
-    $view = $this->executedView($product);
+    [$view, $fell_back] = $this->executedView($product);
     if ($view) {
-      return [
+      $build = [
         '#type' => 'container',
         '#attributes' => ['class' => ['ombu-similar']],
         'view' => $view->render() ?? [],
       ];
     }
-    $build = Cards::build($this->of($product), (string) $this->t('Similar services'), TRUE, TRUE);
-    $build['#cache']['tags'][] = 'config:ombu.similar';
-    $build['#attributes']['class'][] = 'ombu-similar';
+    else {
+      $build = Cards::build($this->of($product), (string) $this->t('Similar services'), TRUE, TRUE);
+      $build['#cache']['tags'][] = 'config:ombu.similar';
+      $build['#attributes']['class'][] = 'ombu-similar';
+    }
+    // A fallback lasts until the view it stands in for answers again.
+    if ($fell_back) {
+      $build['#cache']['max-age'] = self::PING_TTL;
+    }
     return $build;
   }
 
@@ -152,14 +189,13 @@ final class Similar {
    * The ids the block shows, in its order.
    */
   public function ids(ProductInterface $product): array {
-    $view = $this->executedView($product);
+    [$view] = $this->executedView($product);
     if (!$view) {
       return $this->of($product);
     }
     $ids = [];
     foreach ($view->result as $row) {
       // Search API's rows carry the item as a dynamic property.
-      // @phpstan-ignore property.notFound
       $ids[] = (int) $row->_object->getValue()->id();
     }
     // A listing's translations are items of their own: list it once.
@@ -173,23 +209,31 @@ final class Similar {
    * last minute and its search did not fail; a search that fails marks the
    * server down for that minute, and the next view is tried. A view whose
    * argument validation refuses the listing answers too, with nothing.
+   *
+   * @return array
+   *   The view, or NULL when none answers; and whether an enabled view was
+   *   skipped because its server is down.
    */
-  private function executedView(ProductInterface $product): ?ViewExecutable {
+  private function executedView(ProductInterface $product): array {
+    $fell_back = FALSE;
     foreach (self::VIEWS as $name) {
       $storage = $this->entityTypeManager->getStorage('view')->load($name);
-      if (!$storage instanceof ViewEntityInterface || !$storage->status() || !($server = $this->server($storage)) || !$this->answers($server)) {
+      if (!$storage instanceof ViewEntityInterface || !$storage->status() || !($server = $this->server($storage))) {
         continue;
       }
-      $view = $this->viewExecutableFactory->get($storage);
-      $view->setDisplay('embed_1');
-      $view->setArguments([(string) $product->id()]);
-      $view->execute();
-      if (!empty($view->build_info['fail']) || !$view->query instanceof SearchApiQuery || !$view->query->shouldAbort()) {
-        return $view;
+      if ($this->answers($server)) {
+        $view = $this->viewExecutableFactory->get($storage);
+        $view->setDisplay('embed_1');
+        $view->setArguments([(string) $product->id()]);
+        $view->execute();
+        if (!empty($view->build_info['fail']) || !$view->query instanceof SearchApiQuery || !$view->query->shouldAbort()) {
+          return [$view, $fell_back];
+        }
+        $this->remember($server, FALSE);
       }
-      $this->remember($server, FALSE);
+      $fell_back = TRUE;
     }
-    return NULL;
+    return [NULL, $fell_back];
   }
 
   /**
@@ -230,8 +274,10 @@ final class Similar {
    *   The listing.
    * @param array $fields
    *   Term reference field => weight; fields not on the site are skipped.
+   * @param int $per_provider
+   *   At most this many of each provider among the 100.
    */
-  private function termScores(int $id, array $fields): array {
+  private function termScores(int $id, array $fields, int $per_provider): array {
     $storage = $this->entityTypeManager->getStorage('field_storage_config');
     $selects = [];
     foreach (array_filter($fields) as $field => $weight) {
@@ -246,20 +292,58 @@ final class Similar {
     $terms = implode(' UNION ALL ', $selects);
     // ponytail: scores every listing sharing a term on each uncached view
     // (23k term rows, ~2026-10); keep the scores in a table if it gets slow.
-    // Ties by id: the cut at 100 must not change from one call to the next.
     return $this->database->query(
-      "SELECT t.entity_id, SUM(t.w * LOG(n.n / d.df)) score
-       FROM ($terms) t
-       JOIN (SELECT tid, COUNT(*) df FROM ($terms) x
-             WHERE tid IN (SELECT tid FROM ($terms) mine WHERE entity_id = :id) GROUP BY tid) d ON d.tid = t.tid
-       CROSS JOIN (SELECT COUNT(*) n FROM {commerce_product_field_data} WHERE type = 'listing' AND status = 1) n
-       WHERE t.entity_id <> :id
-       GROUP BY t.entity_id
-       HAVING score > 0
-       ORDER BY score DESC, t.entity_id
+      "SELECT entity_id, score FROM (
+         SELECT s.entity_id, s.score, ROW_NUMBER() OVER (PARTITION BY live.provider ORDER BY s.score DESC, s.entity_id) nth
+         FROM (
+           SELECT t.entity_id, SUM(t.w * LOG(n.n / d.df)) score
+           FROM ($terms) t
+           JOIN (SELECT tid, COUNT(*) df FROM ($terms) x
+                 WHERE tid IN (SELECT tid FROM ($terms) mine WHERE entity_id = :id) GROUP BY tid) d ON d.tid = t.tid
+           CROSS JOIN (SELECT COUNT(*) n FROM {commerce_product_field_data} WHERE type = 'listing' AND status = 1) n
+           WHERE t.entity_id <> :id
+           GROUP BY t.entity_id
+           HAVING score > 0
+         ) s
+         JOIN (" . self::LIVE . ") live ON live.product_id = s.entity_id
+       ) ranked
+       WHERE nth <= :per_provider
+       ORDER BY score DESC, entity_id
        LIMIT 100",
-      [':id' => $id],
+      [':id' => $id, ':per_provider' => $per_provider],
     )->fetchAllKeyed();
+  }
+
+  /**
+   * Listings whose texts are closest to this one's: id => similarity.
+   *
+   * Top 100, 1 - cosine distance; empty until it has a vector.
+   *
+   * @param int $id
+   *   The listing.
+   * @param int $per_provider
+   *   At most this many of each provider among the 100.
+   */
+  private function vectorScores(int $id, int $per_provider): array {
+    if (!$this->embeddings->available()) {
+      return [];
+    }
+    $table = '{' . Embeddings::TABLE . '}';
+    // ponytail: a full scan, as Embeddings::nearest().
+    return array_map('floatval', $this->database->query(
+      "SELECT product_id, similarity FROM (
+         SELECT v.product_id, 1 - VEC_DISTANCE_COSINE(v.embedding, me.embedding) similarity,
+           ROW_NUMBER() OVER (PARTITION BY live.provider ORDER BY VEC_DISTANCE_COSINE(v.embedding, me.embedding), v.product_id) nth
+         FROM $table v
+         JOIN $table me ON me.product_id = :id
+         JOIN (" . self::LIVE . ") live ON live.product_id = v.product_id
+         WHERE v.product_id <> :id
+       ) ranked
+       WHERE nth <= :per_provider
+       ORDER BY similarity DESC, product_id
+       LIMIT 100",
+      [':id' => $id, ':per_provider' => $per_provider],
+    )->fetchAllKeyed());
   }
 
 }

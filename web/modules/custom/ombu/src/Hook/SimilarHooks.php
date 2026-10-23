@@ -8,11 +8,14 @@ use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\ombu\Embeddings;
+use Drupal\ombu\Similar;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Utility\Utility;
 
 /**
- * Keeps the listings' vectors current (Embeddings), and Meilisearch's.
+ * Similar services under a listing, and its vector (Embeddings).
+ *
+ * The vector is kept current here and sent to Meilisearch.
  *
  * "More like this" itself is SimilarDatabase on the database server, and
  * Meilisearch's /similar on a Meilisearch one.
@@ -22,7 +25,18 @@ final class SimilarHooks {
   public function __construct(
     private readonly Embeddings $embeddings,
     private readonly QueueFactory $queueFactory,
+    private readonly Similar $similar,
   ) {}
+
+  /**
+   * Alternatives under a listing, after its reviews (12).
+   */
+  #[Hook('commerce_product_view')]
+  public function view(array &$build, ProductInterface $product, $display, string $view_mode): void {
+    if ($product->bundle() === 'listing' && $view_mode === 'full') {
+      $build['similar'] = $this->similar->build($product) + ['#weight' => 13];
+    }
+  }
 
   /**
    * A listing's text changed: embed it again, on cron.

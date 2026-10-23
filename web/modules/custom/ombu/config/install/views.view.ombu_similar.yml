@@ -2,6 +2,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - commerce_product.commerce_product_type.listing
     - search_api.index.listings
   module:
     - ombu
@@ -45,6 +46,16 @@ display:
           field: search_api_more_like_this
           plugin_id: search_api_more_like_this
           default_action: empty
+          specify_validation: true
+          validate:
+            type: 'entity:commerce_product'
+            fail: empty
+          validate_options:
+            bundles:
+              listing: listing
+            access: true
+            operation: view
+            multiple: 0
           fields: {  }
       filters:
         status:

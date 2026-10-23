@@ -74,9 +74,11 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
       || !str_starts_with((string) $response->headers->get('Content-Type'), 'text/markdown')) {
       return;
     }
-    $from = $request->query->get('ombu_from');
-    if (is_numeric($from)) {
-      $this->log->event('follow', (int) $from, (int) $product->id(), max(0, (int) $request->query->get('ombu_pos')), 'markdown');
+    // A followed link names the listing it was under and its place.
+    $from = $this->log->listings([$request->query->get('ombu_from')]);
+    $position = $request->query->get('ombu_pos');
+    if ($from && is_string($position) && ctype_digit($position)) {
+      $this->log->event('follow', $from[0], (int) $product->id(), (int) $position, 'markdown');
     }
     $suggestion = $this->similar->suggest($product);
     $lines = [];

@@ -7,6 +7,7 @@ namespace Drupal\Tests\ombu\Kernel;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\ombu\Embeddings;
 use Drupal\ombu\SimilarLog;
 use Drupal\taxonomy\Entity\Term;
@@ -147,17 +148,15 @@ final class SimilarTest extends CommerceKernelTestBase {
     $source = $this->listing('Source', 'One', ['domains']);
     $other = $this->listing('Other', 'Two', ['domains']);
     $agent = ['REMOTE_ADDR' => '203.0.113.7', 'HTTP_USER_AGENT' => 'Agent/1'];
-    $request = Request::create('/', 'GET', [], [], [], $agent + ['HTTP_REFERER' => 'https://example.com/page?secret=1']);
-    $request->setSession(new Session(new MockArraySessionStorage()));
-    $this->container->get('request_stack')->push($request);
+    $this->pushRequest(Request::create('/', 'GET', [], [], [], $agent + ['HTTP_REFERER' => 'https://user:pw@example.com/page?secret=1#top']));
 
     $this->respond(Product::load($source), 'text/markdown; charset=utf-8');
-    $follow = Request::create('/', 'GET', ['ombu_from' => $source, 'ombu_pos' => 0], [], [], $agent);
+    $this->respond(Product::load($source), 'text/markdown; charset=utf-8');
+    $follow = Request::create('/', 'GET', ['ombu_from' => (string) $source, 'ombu_pos' => '0'], [], [], $agent);
     $this->respond(Product::load($other), 'text/markdown; charset=utf-8', 200, 'entity.commerce_product.canonical', $follow);
 
-    $rows = \Drupal::database()->select(SimilarLog::TABLE, 'l')->fields('l')->orderBy('id')->execute()->fetchAllAssoc('id', FetchAs::Associative);
-    $rows = array_values($rows);
-    $this->assertSame(['shown', 'follow', 'shown'], array_column($rows, 'kind'));
+    $rows = $this->rows();
+    $this->assertSame(['shown', 'follow', 'shown'], array_column($rows, 'kind'), 'The same block, read twice in an hour, counts once.');
     $shown = json_decode($rows[0]['data'], TRUE);
     $this->assertSame($other, $shown['suggestions'][0]['id']);
     $this->assertSame(1, $shown['suggestions'][0]['reasons']['terms_rank']);
@@ -165,53 +164,124 @@ final class SimilarTest extends CommerceKernelTestBase {
     $this->assertSame((string) $source, $rows[1]['listing_id']);
     $this->assertSame((string) $other, $rows[1]['target_id']);
     $this->assertSame('0', $rows[1]['position']);
-    $this->assertSame('https://example.com/page', $rows[0]['referer'], 'The query is not kept.');
+    $this->assertSame('https://example.com/page', $rows[0]['referer'], 'No user, query or fragment.');
+    $this->assertSame('0', $rows[0]['authenticated']);
     $this->assertStringNotContainsString('203.0.113.7', implode('|', $rows[0]));
-    $this->assertSame($rows[0]['visitor'], $rows[1]['visitor'], 'The same visitor within a month.');
-
-    // A new month, a new salt: the visitor cannot be followed across months.
-    \Drupal::state()->set('ombu.similar_log.salt', ['month' => '2000-01', 'value' => 'old']);
-    \Drupal::service('ombu.similar_log')->event('click', $source, $other, 0, 'page');
-    $last = \Drupal::database()->query('SELECT visitor FROM {' . SimilarLog::TABLE . '} ORDER BY id DESC LIMIT 1')->fetchField();
-    $this->assertNotSame($rows[0]['visitor'], $last);
+    $month = date('Y-m', \Drupal::time()->getRequestTime());
+    $expected = hash_hmac('sha256', "$month|203.0.113.7|Agent/1", Settings::getHashSalt());
+    $this->assertSame($expected, $rows[0]['visitor'], 'Keyed with hash_salt, bound to the month.');
 
     // A year later, rows are gone.
     \Drupal::database()->update(SimilarLog::TABLE)->fields(['created' => \Drupal::time()->getRequestTime() - SimilarLog::KEEP - 1])->execute();
     \Drupal::service('ombu.similar_log')->purge();
-    $this->assertSame(0, (int) \Drupal::database()->query('SELECT COUNT(*) FROM {' . SimilarLog::TABLE . '}')->fetchField());
+    $this->assertSame([], $this->rows());
   }
 
   /**
-   * The page's reports: only parsed ones, about a listing one may view.
+   * Hostile links neither break the page nor reach the log.
+   */
+  public function testHostileValuesAreDropped(): void {
+    $this->filler(1);
+    $source = $this->listing('Source', 'One', ['domains']);
+    $this->listing('Other', 'Two', ['domains']);
+    $this->pushRequest(Request::create('/', 'GET', [], [], [], ['REMOTE_ADDR' => '203.0.113.8']));
+    $links = [
+      ['99999999999', '0'],
+      ['-5', '0'],
+      [(string) $source, '99999999999999'],
+      [(string) $source, 'x'],
+    ];
+    foreach ($links as [$from, $position]) {
+      $request = Request::create('/', 'GET', ['ombu_from' => $from, 'ombu_pos' => $position]);
+      $markdown = $this->respond(Product::load($source), 'text/markdown; charset=utf-8', 200, 'entity.commerce_product.canonical', $request);
+      $this->assertStringContainsString('## Similar services', $markdown);
+    }
+    $follows = array_filter($this->rows(), fn ($row) => $row['kind'] === 'follow');
+    $this->assertCount(1, $follows, 'Only the follow with a real listing, its place clamped.');
+    $this->assertSame((string) (2 * 12), current($follows)['position']);
+  }
+
+  /**
+   * A visitor sending Global Privacy Control is not logged.
+   */
+  public function testGlobalPrivacyControl(): void {
+    $this->filler(1);
+    $source = $this->listing('Source', 'One', ['domains']);
+    $this->listing('Other', 'Two', ['domains']);
+    $request = Request::create('/', 'GET', [], [], [], ['HTTP_SEC_GPC' => '1']);
+    $this->pushRequest($request);
+    $this->respond(Product::load($source), 'text/markdown; charset=utf-8', 200, 'entity.commerce_product.canonical', $request);
+    $this->assertSame([], $this->rows());
+  }
+
+  /**
+   * The page's reports: only well-formed ones, about listings one may view.
    */
   public function testEventReports(): void {
     $this->filler(1);
     $source = $this->listing('Source', 'One', ['domains']);
     $other = $this->listing('Other', 'Two', ['domains']);
     $hidden = $this->listing('Hidden', 'Three', ['domains'], published: FALSE);
+    $click = ['kind' => 'click', 'listing' => $source, 'target' => $other, 'position' => 2, 'engine' => 'ombu_similar'];
     foreach ([
       'garbage',
-      json_encode(['kind' => 'click', 'listing' => $hidden, 'target' => $other, 'position' => 0]),
-      json_encode(['kind' => 'nonsense', 'listing' => $source]),
+      json_encode(['listing' => $hidden] + $click),
+      json_encode(['kind' => 'nonsense'] + $click),
+      json_encode(['engine' => '<b>'] + $click),
+      json_encode(['target' => 99999999999] + $click),
+      json_encode($click),
       json_encode([
-        'kind' => 'click',
+        'kind' => 'shown',
         'listing' => $source,
-        'target' => $other,
-        'position' => 2,
-        'engine' => 'ombu_similar',
+        'items' => [$other, 'x', [1], -3, 99999999999, $hidden],
+        'engine' => 'scores',
       ]),
-      json_encode(['kind' => 'shown', 'listing' => $source, 'items' => [$other, 'x'], 'engine' => '<b>']),
     ] as $body) {
-      $response = $this->container->get('http_kernel')->handle(Request::create('/similar/event', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], $body));
-      $this->assertSame(204, $response->getStatusCode());
+      $this->assertSame(204, $this->report($body)->getStatusCode());
     }
-    $rows = \Drupal::database()->query('SELECT kind, target_id, position, engine, data FROM {' . SimilarLog::TABLE . '} ORDER BY id')->fetchAll(FetchAs::Associative);
+    $this->assertSame(204, $this->report(json_encode($click + ['position' => 9]), 'text/plain')->getStatusCode());
+
+    $rows = $this->rows();
     $this->assertSame(['click', 'shown'], array_column($rows, 'kind'));
     $this->assertSame((string) $other, $rows[0]['target_id']);
     $this->assertSame('2', $rows[0]['position']);
     $this->assertSame('ombu_similar', $rows[0]['engine']);
-    $this->assertSame('b', $rows[1]['engine'], 'Only a name is kept.');
-    $this->assertSame([$other], array_column(json_decode($rows[1]['data'], TRUE)['suggestions'], 'id'));
+    $this->assertSame([$other], array_column(json_decode($rows[1]['data'], TRUE)['suggestions'], 'id'), 'Only published listings.');
+  }
+
+  /**
+   * Over the flood limit, a visitor's reports are refused.
+   */
+  public function testReportsAreCapped(): void {
+    $status = [];
+    for ($i = 0; $i < 121; $i++) {
+      $status[] = $this->report('{}')->getStatusCode();
+    }
+    $this->assertSame(204, $status[119]);
+    $this->assertSame(429, $status[120]);
+  }
+
+  /**
+   * Posts a report to /similar/event.
+   */
+  private function report(string $body, string $type = 'application/json'): Response {
+    return $this->container->get('http_kernel')->handle(Request::create('/similar/event', 'POST', [], [], [], ['CONTENT_TYPE' => $type], $body));
+  }
+
+  /**
+   * The log's rows, oldest first.
+   */
+  private function rows(): array {
+    $query = \Drupal::database()->select(SimilarLog::TABLE, 'l')->fields('l')->orderBy('id');
+    return $query->execute()->fetchAll(FetchAs::Associative);
+  }
+
+  /**
+   * Makes a request the current one, with a session.
+   */
+  private function pushRequest(Request $request): void {
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    $this->container->get('request_stack')->push($request);
   }
 
   /**

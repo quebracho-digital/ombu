@@ -51,7 +51,7 @@ services:
   Drupal\ombu\Similar: '@ombu.similar'
   ombu.similar_log:
     class: Drupal\ombu\SimilarLog
-    arguments: ['@database', '@request_stack', '@current_user', '@state', '@datetime.time', '@language_manager', '@ombu.similar']
+    arguments: ['@database', '@request_stack', '@current_user', '@datetime.time', '@language_manager', '@ombu.similar', '@cache.default', '@settings', '@logger.channel.ombu']
   Drupal\ombu\SimilarLog: '@ombu.similar_log'
   ombu.listing_markdown_subscriber:
     class: Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber

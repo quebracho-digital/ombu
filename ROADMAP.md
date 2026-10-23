@@ -27,15 +27,20 @@ own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
 composer takes the issue fork's branch (a `vcs` repository, the lock pins
 the commit), not a patch nor a custom copy.
 
-- **Meilisearch** (2026-10-22, DDEV only; plan under "B. Meilisearch").
+- **Meilisearch** (2026-10-22/23, DDEV only; plan under "B. Meilisearch").
   `drupal/meilisearch` branch `more-like-this-user-vectors` in
-  `~/Proyects/meilisearch` (6e1e38e, not pushed): vectors provided by
-  Drupal (a `userProvided` embedder declared by the server,
-  `hook_meilisearch_documents_alter()` adds `_vectors`), the
-  `meilisearch_vector` query option, and "More like this" through
-  `/similar`; 81 tests green against Meilisearch 1.54, phpcs (Drupal,
-  DrupalPractice) and phpstan clean. Issue and MR drafts:
-  `~/Proyects/meilisearch/DRAFT-issue-and-MR.md`. **To do, Leo:** open the
+  `~/Proyects/meilisearch` (not pushed), one commit per future MR: vectors
+  provided by Drupal (`userProvided` embedder,
+  `hook_meilisearch_documents_alter()` with a `$context`), the
+  `meilisearch_vector` / `meilisearch_semantic_ratio` options, and "More
+  like this" through `/similar`. Reviewed five times (blind, with the use
+  cases, security, maintainer, mutation testing); 110 tests green against
+  Meilisearch 1.54 (and 1.16), phpcs and phpstan clean. The reviews found
+  real bugs, now fixed and tested: declaring an embedder on a populated
+  index failed, Semantic mode with these vectors broke every search. Drafts
+  of the three issues, MRs and the change record:
+  `~/Proyects/meilisearch/DRAFT-issue-and-MR.md`. **Leo:** no MR until we
+  are confident. **To do, Leo:** open the
   issue and its fork; then composer switches from the `path` repository
   (local only: `composer.json`/`.lock` are not committed) to a `vcs` one
   with `dev-<branch> as 1.0.0-alpha2`, and `config/meilisearch/` moves
@@ -1048,6 +1053,22 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
       `Embeddings::nearest()`, 2 ms. Domain Whois Overview (#362) comes
       56th, our own Name check (#2806, unpublished in DDEV) not in the top
       300.
+    - **Found meanwhile (2026-10-23): the cap per provider ran after the
+      cut at 100**, so 159 of 200 sampled listings showed fewer than 12
+      similar services, in production too (one provider has 56% of the
+      catalogue). Fixed (6009305): both lists keep at most per_provider of
+      each provider before the cut; 0 of 200 now. Also: scores changed
+      between calls (ties at the cut, 38ce5cd); the lists are now fused by
+      their places (Reciprocal Rank Fusion, c60b016) instead of adding
+      scores on different scales.
+    - **Logging (aa39b43):** `ombu_similar_log` keeps every block shown
+      (page via `similar.js`, markdown as served), clicks and agents'
+      follows, with the engine and each suggestion's reasons; visitors as
+      a monthly-salted hash, no IP; a year. Privacy policy to update
+      (2do.txt). Next: Solr-like "interesting terms" from titles and
+      bodies; MMR instead of the hard cap; vectors kept per model in
+      `ombu_listing_vector`; compare engines with the clicks once there are
+      qwen3 vectors in DDEV.
     - **So:** `/similar` finds the topic, Similar the variety. What
       `/similar` lacks is Similar's cap per provider (it has no
       `distinct`) and the terms; duplicates show too. Before `/market`

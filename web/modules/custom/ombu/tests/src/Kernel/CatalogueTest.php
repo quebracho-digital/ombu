@@ -163,6 +163,16 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertStringEndsWith("[a](/es/product/$seen.md) [b](/es/market.md) [c](/es/market.md?search=a)", $response->getContent());
   }
 
+  public function testTheFooterRendersOnPagesWithoutMarkdown(): void {
+    $this->enableModules(['llms_txt']);
+    \Drupal::service('router.builder')->rebuild();
+    // No route: no page reads as markdown, only /llms.txt is linked.
+    $build = \Drupal::service('plugin.manager.block')->createInstance('ombu_agents')->build();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('/llms.txt', $html);
+    $this->assertStringNotContainsString('text/markdown', $html);
+  }
+
   /**
    * A listing with these facets.
    */

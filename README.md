@@ -23,7 +23,7 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Built on:** Drupal 11 + Commerce, Search API, our modules [`x402_pay`](https://www.drupal.org/project/x402_pay), `wallet_auth` and `ai_provider_universal`.
 - **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
 - **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
-- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, `/es/terms.md`; or `Accept: text/markdown`), linked from the language switcher.
+- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md).
 
 ## Pieces
@@ -71,17 +71,19 @@ Agents find it without being told: every page sends `Link` headers to
 the values each filter holds right now, and our sellers as paid operations
 with their input and list price).
 
-**Pages as markdown:** add `.md` to a content page's URL (`/terms.md`,
+**Pages as markdown:** add `.md` to a page's URL (`/terms.md`,
 `/es/terms.md`) or send it `Accept: text/markdown`, and it answers in
 markdown, as one more language: the language switcher links to it, and
 the page's `<head>` names it. From
-[`x402_pay`](https://www.drupal.org/project/x402_pay): the same gate
-that charges what is sold, so a paid page answers 402 on every route that
-shows it (its URL, its `.md`, JSON:API, REST), never a free copy. Pages say
-`Vary: Accept` and announce their markdown in a `Link` header. Our own
-listing's page stays HTML (its full view is what is sold: its `.md` answers
-402), a Circle listing's ends with its similar services, and the market
-itself is `/market.json`: agents read listings there.
+[`x402_pay`](https://www.drupal.org/project/x402_pay), the same gate
+that charges what is sold: a field that charges on a page's own URL
+charges its `.md` too, and what is sold at an
+x402 URL is never handed out free on another route (JSON:API, REST). Pages
+say `Vary: Accept` and announce their markdown in a `Link` header. A
+listing's page is free, as for people: its markdown ends with its similar
+services, and its service is bought at its x402 URL. The market answers
+`/market.md` too: the same search and query string as `/market` and
+`/market.json`, each listing linked, the filters as links.
 
 ## Similar services
 

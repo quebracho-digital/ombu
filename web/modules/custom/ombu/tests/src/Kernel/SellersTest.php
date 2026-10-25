@@ -239,6 +239,18 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame(200, $this->container->get('http_kernel')->handle($request)->getStatusCode());
   }
 
+  public function testThePageIsFreeAsMarkdownTooAndTheServiceStillSold(): void {
+    $listing = $this->listing('ping', 'seller_ping', '0.0001');
+    $request = Request::create('/product/' . $listing->id());
+    $request->headers->set('Accept', 'text/markdown');
+    $response = $this->container->get('http_kernel')->handle($request);
+    $this->assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+    $this->assertStringStartsWith('text/markdown', (string) $response->headers->get('Content-Type'));
+    $this->assertStringStartsWith('# Ping', (string) $response->getContent());
+    // What it sells is the call, at its x402 URL.
+    $this->assertNotEmpty($this->required($listing)['accepts']);
+  }
+
   private function listing(string $service, string $key, string $price): Product {
     $listing = Product::create([
       'type' => 'listing',

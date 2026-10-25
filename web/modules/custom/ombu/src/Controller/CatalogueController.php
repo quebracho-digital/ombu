@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Controller;
 
+use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
+use Drupal\ombu\Markdown;
+use Drupal\ombu\Rating;
 use Drupal\x402_pay\Delivery;
 use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The catalogue for agents, shaped like Circle's Discovery API (v2).
@@ -40,6 +47,7 @@ use Symfony\Component\HttpFoundation\Request;
 final class CatalogueController implements ContainerInjectionInterface {
 
   use AutowireTrait;
+  use StringTranslationTrait;
 
   /**
    * Query parameter => index field. The same on /market, for people.
@@ -55,11 +63,98 @@ final class CatalogueController implements ContainerInjectionInterface {
 
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
+    private readonly EntityRepositoryInterface $entityRepository,
     #[Autowire(service: 'x402_pay.delivery')]
     private readonly Delivery $delivery,
+    #[Autowire(service: 'commerce_price.currency_formatter')]
+    private readonly CurrencyFormatterInterface $currencyFormatter,
   ) {}
 
   public function __invoke(Request $request): JsonResponse {
+    $search = $this->search($request);
+    $page = $request->query->all();
+    unset($page['limit'], $page['offset'], $page['openapi']);
+    return new JsonResponse([
+      'x402Version' => 2,
+      'items' => array_map(fn($product) => $this->item($product, $request), $search['products']),
+      'pagination' => ['limit' => $search['limit'], 'offset' => $search['offset'], 'total' => $search['total']],
+      'facets' => $search['facets'],
+      'links' => [
+        'html' => Url::fromRoute('view.market.page_1', [], ['query' => $page, 'absolute' => TRUE])->toString(),
+      ],
+    ]);
+  }
+
+  /**
+   * The same search as markdown: /market.md, or /market for "text/markdown".
+   *
+   * For agents that read pages rather than JSON: each listing with its
+   * price, provider and rating, linked to its page (also readable as .md),
+   * and the filters as links to the same search narrowed.
+   */
+  public function markdown(Request $request): Response {
+    $search = $this->search($request);
+    $query = $request->query->all();
+    $out = ['# ' . $this->t('Ombú market'), ''];
+    // URLs outside t(): its placeholders escape them as HTML (&amp;).
+    $out[] = $this->formatPlural($search['total'], '1 service. The same search as JSON:', '@count services. The same search as JSON:') . ' '
+      . Url::fromRoute('ombu.catalogue', [], ['query' => $query, 'absolute' => TRUE])->toString();
+    $out[] = '';
+    foreach ($search['products'] as $product) {
+      // In the page's language, as people see it.
+      $product = $this->entityRepository->getTranslationFromContext($product);
+      $price = $product->getDefaultVariation()?->getPrice();
+      $rating = Rating::of($product);
+      $facts = array_filter([
+        (string) $product->get('field_provider')->value,
+        (string) $product->get('field_category')->entity?->label(),
+        $price ? $this->currencyFormatter->format($price->getNumber(), $price->getCurrencyCode(), [
+          'minimum_fraction_digits' => 0,
+          'maximum_fraction_digits' => 6,
+        ]) : '',
+        $rating ? $this->t('@average/5 (@count)', ['@average' => $rating['average'], '@count' => $rating['count']]) : '',
+        $product->get('field_verified')->value ? $this->t('verified') : '',
+      ], 'strlen');
+      $url = $product->toUrl('canonical', ['absolute' => TRUE])->toString();
+      // The facts in a code span: a provider named like a URL is not a link.
+      $out[] = '- [' . Markdown::linkText((string) $product->label()) . "]($url)" . ($facts ? ': `' . Markdown::linkText(implode(' · ', $facts), 200) . '`' : '');
+    }
+    if ($search['offset'] + $search['limit'] < $search['total']) {
+      $out[] = '';
+      $out[] = $this->t('Next:') . ' ' . self::marketMd(['offset' => $search['offset'] + $search['limit']] + $query);
+    }
+    foreach ($search['facets'] as $param => $values) {
+      $out[] = '';
+      $out[] = "## $param";
+      $out[] = '';
+      foreach ($values as $value) {
+        $with = $query;
+        unset($with['offset']);
+        $with[$param] = array_values(array_unique([...$this->values($request, $param), $value['value']]));
+        $out[] = '- [' . Markdown::linkText((string) $value['label']) . '](' . self::marketMd($with) . ') ' . $value['count'] . ($value['selected'] ? ' ✓' : '');
+      }
+    }
+    return new Response(implode("\n", $out) . "\n", 200, ['Content-Type' => 'text/markdown; charset=utf-8']);
+  }
+
+  /**
+   * The market's markdown URL for a query, in the page's language.
+   */
+  public static function marketMd(array $query = []): string {
+    // The view's paging and sorting mean nothing to the search (offset).
+    unset($query['page'], $query['sort_by'], $query['sort_order'], $query['items_per_page']);
+    $url = Url::fromRoute('view.market.page_1', [], ['absolute' => TRUE])->toString();
+    return $url . '.md' . ($query ? '?' . UrlHelper::buildQuery($query) : '');
+  }
+
+  /**
+   * Runs the search both answers share.
+   *
+   * @return array
+   *   products (ProductInterface[], this page), total, limit, offset and
+   *   facets.
+   */
+  private function search(Request $request): array {
     $limit = max(1, min(100, (int) $request->query->get('limit', 50)));
     $offset = max(0, (int) $request->query->get('offset', 0));
 
@@ -90,24 +185,20 @@ final class CatalogueController implements ContainerInjectionInterface {
     ], array_combine(self::PARAMS, self::PARAMS)));
     $results = $query->execute();
 
-    $items = [];
+    $products = [];
     foreach ($results->getResultItems() as $item) {
       $product = $item->getOriginalObject()?->getValue();
       if ($product instanceof ProductInterface) {
-        $items[] = $this->item($product, $request);
+        $products[] = $product;
       }
     }
-    $page = $request->query->all();
-    unset($page['limit'], $page['offset'], $page['openapi']);
-    return new JsonResponse([
-      'x402Version' => 2,
-      'items' => $items,
-      'pagination' => ['limit' => $limit, 'offset' => $offset, 'total' => (int) $results->getResultCount()],
+    return [
+      'products' => $products,
+      'total' => (int) $results->getResultCount(),
+      'limit' => $limit,
+      'offset' => $offset,
       'facets' => $this->facets($results->getExtraData('search_api_facets', []), $selected, $request),
-      'links' => [
-        'html' => Url::fromRoute('view.market.page_1', [], ['query' => $page, 'absolute' => TRUE])->toString(),
-      ],
-    ]);
+    ];
   }
 
   /**
@@ -157,7 +248,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     $category = $product->get('field_category')->entity?->label();
     $provider = $product->get('field_provider_term')->entity;
     $rails = array_column($product->get('field_rails')->getValue(), 'value');
-    $rating = \Drupal\ombu\Rating::of($product);
+    $rating = Rating::of($product);
     return [
       'resource' => $resource,
       'type' => 'http',

@@ -34,8 +34,30 @@ the commit), not a patch nor a custom copy.
   markdown, sold → 402, anything else → 404. Named in `<head>` and a `Link`
   header, and linked as the last item of the language switcher ("Markdown,
   for agents"), through x402_pay's `x402-pay-markdown-link` template (and a
-  block, for other sites). Deploy: `drush deploy` runs `ombu_update_10033`
-  (llms.txt), then `drush locale:check && drush locale:update`.
+  block, for other sites). Deployed 2026-10-25 (ad4c8cd, 8f9a771).
+  **Then, same day:** a listing's page is free as markdown, as it is for
+  people: ombu answers it (`ListingMarkdownSubscriber`, before the gate),
+  since what a listing sells is a call to its service. x402_pay stays
+  strict for every other site: a page whose `full` markdown a field sells
+  at its x402 URL charges it on its `.md` too (an audit caught a first
+  version that gave it away). And
+  `/market.md` is the same search as markdown (`CatalogueController::
+  markdown()`, answered by `AgentLinkSubscriber` before the gate's 404).
+  Update `ombu_update_10034` (llms.txt, and config/sync's copy with it:
+  `drush deploy` imports config after the updates).
+- [ ] **Before the freeze: watch the sellers we vouch for.** Circle
+  health-checks its endpoints and sanctions-screens payout wallets; we
+  should for the listings we list ourselves (`/market/sell`) and our own.
+  1. A cron that reads each listing's 402 again (`SellerProbe`, the guard
+     `/market/sell` already uses): endpoint down → shown as unavailable,
+     not for sale, until it answers again; `payTo` no longer one of the
+     seller's wallets → unpublished and the seller and staff told (a taken
+     endpoint, or a seller who changed wallets without saying).
+  2. Payout wallets against OFAC's SDN list (it publishes crypto
+     addresses; downloaded and parsed on cron, no third party): a match →
+     unpublished, logged.
+  3. Not for Circle's listings: Circle screens them, and what it drops is
+     retired by our import.
 - **Meilisearch** (2026-10-22/23, DDEV only; plan under "B. Meilisearch").
   `drupal/meilisearch` branch `more-like-this-user-vectors` in
   `~/Proyects/meilisearch` (not pushed), one commit per future MR: vectors

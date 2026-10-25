@@ -30,6 +30,7 @@ services:
       - { name: event_subscriber }
   ombu.agent_link_subscriber:
     class: Drupal\ombu\EventSubscriber\AgentLinkSubscriber
+    arguments: ['@class_resolver']
     tags:
       - { name: event_subscriber }
   ombu.wallet_only_route_subscriber:
@@ -55,7 +56,7 @@ services:
   Drupal\ombu\SimilarLog: '@ombu.similar_log'
   ombu.listing_markdown_subscriber:
     class: Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber
-    arguments: ['@ombu.similar', '@ombu.similar_log', '@entity_type.manager', '@entity.repository', '@string_translation']
+    arguments: ['@ombu.similar', '@ombu.similar_log', '@entity_type.manager', '@entity.repository', '@string_translation', '@x402_pay.delivery']
     tags:
       - { name: event_subscriber }
   ombu.similar_backend_subscriber:

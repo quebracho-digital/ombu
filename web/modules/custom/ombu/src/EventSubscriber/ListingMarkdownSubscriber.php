@@ -5,19 +5,33 @@ declare(strict_types=1);
 namespace Drupal\ombu\EventSubscriber;
 
 use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\RouteMatch;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\ombu\Markdown;
 use Drupal\ombu\Similar;
 use Drupal\ombu\SimilarLog;
+use Drupal\x402_pay\Delivery;
+use Drupal\x402_pay\PathProcessor\MarkdownPathProcessor;
+use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * A listing read as markdown ends with its similar services, as links.
+ * A listing's page as markdown, free, ending with its similar services.
+ *
+ * Free as its page is for people: what a listing sells is a call to its
+ * service at its x402 URL, not the page, so its .md (or Accept:
+ * text/markdown) is answered here, before x402_pay's gate would charge the
+ * full view mode its price field names.
+ *
  *
  * The markdown x402_pay renders has the display's fields only, not the
  * block under the page (Similar::build()). Agents follow these links as
@@ -37,6 +51,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly EntityRepositoryInterface $entityRepository,
     TranslationInterface $string_translation,
+    private readonly Delivery $delivery,
   ) {
     $this->stringTranslation = $string_translation;
   }
@@ -45,19 +60,53 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents(): array {
-    return [KernelEvents::RESPONSE => 'onResponse'];
+    return [
+      // After routing and its access check (32), before x402_pay's gate (30).
+      KernelEvents::REQUEST => ['onRequest', 31],
+      KernelEvents::RESPONSE => 'onResponse',
+    ];
   }
 
   /**
-   * A seller's title as the text of a markdown link, as long as on a card.
-   *
-   * No brackets to break the link, no line breaks or control characters to
-   * start a block, no HTML or code spans for the reader to interpret.
+   * The listing a route shows as its page, if nothing charges on that page.
    */
-  private function linkText(string $title): string {
-    $title = preg_replace('/[\p{Cc}\s]+/u', ' ', $title);
-    $title = strtr($title, ['[' => '(', ']' => ')', '<' => '‹', '>' => '›', '`' => "'"]);
-    return Unicode::truncate(trim($title), 90, TRUE, TRUE);
+  private static function freeListing(RouteMatchInterface|Request $route): ?ProductInterface {
+    $route = $route instanceof Request ? RouteMatch::createFromRequest($route) : $route;
+    $product = $route->getRouteName() === 'entity.commerce_product.canonical' ? $route->getParameter('commerce_product') : NULL;
+    return $product instanceof ProductInterface && $product->bundle() === 'listing' && !X402PriceItem::find($product) ? $product : NULL;
+  }
+
+  /**
+   * Where agents read this listing's page as markdown, if the route shows one.
+   */
+  public static function markdownUrl(RouteMatchInterface $route_match, CacheableMetadata $cacheability): ?string {
+    $cacheability->addCacheContexts(['route']);
+    $product = $route_match->getParameter('commerce_product');
+    if ($product instanceof ProductInterface) {
+      // It may start charging on its page: the product and its price field.
+      $cacheability->addCacheableDependency($product);
+      if ($product->hasField('field_x402_price')) {
+        $cacheability->addCacheableDependency($product->getFieldDefinition('field_x402_price'));
+      }
+    }
+    if (!$product = self::freeListing($route_match)) {
+      return NULL;
+    }
+    $url = $product->toUrl()->toString(TRUE);
+    $cacheability->addCacheableDependency($url);
+    return $url->getGeneratedUrl() . '.md';
+  }
+
+  /**
+   * A listing's page asked for as markdown: its full view, free.
+   */
+  public function onRequest(RequestEvent $event): void {
+    $request = $event->getRequest();
+    if ($event->isMainRequest() && $request->isMethodCacheable()
+      && (MarkdownPathProcessor::asked($request) || str_contains((string) $request->headers->get('Accept'), 'text/markdown'))
+      && ($product = self::freeListing($request))) {
+      $event->setResponse($this->delivery->markdown($product, 'full'));
+    }
   }
 
   /**
@@ -90,7 +139,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
       }
       $query = ['ombu_from' => $product->id(), 'ombu_pos' => count($shown)];
       $url = $other->toUrl()->setAbsolute()->setOption('query', $query);
-      $lines[] = sprintf('- [%s](%s)', $this->linkText((string) $other->label()), $url->toString());
+      $lines[] = sprintf('- [%s](%s)', Markdown::linkText((string) $other->label()), $url->toString());
       $shown[$id] = $suggestion['items'][$id];
     }
     if ($shown) {

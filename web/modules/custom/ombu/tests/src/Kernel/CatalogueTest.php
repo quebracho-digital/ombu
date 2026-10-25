@@ -92,6 +92,28 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertContains('Gone', $this->titles($this->get('/market.json?retired=1')));
   }
 
+  public function testTheSameSearchAsMarkdownForAgentsThatReadPages(): void {
+    $this->listing('Evil](https://evil.example) <b>\\', 'Infrastructure', 'https://evil.example/x', ['vanilla'], 'eip155:8453');
+    \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')->indexItems();
+    foreach (['/market?category=Infrastructure' => 'text/markdown', '/market.md?category=Infrastructure' => '*/*'] as $path => $accept) {
+      $request = Request::create($path);
+      $request->headers->set('Accept', $accept);
+      $response = $this->container->get('http_kernel')->handle($request);
+      $this->assertSame(200, $response->getStatusCode(), $path);
+      $this->assertStringStartsWith('text/markdown', $response->headers->get('Content-Type'));
+      $md = $response->getContent();
+      $this->assertMatchesRegularExpression('#^- \[Captcha\]\(http[^)]+\)#m', $md);
+      $this->assertStringContainsString('[Gas](', $md);
+      $this->assertStringNotContainsString('[Weather]', $md);
+      // A seller's title cannot close the link or bring HTML.
+      $this->assertStringContainsString('[Evil)(https://evil.example) ‹b›/](', $md);
+      // Nor a provider named like a URL become a link: it is in a code span.
+      $this->assertStringContainsString(': `https://evil.example/x', $md);
+      // Filters narrow the same search, as markdown.
+      $this->assertMatchesRegularExpression('#\[Web search research\]\(http[^)]*/market\.md\?category[^)]*Web#', $md);
+    }
+  }
+
   /**
    * A listing with these facets.
    */

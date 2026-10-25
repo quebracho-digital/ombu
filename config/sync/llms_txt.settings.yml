@@ -8,11 +8,12 @@ content: |
 
   Searching is free. Buying is per call: POST to a listing's resource URL, get a 402 with the payment requirements (PAYMENT-REQUIRED header), sign the EIP-3009 transfer it asks for, and send the same request again with a PAYMENT-SIGNATURE header. Our sellers are settled only when they deliver: a failing call costs nothing.
 
-  Content pages also answer in markdown: add `.md` to their URL ([terms.md]([site:url]terms.md), [privacy.md]([site:url]privacy.md), in any language: `/es/terms.md`), or send `Accept: text/markdown` to it. Listings are read from the catalogue as JSON, below, and bought at their x402 URL, which answers 402 until paid. A listing's own page in markdown ends with its similar services, as links, to compare alternatives.
+  Every page also answers in markdown, free: add `.md` to its URL ([terms.md]([site:url]terms.md), [privacy.md]([site:url]privacy.md), a listing's page, in any language: `/es/terms.md`), or send `Accept: text/markdown` to it. A listing's page in markdown ends with its similar services, as links, to compare alternatives; the listing is bought at its x402 URL, which answers 402 until paid.
 
   ## Search
 
   - [Catalogue as JSON]([site:url]market.json): every listing in the shape of Circle's Discovery API, with facets. Filters, each taking several values (`a,b`): `search`, `category`, `network` (CAIP-2: `eip155:5042` is Arc, `eip155:8453` Base), `provider`, `payment` (`vanilla` = plain x402 from any wallet, `gateway` = Circle Gateway), `tag`, `seller` (`ours`, `third_party`, `circle`). Every facet value comes with its count and the URL that adds it: narrow by following links.
+  - [The same search as markdown]([site:url]market.md): the same query string, each listing linked to its page, the filters as links.
   - [Example: plain x402 on Arc]([site:url]market.json?network=eip155:5042&payment=vanilla)
   - [Example: our own sellers]([site:url]market.json?seller=ours)
   - [OpenAPI]([site:url]openapi.json): the search, its filter values, and our sellers as paid operations with their input.

@@ -6,6 +6,8 @@ namespace Drupal\ombu\Hook;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\ombu\Controller\CatalogueController;
+use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
 use Drupal\x402_pay\Delivery;
 
 /**
@@ -57,9 +59,14 @@ final class ThemeHooks {
       $item['link']['#options']['attributes']['class'][] = 'dropdown-item';
     }
     // Markdown, as one more language: x402_pay's link (and its template)
-    // to this page plus .md, on free pages only.
+    // to this page plus .md, on free pages, listings and the market. The block varies
+    // by path and query already (LanguageBlock).
     $cacheability = new CacheableMetadata();
-    $url = Delivery::markdownUrl(\Drupal::routeMatch(), $cacheability);
+    $route_match = \Drupal::routeMatch();
+    // The market answers its own .md (AgentLinkSubscriber), with the search.
+    $url = $route_match->getRouteName() === 'view.market.page_1'
+      ? CatalogueController::marketMd(\Drupal::request()->query->all())
+      : ListingMarkdownSubscriber::markdownUrl($route_match, $cacheability) ?? Delivery::markdownUrl($route_match, $cacheability);
     $variables['markdown'] = $url ? [
       '#theme' => 'x402_pay_markdown_link',
       '#url' => $url,

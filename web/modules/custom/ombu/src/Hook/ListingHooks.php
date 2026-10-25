@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Hook;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
@@ -17,6 +18,7 @@ use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Rating;
 use Drupal\ombu\Sales;
+use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
 use Drupal\ombu\Sellers;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
@@ -229,6 +231,15 @@ final class ListingHooks {
   #[Hook('page_attachments')]
   public function pageAttachments(array &$attachments): void {
     $attachments['#attached']['library'][] = 'ombu/brand';
+    // A listing's page names its markdown, as x402_pay does for free pages.
+    $cacheability = new CacheableMetadata();
+    if ($url = ListingMarkdownSubscriber::markdownUrl(\Drupal::routeMatch(), $cacheability)) {
+      $attachments['#attached']['html_head_link'][] = [
+        ['rel' => 'alternate', 'type' => 'text/markdown', 'href' => $url],
+        TRUE,
+      ];
+    }
+    CacheableMetadata::createFromRenderArray($attachments)->merge($cacheability)->applyTo($attachments);
   }
 
   /**

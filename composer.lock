@@ -3777,7 +3777,7 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/x402_pay.git",
-                "reference": "3d51616dda92e3e737314d3e28034e14fd7a3af5"
+                "reference": "d6b44d101efcf72ba4f4cdb8dc7f4c16411ee22a"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",

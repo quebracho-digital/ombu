@@ -607,3 +607,10 @@ function ombu_update_10032(): string {
 function ombu_update_10033(): void {
   _ombu_llms_txt();
 }
+
+/**
+ * Rewrites /llms.txt: listings and the market as markdown too.
+ */
+function ombu_update_10034(): void {
+  _ombu_llms_txt();
+}

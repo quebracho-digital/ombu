@@ -107,9 +107,18 @@ Privacy Control or Do Not Track; rows older than a year go on cron.
 Declared in the privacy policy. Checks: `drush php:script
 scripts/check-similar.php`.
 
+**How good they are:** `scripts/eval-similar.php` scores the engines on a
+labelled set (`scripts/eval/similar-labels.json`: 50 listings, 1,433 pairs
+marked *alternative*, *works with* or *unrelated*, labelled by Claude, to
+be reviewed). The list production serves is the worst (precision at 5:
+0.14, against 0.39 for vectors alone and 0.38 for Meilisearch): the cap per
+provider makes room, and hub listings fill it. Next, in
+[ROADMAP.md](ROADMAP.md): an LLM judge, then a decision model that picks
+what is shown.
+
 ## Our sellers
 
-Four listings Ombú runs itself, sold in USDC on **Arc mainnet**
+Five listings Ombú runs itself, sold in USDC on **Arc mainnet**
 (`eip155:5042`) since 2026-10-14. Agents `POST` JSON to
 `/x402/commerce_product/{id}/full`; `/market.json` and `/x402/discovery`
 give the URL, price and `payTo`.
@@ -243,7 +252,7 @@ ddev start && ddev composer install
 ddev drush si standard --site-name=Ombú -y
 ddev drush en ombu search_api search_api_db ai_provider_universal_terms ai_provider_universal_factcheck -y
 ddev drush php:script ../scripts/sellers-llm.php    # the model behind two sellers
-ddev drush php:script ../scripts/seed-listings.php  # our four listings
+ddev drush php:script ../scripts/seed-listings.php  # our five listings
 ddev drush ombu:import-circle && ddev drush sapi-i
 ddev drush php:script ../scripts/seed-pages.php     # the guide: how it works, for agents, for sellers
 ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \

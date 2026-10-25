@@ -56,8 +56,8 @@ the commit), not a patch nor a custom copy.
   page showing a priced entity out of the page cache (`private`). Later:
   vary by account or payment, the right cache contexts, a CDN that honours
   `Vary`. Then free `.md` pages can be page-cached too (the links they
-  rewrite vary by the reader's access). Also gate JSON:API collections and
-  `include`, which list entities with no entity in the route.
+  rewrite vary by the reader's access). JSON:API's collections, includes
+  and filters were gated for 1.0.0-beta2 (2026-10-25).
 - [ ] **Before the freeze: watch the sellers we vouch for.** Circle
   health-checks its endpoints and sanctions-screens payout wallets; we
   should for the listings we list ourselves (`/market/sell`) and our own.

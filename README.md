@@ -73,8 +73,10 @@ with their input and list price).
 
 **Pages as markdown:** add `.md` to a page's URL (`/terms.md`,
 `/es/terms.md`) or send it `Accept: text/markdown`, and it answers in
-markdown, as one more language: the language switcher links to it, and
-the page's `<head>` names it. From
+markdown, as one more language: the language switcher and the footer
+link to it, and the page's `<head>` names it. Each markdown page opens
+saying so, and its links to pages the reader may see (Drupal's access
+checks, for them) go to their `.md`, so an agent keeps reading markdown. From
 [`x402_pay`](https://www.drupal.org/project/x402_pay), the same gate
 that charges what is sold: a field that charges on a page's own URL
 charges its `.md` too, and what is sold at an

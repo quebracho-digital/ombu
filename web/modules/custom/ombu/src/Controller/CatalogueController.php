@@ -11,6 +11,8 @@ use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ombu\Chains;
@@ -68,6 +70,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     private readonly Delivery $delivery,
     #[Autowire(service: 'commerce_price.currency_formatter')]
     private readonly CurrencyFormatterInterface $currencyFormatter,
+    private readonly LanguageManagerInterface $languageManager,
   ) {}
 
   public function __invoke(Request $request): JsonResponse {
@@ -115,7 +118,11 @@ final class CatalogueController implements ContainerInjectionInterface {
         $rating ? $this->t('@average/5 (@count)', ['@average' => $rating['average'], '@count' => $rating['count']]) : '',
         $product->get('field_verified')->value ? $this->t('verified') : '',
       ], 'strlen');
-      $url = $product->toUrl('canonical', ['absolute' => TRUE])->toString();
+      // The page's language: one not translated to it would link to its own.
+      $url = $product->toUrl('canonical', [
+        'absolute' => TRUE,
+        'language' => $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_URL),
+      ])->toString();
       // The facts in a code span: a provider named like a URL is not a link.
       $out[] = '- [' . Markdown::linkText((string) $product->label()) . "]($url)" . ($facts ? ': `' . Markdown::linkText(implode(' · ', $facts), 200) . '`' : '');
     }

@@ -54,9 +54,14 @@ services:
     class: Drupal\ombu\SimilarLog
     arguments: ['@database', '@request_stack', '@current_user', '@datetime.time', '@language_manager', '@ombu.similar', '@cache.default', '@settings', '@logger.channel.ombu']
   Drupal\ombu\SimilarLog: '@ombu.similar_log'
+  ombu.markdown_navigation_subscriber:
+    class: Drupal\ombu\EventSubscriber\MarkdownNavigationSubscriber
+    arguments: ['@router', '@string_translation']
+    tags:
+      - { name: event_subscriber }
   ombu.listing_markdown_subscriber:
     class: Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber
-    arguments: ['@ombu.similar', '@ombu.similar_log', '@entity_type.manager', '@entity.repository', '@string_translation', '@x402_pay.delivery']
+    arguments: ['@ombu.similar', '@ombu.similar_log', '@entity_type.manager', '@entity.repository', '@string_translation', '@x402_pay.delivery', '@language_manager']
     tags:
       - { name: event_subscriber }
   ombu.similar_backend_subscriber:

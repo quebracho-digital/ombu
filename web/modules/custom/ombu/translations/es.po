@@ -163,3 +163,15 @@ msgstr "Siguiente"
 
 msgid "Markdown, for agents"
 msgstr "Markdown, para agentes"
+
+msgid "Every page on this site also reads as markdown: add .md to its path, before any ?query. Links here to pages that read free already do."
+msgstr "Todas las páginas de este sitio también se leen en markdown: agrega .md a la ruta, antes de cualquier ?query. Los links de acá a páginas que se leen gratis ya lo hacen."
+
+msgid "For agents: <a href=\":md\" rel=\"alternate\" type=\"text/markdown\">this page in markdown</a> · <a href=\":llms\">the whole site, from /llms.txt</a>"
+msgstr "Para agentes: <a href=\":md\" rel=\"alternate\" type=\"text/markdown\">esta página en markdown</a> · <a href=\":llms\">todo el sitio, desde /llms.txt</a>"
+
+msgid "For agents: <a href=\":llms\">the whole site, from /llms.txt</a>"
+msgstr "Para agentes: <a href=\":llms\">todo el sitio, desde /llms.txt</a>"
+
+msgid "For agents"
+msgstr "Para agentes"

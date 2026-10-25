@@ -6,9 +6,7 @@ namespace Drupal\ombu\Hook;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Hook\Attribute\Hook;
-use Drupal\ombu\Controller\CatalogueController;
-use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
-use Drupal\x402_pay\Delivery;
+use Drupal\ombu\Markdown;
 
 /**
  * Ombú's accessible pager and the header's two dropdowns, over Belgrade.
@@ -63,10 +61,7 @@ final class ThemeHooks {
     // by path and query already (LanguageBlock).
     $cacheability = new CacheableMetadata();
     $route_match = \Drupal::routeMatch();
-    // The market answers its own .md (AgentLinkSubscriber), with the search.
-    $url = $route_match->getRouteName() === 'view.market.page_1'
-      ? CatalogueController::marketMd(\Drupal::request()->query->all())
-      : ListingMarkdownSubscriber::markdownUrl($route_match, $cacheability) ?? Delivery::markdownUrl($route_match, $cacheability);
+    $url = Markdown::url($route_match, $cacheability, \Drupal::request()->query->all());
     $variables['markdown'] = $url ? [
       '#theme' => 'x402_pay_markdown_link',
       '#url' => $url,

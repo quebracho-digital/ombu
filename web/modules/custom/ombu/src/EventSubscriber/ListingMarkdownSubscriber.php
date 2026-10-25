@@ -8,6 +8,8 @@ use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -52,6 +54,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
     private readonly EntityRepositoryInterface $entityRepository,
     TranslationInterface $string_translation,
     private readonly Delivery $delivery,
+    private readonly LanguageManagerInterface $languageManager,
   ) {
     $this->stringTranslation = $string_translation;
   }
@@ -92,7 +95,10 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
     if (!$product = self::freeListing($route_match)) {
       return NULL;
     }
-    $url = $product->toUrl()->toString(TRUE);
+    // In the page's language: a listing not translated to it would link to
+    // its own.
+    $cacheability->addCacheContexts(['languages:' . LanguageInterface::TYPE_URL]);
+    $url = $product->toUrl('canonical', ['language' => \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_URL)])->toString(TRUE);
     $cacheability->addCacheableDependency($url);
     return $url->getGeneratedUrl() . '.md';
   }
@@ -138,7 +144,7 @@ final class ListingMarkdownSubscriber implements EventSubscriberInterface {
         continue;
       }
       $query = ['ombu_from' => $product->id(), 'ombu_pos' => count($shown)];
-      $url = $other->toUrl()->setAbsolute()->setOption('query', $query);
+      $url = $other->toUrl('canonical', ['language' => $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_URL)])->setAbsolute()->setOption('query', $query);
       $lines[] = sprintf('- [%s](%s)', Markdown::linkText((string) $other->label()), $url->toString());
       $shown[$id] = $suggestion['items'][$id];
     }

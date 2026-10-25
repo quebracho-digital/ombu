@@ -246,7 +246,8 @@ final class SellersTest extends CommerceKernelTestBase {
     $response = $this->container->get('http_kernel')->handle($request);
     $this->assertSame(200, $response->getStatusCode(), (string) $response->getContent());
     $this->assertStringStartsWith('text/markdown', (string) $response->headers->get('Content-Type'));
-    $this->assertStringStartsWith('# Ping', (string) $response->getContent());
+    // Under the line that says how to keep reading as markdown.
+    $this->assertMatchesRegularExpression('/^> .+\n\n# Ping/', (string) $response->getContent());
     // What it sells is the call, at its x402 URL.
     $this->assertNotEmpty($this->required($listing)['accepts']);
   }

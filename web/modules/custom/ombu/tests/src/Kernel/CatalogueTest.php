@@ -5,13 +5,20 @@ declare(strict_types=1);
 namespace Drupal\Tests\ombu\Kernel;
 
 use Drupal\commerce_product\Entity\Product;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\Role;
+use Drupal\x402_pay\PaymentHeaders;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * /market.json: the facets people get on /market, for agents.
@@ -27,7 +34,7 @@ final class CatalogueTest extends CommerceKernelTestBase {
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
     'link', 'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views',
-    'search_api', 'search_api_db', 'facets', 'better_exposed_filters', 'facets_exposed_filters',
+    'search_api', 'search_api_db', 'facets', 'better_exposed_filters', 'facets_exposed_filters', 'language',
   ];
 
   /**
@@ -109,9 +116,51 @@ final class CatalogueTest extends CommerceKernelTestBase {
       $this->assertStringContainsString('[Evil)(https://evil.example) ‹b›/](', $md);
       // Nor a provider named like a URL become a link: it is in a code span.
       $this->assertStringContainsString(': `https://evil.example/x', $md);
+      // It says how to keep reading as markdown, and its links already do.
+      $this->assertStringStartsWith('> ', $md);
+      $this->assertMatchesRegularExpression('#^- \[Gas\]\(http[^)]+/product/\d+\.md\)#m', $md);
       // Filters narrow the same search, as markdown.
       $this->assertMatchesRegularExpression('#\[Web search research\]\(http[^)]*/market\.md\?category[^)]*Web#', $md);
     }
+  }
+
+  public function testLinksGoToMarkdownOnlyWhereTheReaderMayGo(): void {
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+    // As on the site: the front page is the market.
+    $this->config('system.site')->set('page.front', '/market')->save();
+    $seen = \Drupal::entityTypeManager()->getStorage('commerce_product')->loadByProperties(['title' => 'Gas']);
+    $seen = (int) reset($seen)->id();
+    $hidden = Product::create(['type' => 'listing', 'title' => 'Draft', 'stores' => [$this->store], 'status' => FALSE]);
+    $hidden->save();
+    $hidden = (int) $hidden->id();
+    $md = "[a](/product/$seen) [b](http://localhost/product/$seen?ombu_pos=1#x) [c](/product/$hidden) [d](/admin/config)"
+      . " [e](https://elsewhere.example/product/$seen) [f](/) [g](/product/$seen.md) [h](/market/?search=a) [i](//elsewhere.example/x)";
+    $response = new Response($md, 200, ['Content-Type' => 'text/markdown; charset=utf-8']);
+    $event = new ResponseEvent($this->container->get('http_kernel'), Request::create('/terms.md'), HttpKernelInterface::MAIN_REQUEST, $response);
+    $this->container->get('ombu.markdown_navigation_subscriber')->onResponse($event);
+    $this->assertStringEndsWith("[a](/product/$seen.md) [b](http://localhost/product/$seen.md?ombu_pos=1#x)"
+      . " [c](/product/$hidden) [d](/admin/config) [e](https://elsewhere.example/product/$seen)"
+      . " [f](/market.md) [g](/product/$seen.md) [h](/market.md?search=a) [i](//elsewhere.example/x)", $response->getContent());
+    // What was paid for, or a file, is left as it was.
+    foreach ([new Response($md, 200, ['Content-Type' => 'text/markdown', PaymentHeaders::RESPONSE => 'x']), new BinaryFileResponse(__FILE__, 200, ['Content-Type' => 'text/markdown'])] as $response) {
+      $event = new ResponseEvent($this->container->get('http_kernel'), Request::create('/terms.md'), HttpKernelInterface::MAIN_REQUEST, $response);
+      $this->container->get('ombu.markdown_navigation_subscriber')->onResponse($event);
+      $this->assertSame($response instanceof BinaryFileResponse ? FALSE : $md, $response->getContent());
+    }
+  }
+
+  public function testLinksKeepTheirLanguage(): void {
+    $this->installConfig(['language']);
+    ConfigurableLanguage::createFromLangcode('es')->save();
+    $this->container->get('kernel')->rebuildContainer();
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+    $this->config('system.site')->set('page.front', '/market')->save();
+    $seen = \Drupal::entityTypeManager()->getStorage('commerce_product')->loadByProperties(['title' => 'Gas']);
+    $seen = (int) reset($seen)->id();
+    $response = new Response("[a](/es/product/$seen) [b](/es) [c](/es/market?search=a)", 200, ['Content-Type' => 'text/markdown']);
+    $event = new ResponseEvent($this->container->get('http_kernel'), Request::create('/es/terms.md'), HttpKernelInterface::MAIN_REQUEST, $response);
+    $this->container->get('ombu.markdown_navigation_subscriber')->onResponse($event);
+    $this->assertStringEndsWith("[a](/es/product/$seen.md) [b](/es/market.md) [c](/es/market.md?search=a)", $response->getContent());
   }
 
   /**

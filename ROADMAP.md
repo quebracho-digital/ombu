@@ -45,6 +45,19 @@ the commit), not a patch nor a custom copy.
   markdown()`, answered by `AgentLinkSubscriber` before the gate's 404).
   Update `ombu_update_10034` (llms.txt, and config/sync's copy with it:
   `drush deploy` imports config after the updates).
+- [x] **2026-10-25: agents keep reading markdown, and x402_pay's leaks
+  closed.** Each `.md` opens saying how, its links to pages the reader may
+  see go to their `.md`, and the footer links this page's `.md` and
+  llms.txt. x402_pay (488afa9): a priced entity was free with a browser's
+  Accept through Markdownify's routes and JSON:API (and the page cache then
+  kept it); now only an HTML page is free for people, and no page showing
+  what is sold is cached. Ombú has neither module, so was not exposed.
+- [ ] **A cache that is safe for what is sold.** For now x402_pay keeps any
+  page showing a priced entity out of the page cache (`private`). Later:
+  vary by account or payment, the right cache contexts, a CDN that honours
+  `Vary`. Then free `.md` pages can be page-cached too (the links they
+  rewrite vary by the reader's access). Also gate JSON:API collections and
+  `include`, which list entities with no entity in the route.
 - [ ] **Before the freeze: watch the sellers we vouch for.** Circle
   health-checks its endpoints and sanctions-screens payout wallets; we
   should for the listings we list ourselves (`/market/sell`) and our own.

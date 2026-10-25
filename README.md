@@ -24,7 +24,7 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
 - **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
 - **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher.
-- **Status and plan:** [ROADMAP.md](ROADMAP.md).
+- **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces
 

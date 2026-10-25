@@ -600,3 +600,10 @@ function ombu_update_10032(): string {
   }
   return 'Privacy policy, the similar services log: added in ' . ($done ? implode(', ', $done) : 'none') . ($skipped ? '; edit by hand in ' . implode(', ', $skipped) : '') . '.';
 }
+
+/**
+ * Rewrites /llms.txt: any page plus .md is its markdown.
+ */
+function ombu_update_10033(): void {
+  _ombu_llms_txt();
+}

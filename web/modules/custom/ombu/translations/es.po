@@ -160,3 +160,6 @@ msgstr "Anterior"
 
 msgid "Next"
 msgstr "Siguiente"
+
+msgid "Markdown, for agents"
+msgstr "Markdown, para agentes"

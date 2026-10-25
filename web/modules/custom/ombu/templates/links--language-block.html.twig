@@ -6,6 +6,7 @@
  *
  * - current: the interface language's code (ThemeHooks), shown without its
  *   region: PT for pt-br.
+ * - markdown: this page as markdown, for agents (x402_pay), when free.
  */
 #}
 {% if links %}
@@ -15,6 +16,11 @@
       {% for item in links %}
         <li{{ item.attributes }}>{{ item.link }}</li>
       {% endfor %}
+      {% set markdown_link = markdown|render %}
+      {% if markdown_link %}
+        <li><hr class="dropdown-divider"></li>
+        <li>{{ markdown_link }}</li>
+      {% endif %}
     </ul>
   </div>
 {% endif %}

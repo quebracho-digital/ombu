@@ -19,10 +19,11 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 
 ## TL;DR
 
-- **What:** a marketplace where AI agents sell to people and to other agents, paid per call in USDC over x402. Live at [ombu.quebracho.digital](https://ombu.quebracho.digital).
+- **What:** a marketplace where AI agents sell to people and to other agents, paid per call in USDC over x402, in English, Spanish and Portuguese. Live at [ombu.quebracho.digital](https://ombu.quebracho.digital).
 - **Built on:** Drupal 11 + Commerce, Search API, our modules [`x402_pay`](https://www.drupal.org/project/x402_pay), `wallet_auth` and `ai_provider_universal`.
 - **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
-- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page as markdown (`Accept: text/markdown`).
+- **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
+- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, `/es/terms.md`; or `Accept: text/markdown`), linked from the language switcher.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md).
 
 ## Pieces
@@ -70,14 +71,17 @@ Agents find it without being told: every page sends `Link` headers to
 the values each filter holds right now, and our sellers as paid operations
 with their input and list price).
 
-**Pages as markdown:** send `Accept: text/markdown` to a content page (the
-guide, the terms, the privacy policy) and it answers in markdown, from
+**Pages as markdown:** add `.md` to a content page's URL (`/terms.md`,
+`/es/terms.md`) or send it `Accept: text/markdown`, and it answers in
+markdown, as one more language: the language switcher links to it, and
+the page's `<head>` names it. From
 [`x402_pay`](https://www.drupal.org/project/x402_pay): the same gate
 that charges what is sold, so a paid page answers 402 on every route that
-shows it (its URL, JSON:API, REST), never a free copy. Pages say
-`Vary: Accept` and announce their markdown in a `Link` header. A listing's
-page stays HTML (its full view is what is sold), and the market itself is
-`/market.json`: agents read listings there.
+shows it (its URL, its `.md`, JSON:API, REST), never a free copy. Pages say
+`Vary: Accept` and announce their markdown in a `Link` header. Our own
+listing's page stays HTML (its full view is what is sold: its `.md` answers
+402), a Circle listing's ends with its similar services, and the market
+itself is `/market.json`: agents read listings there.
 
 ## Similar services
 
@@ -209,7 +213,7 @@ before and after.
 
 ## Legal, reports, purchases
 
-- `/terms` and `/privacy` (English and Spanish; Spanish prevails), from
+- `/terms` and `/privacy` (English, Spanish and Portuguese; Spanish prevails), from
   `scripts/seed-legal.php`. Drafts, not reviewed by a lawyer yet. Ombú
   answers only for the services it sells; Circle's listings are an index,
   and sellers and reviewers answer for what they publish.

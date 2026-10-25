@@ -27,6 +27,15 @@ own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
 composer takes the issue fork's branch (a `vcs` repository, the lock pins
 the commit), not a patch nor a custom copy.
 
+- **Markdown as one more language** (2026-10-25, DDEV, not deployed): any
+  page plus `.md` (`/terms.md`, `/es/terms.md`) is its markdown, for agents
+  that cannot send `Accept: text/markdown` nor read a `Link` header (most
+  fetch tools). In `x402_pay`, so the same gate decides: free page →
+  markdown, sold → 402, anything else → 404. Named in `<head>` and a `Link`
+  header, and linked as the last item of the language switcher ("Markdown,
+  for agents"), through x402_pay's `x402-pay-markdown-link` template (and a
+  block, for other sites). Deploy: `drush deploy` runs `ombu_update_10033`
+  (llms.txt), then `drush locale:check && drush locale:update`.
 - **Meilisearch** (2026-10-22/23, DDEV only; plan under "B. Meilisearch").
   `drupal/meilisearch` branch `more-like-this-user-vectors` in
   `~/Proyects/meilisearch` (not pushed), one commit per future MR: vectors

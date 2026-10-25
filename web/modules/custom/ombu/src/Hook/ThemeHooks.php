@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Hook;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\x402_pay\Delivery;
 
 /**
  * Ombú's accessible pager and the header's two dropdowns, over Belgrade.
@@ -54,6 +56,16 @@ final class ThemeHooks {
     foreach ($variables['links'] as &$item) {
       $item['link']['#options']['attributes']['class'][] = 'dropdown-item';
     }
+    // Markdown, as one more language: x402_pay's link (and its template)
+    // to this page plus .md, on free pages only.
+    $cacheability = new CacheableMetadata();
+    $url = Delivery::markdownUrl(\Drupal::routeMatch(), $cacheability);
+    $variables['markdown'] = $url ? [
+      '#theme' => 'x402_pay_markdown_link',
+      '#url' => $url,
+      '#attributes' => ['class' => ['dropdown-item']],
+    ] : [];
+    $cacheability->applyTo($variables['markdown']);
   }
 
   /**

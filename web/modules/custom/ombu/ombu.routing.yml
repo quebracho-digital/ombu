@@ -61,3 +61,12 @@ ombu.similar_event:
     _access: 'TRUE'
   options:
     no_cache: TRUE
+
+# x402scan's compatibility discovery (the OpenAPI one is /openapi.json).
+ombu.well_known_x402:
+  path: '/.well-known/x402'
+  defaults:
+    _controller: '\Drupal\ombu\Controller\OpenApiController::wellKnown'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'

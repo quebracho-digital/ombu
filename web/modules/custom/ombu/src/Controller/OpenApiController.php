@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Controller;
 
+use Drupal\Core\Cache\CacheableJsonResponse;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\AutowireTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -48,6 +50,26 @@ final class OpenApiController implements ContainerInjectionInterface {
       'servers' => [['url' => $base]],
       'paths' => $paths,
     ]);
+  }
+
+  /**
+   * /.well-known/x402: the URLs of our paid operations, for x402scan.
+   *
+   * Format: https://github.com/Merit-Systems/x402scan/blob/main/docs/DISCOVERY.md
+   * section B, "{version: 1, resources: [url, ...]}". ownershipProofs and
+   * instructions are optional there and left out: x402scan's own OpenAPI
+   * discovery (/openapi.json) comes first and runs the 402 probe anyway.
+   * The same listings as the OpenAPI paths.
+   */
+  public function wellKnown(): CacheableJsonResponse {
+    $resources = [];
+    foreach ($this->ours() as $listing) {
+      if ($this->sale($listing)) {
+        $resources[] = Url::fromRoute('x402_pay.entity', ['entity_type' => 'commerce_product', 'entity' => $listing->id(), 'view_mode' => 'full'], ['absolute' => TRUE])->toString();
+      }
+    }
+    return (new CacheableJsonResponse(['version' => 1, 'resources' => $resources]))
+      ->addCacheableDependency((new CacheableMetadata())->addCacheTags(['commerce_product_list']));
   }
 
   /**

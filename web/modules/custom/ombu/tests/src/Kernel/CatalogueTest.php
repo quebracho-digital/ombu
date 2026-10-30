@@ -94,6 +94,18 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertContains('eip155:5042', $parameters['network']['schema']['items']['enum']);
   }
 
+  public function testWellKnownX402ListsOnlyOurPaidOperations(): void {
+    $ours = Product::create([
+      'type' => 'listing', 'title' => 'Mine', 'stores' => [$this->store], 'field_source' => 'ours',
+      'field_x402_price' => ['enabled' => 1, 'amount' => '0.01'],
+    ]);
+    $ours->save();
+    $page = $this->get('/.well-known/x402');
+    $this->assertSame(1, $page['version']);
+    $this->assertCount(1, $page['resources']);
+    $this->assertStringEndsWith("/x402/commerce_product/{$ours->id()}/full", $page['resources'][0]);
+  }
+
   public function testRetiredOnlyWhenAsked(): void {
     $this->assertNotContains('Gone', $this->titles($this->get('/market.json')));
     $this->assertContains('Gone', $this->titles($this->get('/market.json?retired=1')));

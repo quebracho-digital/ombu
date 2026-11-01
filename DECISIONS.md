@@ -95,3 +95,5 @@ ombu's vendor. We do not switch that checkout to `1.0.x`; we wait for
 search_api 1.41 until then. v0.2.0 reached Packagist the same morning;
 the lock change (1.41.0 → 1.43.0, only search_api) was tested in DDEV and
 committed as f01fe08 on `chore/search-api-1.43`.
+
+Decidido por Leo (2026-11-01 14:50): "commit, push, luego git pull en ser5", with "Sí, avanzá 1.0.x" for x402_pay and "Sí, en este deploy" for symfony/mime. One deploy carries the x402_pay refactor (lock to the new `1.0.x`), 4ed8361, search_api 1.43 and symfony/mime 7.4.22 (CVE-2026-45070, email header injection). The lock is updated once on this branch, so `chore/search-api-1.43` (f01fe08) is not merged.

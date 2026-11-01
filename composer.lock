@@ -3794,17 +3794,21 @@
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/x402_pay.git",
-                "reference": "c52974015c59f8e028e688349db409a607a461e2"
+                "reference": "9dce26280669e5b09e9efdee4b6afda27410d201"
             },
             "require": {
                 "drupal/core": "^11.1 || ^12",
                 "drupal/key": "^1.18",
                 "ext-gmp": "*",
                 "ext-sodium": "*",
-                "kornrunner/keccak": "^1.1",
-                "kornrunner/secp256k1": "^0.4",
+                "guzzlehttp/psr7": "^2.6",
                 "league/html-to-markdown": "^5.1",
-                "php": "^8.3"
+                "php": "^8.3",
+                "quebracho/x402": "^0.2",
+                "symfony/psr-http-message-bridge": "^6.4 || ^7.0"
+            },
+            "require-dev": {
+                "drupal/markdownify": "^1.2"
             },
             "type": "drupal-module",
             "extra": {
@@ -3812,8 +3816,8 @@
                     "dev-1.0.x": "1.0.x-dev"
                 },
                 "drupal": {
-                    "version": "1.0.0-beta1+17-dev",
-                    "datestamp": "1792598255",
+                    "version": "1.0.0-beta2+12-dev",
+                    "datestamp": "1793555583",
                     "security-coverage": {
                         "status": "not-covered",
                         "message": "Project has not opted into security advisory coverage!"
@@ -8495,16 +8499,16 @@
         },
         {
             "name": "symfony/mime",
-            "version": "v7.4.19",
+            "version": "v7.4.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "f8ac7d0a800bcabbcd1f7de56594cf05e6cd5693"
+                "reference": "94a4c017435bc515f5ac80421a2c555fb9ca3676"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/f8ac7d0a800bcabbcd1f7de56594cf05e6cd5693",
-                "reference": "f8ac7d0a800bcabbcd1f7de56594cf05e6cd5693",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/94a4c017435bc515f5ac80421a2c555fb9ca3676",
+                "reference": "94a4c017435bc515f5ac80421a2c555fb9ca3676",
                 "shasum": ""
             },
             "require": {
@@ -8560,7 +8564,7 @@
                 "mime-type"
             ],
             "support": {
-                "source": "https://github.com/symfony/mime/tree/v7.4.19"
+                "source": "https://github.com/symfony/mime/tree/v7.4.22"
             },
             "funding": [
                 {
@@ -8580,7 +8584,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-04T10:45:44+00:00"
+            "time": "2026-10-28T17:57:58+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",

@@ -270,7 +270,10 @@ ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='�
 ddev test                                           # x402_pay, wallet_auth and ombu
 ```
 
-The modules come from drupal.org through composer; nothing to clone. Only
+The modules come from drupal.org through composer; nothing to clone.
+x402_pay's protocol code (signing, headers, networks, facilitators) is the
+`quebracho/x402` library from Packagist, which Ombú also requires because
+its own code uses it. Only
 to work on the modules themselves, clone them next to this repo and copy
 `.ddev/docker-compose.dev-modules.yaml.example` to
 `.ddev/docker-compose.dev-modules.yaml`: your checkouts are mounted in

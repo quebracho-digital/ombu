@@ -10,13 +10,15 @@ use Drupal\key\Entity\Key;
 use Drupal\ombu\Sales;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\Role;
-use Drupal\x402_pay\CircleFacilitator;
-use Drupal\x402_pay\Eip712;
-use Drupal\x402_pay\PaymentHeaders;
+use Drupal\x402_pay\Facilitators;
 use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
-use Drupal\x402_pay\Signer;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Quebracho\X402\Eip712;
+use Quebracho\X402\EvmExact;
+use Quebracho\X402\Facilitator;
+use Quebracho\X402\PaymentHeaders;
+use Quebracho\X402\Signer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -33,6 +35,8 @@ final class SellersTest extends CommerceKernelTestBase {
   // Hardhat's public test accounts #2 and #3, never real wallets.
   private const PING_KEY = '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a';
   private const MARKDOWN_KEY = '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6';
+  // Hardhat's #4, the buyer.
+  private const BUYER_KEY = '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a';
 
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
@@ -49,7 +53,7 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->installEntitySchema('commerce_product_variation');
     $this->installEntitySchema('comment');
     $this->installEntitySchema('taxonomy_term');
-    $this->installSchema('x402_pay', ['x402_pay_log']);
+    $this->installSchema('x402_pay', ['x402_pay_log', 'x402_pay_claim']);
     $this->installSchema('comment', ['comment_entity_statistics']);
     $this->installConfig(['commerce_product', 'comment', 'x402_pay', 'ombu']);
     Role::create(['id' => AccountInterface::ANONYMOUS_ROLE, 'label' => 'Anonymous'])
@@ -275,15 +279,19 @@ final class SellersTest extends CommerceKernelTestBase {
    * A paid POST with the service's input; the facilitator says yes.
    */
   private function buy(Product $listing, array $input): Response {
-    $facilitator = $this->createMock(CircleFacilitator::class);
+    $facilitator = $this->createMock(Facilitator::class);
     $facilitator->method('verify')->willReturn(['isValid' => TRUE, 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
     $facilitator->method('settle')->willReturn(['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
-    $this->container->set('x402_pay.facilitator', $facilitator);
+    $facilitators = $this->createMock(Facilitators::class);
+    $facilitators->method('for')->willReturn($facilitator);
+    $this->container->set('x402_pay.facilitators', $facilitators);
 
-    $accepted = $this->required($listing)['accepts'][0];
+    // Signed for real: the library checks it offline before the facilitator.
+    $required = $this->required($listing);
+    $accepted = $required['accepts'][0];
     $request = Request::create("/x402/commerce_product/{$listing->id()}/full", 'POST', content: json_encode($input));
     $request->headers->set('Content-Type', 'application/json');
-    $request->headers->set(PaymentHeaders::SIGNATURE, PaymentHeaders::encode(['x402Version' => 2, 'accepted' => $accepted, 'payload' => []]));
+    $request->headers->set(PaymentHeaders::SIGNATURE, PaymentHeaders::encode((new EvmExact(new Signer(self::BUYER_KEY)))->pay($required, $accepted)));
     return $this->container->get('http_kernel')->handle($request);
   }
 

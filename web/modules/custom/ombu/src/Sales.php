@@ -8,8 +8,8 @@ use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\views\Views;
-use Drupal\x402_pay\Networks;
-use Drupal\x402_pay\Signer;
+use Quebracho\X402\Networks;
+use Quebracho\X402\Signer;
 
 /**
  * The market's sales on chain, from x402_pay's log: proof it trades.
@@ -49,7 +49,7 @@ final class Sales {
         return ['#cache' => $cache];
       }
     }
-    $explorer = Networks::ALL[$network]['explorer'] ?? NULL;
+    $explorer = Networks::find($network)['explorer'] ?? NULL;
 
     $build = [
       '#type' => 'container',

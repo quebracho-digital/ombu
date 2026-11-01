@@ -7,6 +7,7 @@ facilitator:
   own_networks:
     - 'eip155:5042'
   own_key_id: gas_wallet
+  max_gas_cost: '0.05'
 sweep:
   enabled: false
   to: ''

@@ -84,3 +84,14 @@ request, one commit each, stacked on a single branch.
   postponed, until it is in.
 - **Rejected:** one issue with one merge request, where a "no" to any part
   stops all of it.
+
+### search_api 1.43 waits for quebracho/x402 on Packagist
+
+Decidido por Leo (2026-11-01): "esperemos que este publicada la version de la
+libreria y luego usala desde packglist". The DDEV mount of `x402_pay` is on
+`refactor/use-quebracho-x402`, which needs `quebracho/x402` that is not in
+ombu's vendor. We do not switch that checkout to `1.0.x`; we wait for
+`quebracho/x402` v0.2.0 on Packagist and use it from there. Prod keeps
+search_api 1.41 until then. The lock change (1.41.0 → 1.43.0, only
+search_api) is ready, uncommitted, in the worktree `../ombu-sa143`
+(`chore/search-api-1.43`).

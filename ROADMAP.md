@@ -27,6 +27,15 @@ own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
 composer takes the issue fork's branch (a `vcs` repository, the lock pins
 the commit), not a patch nor a custom copy.
 
+- **Settlement hardening** (from the SR1–SR8 review, 2026-10-16; moved from
+  Leo's todo 2026-11-01). Done when each holds in x402_pay with a test:
+  a configurable gas cap (SR6); a cron that settles the log of a
+  `settlement_pending` sale from its receipt (SR4); a rate limit on failed
+  payments per IP; a weekly reconciliation of `x402_pay_log` against the
+  chain. Already covered by quebracho/x402 0.2: the longest `validBefore`
+  (`maxTimeoutSeconds` + 60 s) and re-checking the balance before settling
+  (`eth_estimateGas` simulates the transfer).
+
 - **Markdown as one more language** (2026-10-25, DDEV, not deployed): any
   page plus `.md` (`/terms.md`, `/es/terms.md`) is its markdown, for agents
   that cannot send `Accept: text/markdown` nor read a `Link` header (most

@@ -265,7 +265,10 @@ discovery.
 ```sh
 # .ddev/.env (git-ignored): one testnet key per seller, and the LLM key.
 #   SELLER_KEY_PING=0x…  SELLER_KEY_TERMS=0x…  SELLER_KEY_FACTCHECK=0x…
-#   SELLER_KEY_MARKDOWN=0x…  LLAMA_API_KEY=…  FIREWORKS_API_KEY=… (embeddings)
+#   SELLER_KEY_MARKDOWN=0x…  SELLER_KEY_NAMES=0x…  LLAMA_API_KEY=…  FIREWORKS_API_KEY=… (embeddings)
+# The buyer's key for the buying scripts is not here: x402_pay/scripts/.env
+#   (BUYER_PRIVATE_KEY, testnet) or .env.mainnet (BUYER_PRIVATE_KEY, real money),
+#   both git-ignored, in the x402_pay checkout.
 ddev start && ddev composer install
 ddev drush si standard --site-name=Ombú -y
 ddev drush en ombu search_api search_api_db ai_provider_universal_terms ai_provider_universal_factcheck -y

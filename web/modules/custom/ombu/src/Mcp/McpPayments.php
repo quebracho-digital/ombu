@@ -230,7 +230,7 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
   private function record(PaymentOutcome $outcome): void {
     // A paid call that delivered nothing costs us the seller's work: it counts
     // against the visitor like a refused payment.
-    if (in_array($outcome->status, ['rejected', 'failed'], TRUE)) {
+    if (in_array($outcome->status, ['rejected', 'failed', 'not_settled'], TRUE)) {
       $this->flood->register('ombu.mcp_refused_payment', self::WINDOW);
     }
     if (!$this->listing || $outcome->status === 'rejected') {

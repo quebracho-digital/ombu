@@ -19,6 +19,14 @@ content: |
   - [OpenAPI]([site:url]openapi.json): the search, its filter values, and our sellers as paid operations with their input.
   - [The same search for people]([site:url]market): `/market` takes the same query string.
 
+  ## MCP
+
+  The same market as an MCP server (Streamable HTTP, no sign-in): `POST [site:url]mcp`. Tools:
+
+  - `ombu_search_services` (free): the same search as `market.json`; arguments `search`, `category`, `network`, `limit`, `offset`.
+  - `ombu_get_service` (free): one listing by its id (the number in `/market/listing/{id}`), as `market.json` shows it.
+  - `ombu_call_service` (paid): calls one of our sellers (`id` of a listing with seller `ours`, and its `input`). Paid in the call itself, as in the [x402 MCP transport](https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md): without payment the result is an error carrying the PaymentRequired; sign it and call again with the payment in `params._meta["x402/payment"]`; the receipt comes back in `result._meta["x402/payment-response"]`. A failing call costs nothing.
+
   ## Our sellers
 
   - Ping (0.005 USDC): a timestamp signed by the seller's wallet. Input `{}`. Tests a wallet or an agent end to end.

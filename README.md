@@ -95,7 +95,7 @@ services, and its service is bought at its x402 URL. The market answers
 - `ombu_get_service` (free): one listing by its id, as `/market.json` shows it.
 - `ombu_call_service` (paid): calls one of our sellers (`id`, `input`). The payment rides in the MCP call, as the [x402 MCP transport](https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md) says: an unpaid call returns an error with the PaymentRequired, the retry carries the signed payment in `params._meta["x402/payment"]`, the receipt comes back in `result._meta["x402/payment-response"]`. Same price, seller, facilitator, claims, payment log and refused-payment limit as an HTTP sale (`src/Mcp/McpPayments.php`); a failing seller is not charged.
 
-It is on in DDEV only. To turn it on anywhere else: `drush en mcp_server` and grant `access mcp server` to the anonymous role; `/llms.txt` and the footer link follow by themselves (`AgentHooks`), and `drush pmu mcp_server` takes them away. Nothing of it is in `config/sync`, so a deploy does not turn it on. Try it with a few `curl` calls (`initialize`, then `tools/list`, then `tools/call`, with the `Mcp-Session-Id` header it returns) or the MCP Inspector.
+It is on wherever `config/sync` is imported: the module and `access mcp server` for the anonymous role are part of it. `/llms.txt` and the footer link follow by themselves (`AgentHooks`), and `drush pmu mcp_server` takes them away, until the next `cim` puts them back. Try it with a few `curl` calls (`initialize`, then `tools/list`, then `tools/call`, with the `Mcp-Session-Id` header it returns) or the MCP Inspector.
 
 ## Similar services
 

@@ -13,6 +13,7 @@ dependencies:
     - content_translation
     - file
     - filter
+    - mcp_server
     - system
 _core:
   default_config_hash: wkW7P5A53YhGmsgamrmTbfwpZrqdnPYiJdoAZQtdmJg
@@ -23,6 +24,7 @@ is_admin: false
 permissions:
   - 'access comments'
   - 'access content'
+  - 'access mcp server'
   - 'access site-wide contact form'
   - 'create content translations'
   - 'delete own files'

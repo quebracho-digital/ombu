@@ -97,3 +97,9 @@ the lock change (1.41.0 → 1.43.0, only search_api) was tested in DDEV and
 committed as f01fe08 on `chore/search-api-1.43`.
 
 Decidido por Leo (2026-11-01 14:50): "commit, push, luego git pull en ser5", with "Sí, avanzá 1.0.x" for x402_pay and "Sí, en este deploy" for symfony/mime. One deploy carries the x402_pay refactor (lock to the new `1.0.x`), 4ed8361, search_api 1.43 and symfony/mime 7.4.22 (CVE-2026-45070, email header injection). The lock is updated once on this branch, so `chore/search-api-1.43` (f01fe08) is not merged.
+
+### An MCP endpoint, read-only and free, in dev first
+
+Decidido por Leo (2026-11-03 09:30): "el mcp deberia hacerlo una sesion experta en ombu". For the Symfony AI & MCP hackathon, Ombú serves `/mcp` with the contrib `drupal/mcp_server` (official `mcp/sdk`), two tools that call `CatalogueController`, so they answer what `/market.json` answers: `ombu_search_services` and `ombu_get_service`. Anonymous may use them: the module's `access mcp server` permission is granted to the anonymous role, which is safe only because both tools are read-only over what anonymous already sees. Any tool that writes or charges must check its own access.
+
+The module and that permission are enabled in DDEV only and are not in `config/sync`, so a deploy does not turn the endpoint on in SER5. Turning it on there is Leo's call.

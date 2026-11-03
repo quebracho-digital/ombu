@@ -31,6 +31,7 @@
         "drupal/gin_toolbar": "^3.0",
         "drupal/key": "^1.22",
         "drupal/llms_txt": "^1.1",
+        "drupal/mcp_server": "2.0.0-beta7",
         "drupal/pathauto": "^1.15",
         "drupal/search_api": "^1.41",
         "drupal/wallet_auth": "1.0.x-dev@dev",

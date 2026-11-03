@@ -59,7 +59,14 @@ final class AgentsBlock extends BlockBase implements ContainerFactoryPluginInter
       $links[] = $this->t('<a href=":md" rel="alternate" type="text/markdown">this page in markdown</a>', [':md' => $md]);
     }
     $links[] = $this->t('<a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
-    $build['#markup'] = $this->t('For agents: @links', ['@links' => Markup::create(implode(' · ', $links))]);
+    // Its own strip under the footer's columns: Belgrade's dark footer is
+    // Bootstrap, and the block is a full-width item of its row.
+    $build = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#attributes' => ['class' => ['small', 'mt-4', 'mb-0', 'pt-3', 'border-top', 'border-secondary']],
+      '#value' => $this->t('For agents: @links', ['@links' => Markup::create(implode(' · ', $links))]),
+    ];
     $cacheability->applyTo($build);
     return $build;
   }

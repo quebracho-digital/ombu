@@ -31,6 +31,18 @@ final class AgentHooks {
   }
 
   /**
+   * Implements hook_menu_links_discovered_alter().
+   *
+   * The MCP link of the footer exists only where its route does.
+   */
+  #[Hook('menu_links_discovered_alter')]
+  public function links(array &$links): void {
+    if (!$this->moduleHandler->moduleExists('mcp_server')) {
+      unset($links['ombu.mcp']);
+    }
+  }
+
+  /**
    * Rewrites /llms.txt when mcp_server comes or goes (its MCP section).
    */
   private function rewrite(array $modules, bool $is_syncing): void {

@@ -23,6 +23,7 @@ use Quebracho\X402\X402McpMiddleware;
 use Quebracho\X402\Signer;
 use GuzzleHttp\Psr7\Response as PsrResponse;
 use GuzzleHttp\Psr7\ServerRequest;
+use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -268,33 +269,11 @@ final class SellersTest extends CommerceKernelTestBase {
     $ping = $this->listing('ping', 'seller_ping', '0.0001');
     // Before the payments service is built: it keeps the facilitators it got.
     $this->facilitatorSaysYes();
-    $tool = $this->container->get('plugin.manager.mcp_server.tool')->createInstance(McpPayments::TOOL);
     $ran = 0;
-    $handler = new class($tool, $this->createStub(ClientGateway::class), $ran) implements RequestHandlerInterface {
-
-      public function __construct(private $tool, private $gateway, private int &$ran) {}
-
-      public function handle(ServerRequestInterface $request): ResponseInterface {
-        $message = json_decode((string) $request->getBody(), TRUE);
-        $this->ran++;
-        try {
-          $result = ['content' => [['type' => 'text', 'text' => json_encode($this->tool->execute($message['params']['arguments'], $this->gateway))]]];
-        }
-        catch (\Throwable $e) {
-          $result = ['isError' => TRUE, 'content' => [['type' => 'text', 'text' => $e->getMessage()]]];
-        }
-        return new PsrResponse(200, ['Content-Type' => 'application/json'], json_encode(['jsonrpc' => '2.0', 'id' => $message['id'], 'result' => $result]));
-      }
-
-    };
-    $call = function (array $meta = []) use ($ping, $handler): array {
-      $body = json_encode(['jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call', 'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $ping->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : [])]);
-      $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $body), $handler);
-      return json_decode((string) $response->getBody(), TRUE)['result'];
-    };
+    $handler = $this->mcpHandler($ran);
 
     // Unpaid: the PaymentRequired, and the seller never ran.
-    $required = $call();
+    $required = $this->mcpCall($ping, $handler);
     $this->assertTrue($required['isError']);
     $this->assertSame(0, $ran);
     $accepted = $required['structuredContent']['accepts'][0];
@@ -303,20 +282,87 @@ final class SellersTest extends CommerceKernelTestBase {
 
     // Paid: delivered, with the receipt, logged as a sale of the listing.
     $payment = (new EvmExact(new Signer(self::BUYER_KEY)))->pay($required['structuredContent'], $accepted);
-    $paid = $call([X402McpMiddleware::PAYMENT => $payment]);
-    $this->assertArrayNotHasKey("isError", $paid, json_encode($paid));
+    $paid = $this->mcpCall($ping, $handler, [X402McpMiddleware::PAYMENT => $payment]);
+    $this->assertArrayNotHasKey('isError', $paid, json_encode($paid));
     $this->assertSame((new Signer(self::PING_KEY))->address(), json_decode($paid['content'][0]['text'], TRUE)['signer']);
     $this->assertTrue($paid['_meta'][X402McpMiddleware::PAYMENT_RESPONSE]['success']);
     $this->assertSame('settled', $this->logged());
     $this->assertSame((string) $ping->id(), \Drupal::database()->select('x402_pay_log', 'l')->fields('l', ['entity_id'])->execute()->fetchField());
 
     // The same payment buys one delivery.
-    $this->assertTrue($call([X402McpMiddleware::PAYMENT => $payment])['isError']);
+    $this->assertTrue($this->mcpCall($ping, $handler, [X402McpMiddleware::PAYMENT => $payment])['isError']);
     $this->assertSame(1, $ran, 'Unpaid and replayed calls did not run the seller; only the paid one did.');
 
     // Without the middleware (another transport) a priced listing sells nothing.
+    $tool = $this->container->get('plugin.manager.mcp_server.tool')->createInstance(McpPayments::TOOL);
+    $this->expectException(ToolCallException::class);
     $this->expectExceptionMessage('Payment required.');
     $tool->execute(['id' => (int) $ping->id()], $this->createStub(ClientGateway::class));
+  }
+
+  /**
+   * Past the site's deadline, or on a settle answer that is not a real TRUE,
+   * the buyer is not charged and gets nothing.
+   */
+  public function testAnMcpCallIsNotChargedPastTheDeadlineNorOnASettleThatDoesNotAddUp(): void {
+    foreach ([
+      'deadline' => [['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32)], 'deadline'],
+      'string false' => [['success' => 'false', 'errorReason' => 'insufficient_funds'], 'invalid_settle_response'],
+      'refused' => [['success' => FALSE, 'errorReason' => 'insufficient_funds', 'transaction' => ''], 'insufficient_funds'],
+    ] as $case => [$settle, $reason]) {
+      $this->setSetting('x402_pay_deadline', $case === 'deadline' ? 0.000001 : NULL);
+      $this->container->get('kernel')->rebuildContainer();
+      $ping = $this->listing('ping', 'seller_ping', '0.0001');
+      $this->facilitatorSaysYes($settle);
+      $ran = 0;
+      $handler = $this->mcpHandler($ran);
+      $required = $this->mcpCall($ping, $handler)['structuredContent'];
+      $payment = (new EvmExact(new Signer(self::BUYER_KEY)))->pay($required, $required['accepts'][0]);
+      $result = $this->mcpCall($ping, $handler, [X402McpMiddleware::PAYMENT => $payment]);
+      $this->assertTrue($result['isError'], $case);
+      $this->assertSame($reason, $result['structuredContent']['error'], $case);
+      $this->assertStringNotContainsString('signer', json_encode($result), "$case: the content is withheld");
+    }
+  }
+
+  public function testMalformedMcpParamsAreNotAnError(): void {
+    $this->facilitatorSaysYes();
+    $ran = 0;
+    foreach (['x', 7, NULL] as $params) {
+      $body = json_encode(['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call', 'params' => $params]);
+      $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', [], $body), $this->mcpHandler($ran));
+      $this->assertSame(200, $response->getStatusCode());
+    }
+  }
+
+  /**
+   * What the SDK does with a tools/call: runs the tool, wraps the answer.
+   */
+  private function mcpHandler(int &$ran): RequestHandlerInterface {
+    $tool = $this->container->get('plugin.manager.mcp_server.tool')->createInstance(McpPayments::TOOL);
+    return new class($tool, $this->createStub(ClientGateway::class), $ran) implements RequestHandlerInterface {
+
+      public function __construct(private $tool, private $gateway, private int &$ran) {}
+
+      public function handle(ServerRequestInterface $request): ResponseInterface {
+        $message = json_decode((string) $request->getBody(), TRUE);
+        $this->ran++;
+        try {
+          $result = ['content' => [['type' => 'text', 'text' => json_encode($this->tool->execute($message['params']['arguments'] ?? [], $this->gateway))]]];
+        }
+        catch (\Throwable $e) {
+          $result = ['isError' => TRUE, 'content' => [['type' => 'text', 'text' => $e->getMessage()]]];
+        }
+        return new PsrResponse(200, ['Content-Type' => 'application/json'], json_encode(['jsonrpc' => '2.0', 'id' => $message['id'] ?? 1, 'result' => $result]));
+      }
+
+    };
+  }
+
+  private function mcpCall(Product $listing, RequestHandlerInterface $handler, array $meta = []): array {
+    $body = json_encode(['jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call', 'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $listing->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : [])]);
+    $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $body), $handler);
+    return json_decode((string) $response->getBody(), TRUE)['result'];
   }
 
   private function listing(string $service, string $key, string $price): Product {
@@ -356,10 +402,10 @@ final class SellersTest extends CommerceKernelTestBase {
   /**
    * A facilitator that verifies and settles whatever it is given.
    */
-  private function facilitatorSaysYes(): void {
+  private function facilitatorSaysYes(array $settle = []): void {
     $facilitator = $this->createMock(Facilitator::class);
     $facilitator->method('verify')->willReturn(['isValid' => TRUE, 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
-    $facilitator->method('settle')->willReturn(['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
+    $facilitator->method('settle')->willReturn($settle + ['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
     $facilitators = $this->createMock(Facilitators::class);
     $facilitators->method('for')->willReturn($facilitator);
     $this->container->set('x402_pay.facilitators', $facilitators);

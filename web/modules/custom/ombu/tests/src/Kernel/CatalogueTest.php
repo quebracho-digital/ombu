@@ -83,8 +83,21 @@ final class CatalogueTest extends CommerceKernelTestBase {
 
     $one = $manager->createInstance('ombu_get_service')->execute(['id' => 2], $gateway);
     $this->assertSame('Captcha', $one['metadata']['description']);
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(\Mcp\Exception\ToolCallException::class);
     $manager->createInstance('ombu_get_service')->execute(['id' => 999], $gateway);
+  }
+
+  public function testARoleThatCannotViewListingsDoesNotFindThem(): void {
+    $this->assertNotEmpty($this->titles($this->get('/market.json')));
+    // The index keeps who may view each item (role_access): take the
+    // permission away, index again, and the search finds nothing.
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->revokePermission('view commerce_product')->save();
+    // This process remembers who could view before; a new one would not.
+    \Drupal::entityTypeManager()->getAccessControlHandler('commerce_product')->resetCache();
+    $index = \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings');
+    $index->reindex();
+    $index->indexItems();
+    $this->assertSame([], $this->titles($this->get('/market.json')));
   }
 
   public function testSeveralValuesMatchAnyOfThem(): void {

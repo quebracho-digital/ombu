@@ -7,6 +7,7 @@ namespace Drupal\ombu\Plugin\mcp_server\Tool;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mcp_server\Attribute\Tool;
+use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -35,7 +36,7 @@ final class GetService extends CatalogueToolBase {
     $product = $this->entityTypeManager->getStorage('commerce_product')->load((int) ($arguments['id'] ?? 0));
     // Only what anonymous sees on /market: published listings.
     if (!$product instanceof ProductInterface || !$product->isPublished() || $product->bundle() !== 'listing') {
-      throw new \InvalidArgumentException('No such service.');
+      throw new ToolCallException('No such service.');
     }
     return $this->catalogue->item($product, Request::create('/market.json'));
   }

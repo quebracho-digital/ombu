@@ -23,8 +23,9 @@ use Symfony\Component\HttpFoundation\Request;
       'category' => ['type' => 'string', 'description' => 'A category from the facets of a previous search.'],
       'network' => ['type' => 'string', 'description' => 'CAIP-2 network id, e.g. eip155:8453.'],
       'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50, 'default' => 10],
-      'offset' => ['type' => 'integer', 'minimum' => 0, 'default' => 0],
+      'offset' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 100000, 'default' => 0],
     ],
+    'additionalProperties' => FALSE,
   ],
   readOnly: TRUE,
   destructive: FALSE,
@@ -36,7 +37,7 @@ final class SearchServices extends CatalogueToolBase {
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $arguments += ['limit' => 10];
     $arguments['limit'] = min(50, (int) $arguments['limit']);
-    $request = Request::create('/market.json', 'GET', array_filter($arguments, fn($v) => $v !== '' && $v !== NULL));
+    $request = Request::create('/market.json', 'GET', array_filter(array_intersect_key($arguments, array_flip(['search', 'category', 'network', 'limit', 'offset'])), fn($v) => $v !== '' && $v !== NULL));
     $search = $this->catalogue->search($request);
     return [
       'items' => array_map(fn($p) => $this->catalogue->item($p, $request), $search['products']),

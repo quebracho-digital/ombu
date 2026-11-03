@@ -108,3 +108,11 @@ Decidido por Leo (2026-11-03): "si, agrega mis listados al mcp" (answering wheth
 
 Decidido por Leo (2026-11-03): "podemos actualizar ombu para que use los modulos x composer en lugar de mapear el volumen?". DDEV no longer mounts `x402_pay`, `wallet_auth` or `ai_provider_universal`: they run from `web/modules/contrib`, as in prod. The mounts stay available in `.ddev/docker-compose.dev-modules.yaml.example` for working on a module.
 
+
+### The listings index keeps who may view each item
+
+Decidido por Leo (2026-11-03): "puedes ajustar los indices de search_api para que no indexen no publicados y respeten los niveles de permisos?". Unpublished listings were already out of the index (`entity_status`, with `index_directly`). The `listings` index now also has Search API's `role_access` processor: it stores, per item, the roles whose entity access allows `view`, and every query is filtered by the current user's roles. Its hidden field `role_access` is in the index config (`config/sync` and the module's `config/optional`); importing the processor alone does not add it, because `preIndexSave()` only runs when the index is saved through its form or code.
+
+Caveat: the roles are decided when an item is indexed. Changing who can view listings (a permission, a role) needs `drush search-api:reset-tracker listings && drush search-api:index listings` (about a minute for 2,800 listings). So does the deploy that first brings the processor: until then the items have no roles and the market is empty. The Meilisearch index is not touched.
+
+The link to `/mcp` in the footer is a link of the `footer` menu (`ombu.links.menu.yml`), so the menu system checks access, caches and translates it; `AgentHooks` removes it where `mcp_server` is not installed.

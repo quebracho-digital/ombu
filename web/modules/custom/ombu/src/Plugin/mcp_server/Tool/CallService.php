@@ -8,6 +8,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mcp_server\Attribute\Tool;
 use Drupal\ombu\Mcp\McpPayments;
 use Drupal\ombu\Sellers;
+use Mcp\Exception\ToolCallException;
 use Mcp\Server\ClientGateway;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
     'type' => 'object',
     'properties' => [
       'id' => ['type' => 'integer', 'description' => 'The listing id.'],
-      'input' => ['type' => 'object', 'description' => "The service's input, as its listing describes it."],
+      'input' => ['type' => ['object', 'array'], 'description' => "The service's input, as its listing describes it."],
     ],
     'required' => ['id'],
   ],
@@ -50,16 +51,16 @@ final class CallService extends CatalogueToolBase {
 
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $product = $this->payments->listing(['name' => McpPayments::TOOL, 'arguments' => $arguments])
-      ?? throw new \InvalidArgumentException('No such service for sale.');
+      ?? throw new ToolCallException('No such service for sale.');
     // Not admitted by the payment middleware (another transport): sell nothing.
     if (!$this->payments->isPaid($product)) {
-      throw new \RuntimeException('Payment required.');
+      throw new ToolCallException('Payment required.');
     }
     $input = is_array($arguments['input'] ?? NULL) ? $arguments['input'] : [];
     $response = $this->sellers->deliver((string) $product->get('field_service')->value, $product, Request::create('/', 'POST', [], [], [], [], json_encode($input)));
     $answer = json_decode((string) $response->getContent(), TRUE);
     if (!$response->isSuccessful()) {
-      throw new \RuntimeException(is_array($answer) && isset($answer['error']) ? (string) $answer['error'] : 'The service failed; not charged.');
+      throw new ToolCallException(is_array($answer) && isset($answer['error']) ? (string) $answer['error'] : 'The service failed; not charged.');
     }
     return $answer;
   }

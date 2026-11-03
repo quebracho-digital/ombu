@@ -8,6 +8,7 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -15,7 +16,6 @@ use Drupal\Core\Url;
 use Drupal\ombu\Markdown;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * For agents, in the footer: this page as markdown, and the whole site.
@@ -59,15 +59,7 @@ final class AgentsBlock extends BlockBase implements ContainerFactoryPluginInter
       $links[] = $this->t('<a href=":md" rel="alternate" type="text/markdown">this page in markdown</a>', [':md' => $md]);
     }
     $links[] = $this->t('<a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
-    // Only where the MCP server is on (mcp_server module).
-    $cacheability->addCacheTags(['routes']);
-    try {
-      $mcp = Url::fromRoute('mcp_server.handle')->toString();
-      $links[] = $this->t('<a href=":mcp">MCP server, at @mcp</a>', [':mcp' => $mcp, '@mcp' => $mcp]);
-    }
-    catch (RouteNotFoundException) {
-    }
-    $build['#markup'] = $this->t('For agents:') . ' ' . implode(' · ', $links);
+    $build['#markup'] = $this->t('For agents: @links', ['@links' => Markup::create(implode(' · ', $links))]);
     $cacheability->applyTo($build);
     return $build;
   }

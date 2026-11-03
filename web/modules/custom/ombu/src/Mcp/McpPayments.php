@@ -7,6 +7,7 @@ namespace Drupal\ombu\Mcp;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Flood\FloodInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\ombu\Sellers;
 use Drupal\x402_pay\ClaimStore;
 use Drupal\x402_pay\Delivery;
@@ -24,7 +25,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Quebracho\X402\EvmExact;
 use Quebracho\X402\FacilitatorException;
 use Quebracho\X402\PaymentOutcome;
-use Quebracho\X402\Settlement;
 use Quebracho\X402\SolanaExact;
 use Quebracho\X402\X402McpMiddleware;
 use Symfony\Component\HttpFoundation\Request;
@@ -85,7 +85,7 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
       return NULL;
     }
     $product = $this->entityTypeManager->getStorage('commerce_product')->load($id);
-    if (!$product instanceof ProductInterface || !$product->isPublished() || !$product->hasField('field_service')
+    if (!$product instanceof ProductInterface || !$product->isPublished() || !$product->access('view') || !$product->hasField('field_service')
       || !$product->get('field_service')->value || !X402PriceItem::find($product, 'full')) {
       return NULL;
     }
@@ -100,7 +100,8 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
       return TRUE;
     }
     $item = X402PriceItem::find($product, 'full');
-    return $item && $this->delivery->quote(Request::create('/mcp', 'POST'), $product, $item)->isFree();
+    $quote = $item ? $this->delivery->quote(Request::create('/mcp', 'POST'), $product, $item) : NULL;
+    return $quote && !$quote->isDenied() && $quote->isFree();
   }
 
   /**
@@ -134,7 +135,7 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
     if ($body->isSeekable()) {
       $body->rewind();
     }
-    $params = is_array($message) && !array_is_list($message) && ($message['method'] ?? NULL) === 'tools/call' ? ($message['params'] ?? []) : [];
+    $params = is_array($message) && !array_is_list($message) && ($message['method'] ?? NULL) === 'tools/call' && is_array($message['params'] ?? NULL) ? $message['params'] : [];
     $this->admitted = $this->listing = NULL;
     $product = $this->listing($params);
     $requirements = $product ? $this->requirements($product) : NULL;
@@ -158,20 +159,28 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
       }
       return empty($verified['isValid']) ? ($verified['invalidReason'] ?? 'invalid_payment') : NULL;
     };
-    $settle = function (array $payment, array $req) use ($seller, &$facilitator): array {
+    // Past the site's deadline (a proxy drops the answer at about 100 s) the
+    // buyer got nothing: do not charge, as PaymentGate does over HTTP.
+    $deadline = Settings::get('x402_pay_deadline');
+    $started = (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(TRUE));
+    $settle = function (array $payment, array $req) use ($seller, &$facilitator, $deadline, $started): array {
+      if ($deadline && microtime(TRUE) - $started > $deadline) {
+        return ['success' => FALSE, 'errorReason' => 'deadline', 'transaction' => '', 'network' => $req['network']];
+      }
       try {
         $receipt = ($facilitator ?? $this->facilitators->for($req['network'], $seller))->settle($payment, $req);
       }
       catch (FacilitatorException) {
-        $receipt = ['success' => FALSE, 'errorReason' => 'facilitator_unavailable', 'transaction' => '', 'network' => $req['network']];
+        // It may have sent the transaction before going silent: the claim
+        // stays (the library's rule), so the same payment cannot run twice.
+        return ['success' => FALSE, 'errorReason' => 'facilitator_unavailable', 'transaction' => '', 'network' => $req['network']];
       }
-      if (empty($receipt['success'])) {
-        // Nothing broadcast: the payment may be offered again. A sent but
-        // unconfirmed one (settlement_pending) stays claimed.
-        if (($receipt['transaction'] ?? '') === '') {
-          $this->claims->release(Settlement::key($payment));
-        }
-        return $receipt;
+      // Only a real TRUE is a charge. A real FALSE is a refusal; anything
+      // else ("false", 1, [0]) is an answer that does not add up: the claim
+      // stays, as the library does.
+      if (($receipt['success'] ?? NULL) !== TRUE) {
+        $reason = ($receipt['success'] ?? NULL) === FALSE ? (string) ($receipt['errorReason'] ?? 'settle_failed') : 'invalid_settle_response';
+        return ['success' => FALSE, 'errorReason' => $reason, 'transaction' => (string) ($receipt['transaction'] ?? ''), 'network' => $req['network']];
       }
       return ['success' => TRUE, 'transaction' => $receipt['transaction'], 'network' => $receipt['network'] ?? $req['network'], 'payer' => $receipt['payer'] ?? NULL];
     };
@@ -219,7 +228,9 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
    * Logs what became of a payment, as PaymentGate does for an HTTP sale.
    */
   private function record(PaymentOutcome $outcome): void {
-    if ($outcome->status === 'rejected') {
+    // A paid call that delivered nothing costs us the seller's work: it counts
+    // against the visitor like a refused payment.
+    if (in_array($outcome->status, ['rejected', 'failed'], TRUE)) {
       $this->flood->register('ombu.mcp_refused_payment', self::WINDOW);
     }
     if (!$this->listing || $outcome->status === 'rejected') {

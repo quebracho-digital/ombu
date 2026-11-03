@@ -23,7 +23,7 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Built on:** Drupal 11 + Commerce, Search API, our modules [`x402_pay`](https://www.drupal.org/project/x402_pay), `wallet_auth` and `ai_provider_universal`.
 - **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
 - **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
-- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher.
+- **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher; and `/mcp`, an [MCP server](#mcp-for-agents) (where it is on: see below), linked from the footer.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces
@@ -86,6 +86,16 @@ listing's page is free, as for people: its markdown ends with its similar
 services, and its service is bought at its x402 URL. The market answers
 `/market.md` too: the same search and query string as `/market` and
 `/market.json`, each listing linked, the filters as links.
+
+## MCP for agents
+
+`POST /mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server (Streamable HTTP, no sign-in), from the contrib `drupal/mcp_server` and the official `mcp/sdk`. Three tools:
+
+- `ombu_search_services` (free): the search of `/market.json`, with the same filters.
+- `ombu_get_service` (free): one listing by its id, as `/market.json` shows it.
+- `ombu_call_service` (paid): calls one of our sellers (`id`, `input`). The payment rides in the MCP call, as the [x402 MCP transport](https://github.com/x402-foundation/x402/blob/main/specs/transports-v2/mcp.md) says: an unpaid call returns an error with the PaymentRequired, the retry carries the signed payment in `params._meta["x402/payment"]`, the receipt comes back in `result._meta["x402/payment-response"]`. Same price, seller, facilitator, claims, payment log and refused-payment limit as an HTTP sale (`src/Mcp/McpPayments.php`); a failing seller is not charged.
+
+It is on in DDEV only. To turn it on anywhere else: `drush en mcp_server`, grant `access mcp server` to the anonymous role, `drush ev "\\Drupal::moduleHandler()->loadInclude('ombu', 'install'); _ombu_llms_txt();"` to add it to `/llms.txt` (the footer link follows the route by itself). Nothing of it is in `config/sync`, so a deploy does not turn it on. Try it with a few `curl` calls (`initialize`, then `tools/list`, then `tools/call`, with the `Mcp-Session-Id` header it returns) or the MCP Inspector.
 
 ## Similar services
 

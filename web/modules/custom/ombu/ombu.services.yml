@@ -68,3 +68,9 @@ services:
     class: Drupal\ombu\EventSubscriber\SimilarBackendSubscriber
     tags:
       - { name: event_subscriber }
+  # Charges for the MCP tool ombu_call_service; only used if mcp_server is on.
+  ombu.mcp_payments:
+    class: Drupal\ombu\Mcp\McpPayments
+    arguments: ['@entity_type.manager', '@x402_pay.delivery', '@ombu.sellers', '@x402_pay.facilitators', '@x402_pay.claims', '@x402_pay.log', '@x402_pay.psr17', '@event_dispatcher', '@flood']
+    tags:
+      - { name: mcp_server.transport_middleware, priority: 100 }

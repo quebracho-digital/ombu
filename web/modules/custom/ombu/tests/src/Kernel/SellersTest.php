@@ -7,6 +7,7 @@ namespace Drupal\Tests\ombu\Kernel;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\key\Entity\Key;
+use Drupal\ombu\Mcp\McpPayments;
 use Drupal\ombu\Sales;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\Role;
@@ -18,7 +19,14 @@ use Quebracho\X402\Eip712;
 use Quebracho\X402\EvmExact;
 use Quebracho\X402\Facilitator;
 use Quebracho\X402\PaymentHeaders;
+use Quebracho\X402\X402McpMiddleware;
 use Quebracho\X402\Signer;
+use GuzzleHttp\Psr7\Response as PsrResponse;
+use GuzzleHttp\Psr7\ServerRequest;
+use Mcp\Server\ClientGateway;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -44,7 +52,7 @@ final class SellersTest extends CommerceKernelTestBase {
     'text', 'filter', 'link', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views', 'user', 'wallet_auth',
     // PageFetcher (the markdown seller's guarded fetch) lives here; its
     // config is not needed, and the model sellers stay unconfigured.
-    'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
+    'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck', 'mcp_server',
   ];
 
   protected function setUp(): void {
@@ -256,6 +264,61 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertNotEmpty($this->required($listing)['accepts']);
   }
 
+  public function testAnMcpCallIsPaidInBandAndNeverFree(): void {
+    $ping = $this->listing('ping', 'seller_ping', '0.0001');
+    // Before the payments service is built: it keeps the facilitators it got.
+    $this->facilitatorSaysYes();
+    $tool = $this->container->get('plugin.manager.mcp_server.tool')->createInstance(McpPayments::TOOL);
+    $ran = 0;
+    $handler = new class($tool, $this->createStub(ClientGateway::class), $ran) implements RequestHandlerInterface {
+
+      public function __construct(private $tool, private $gateway, private int &$ran) {}
+
+      public function handle(ServerRequestInterface $request): ResponseInterface {
+        $message = json_decode((string) $request->getBody(), TRUE);
+        $this->ran++;
+        try {
+          $result = ['content' => [['type' => 'text', 'text' => json_encode($this->tool->execute($message['params']['arguments'], $this->gateway))]]];
+        }
+        catch (\Throwable $e) {
+          $result = ['isError' => TRUE, 'content' => [['type' => 'text', 'text' => $e->getMessage()]]];
+        }
+        return new PsrResponse(200, ['Content-Type' => 'application/json'], json_encode(['jsonrpc' => '2.0', 'id' => $message['id'], 'result' => $result]));
+      }
+
+    };
+    $call = function (array $meta = []) use ($ping, $handler): array {
+      $body = json_encode(['jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call', 'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $ping->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : [])]);
+      $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $body), $handler);
+      return json_decode((string) $response->getBody(), TRUE)['result'];
+    };
+
+    // Unpaid: the PaymentRequired, and the seller never ran.
+    $required = $call();
+    $this->assertTrue($required['isError']);
+    $this->assertSame(0, $ran);
+    $accepted = $required['structuredContent']['accepts'][0];
+    $this->assertSame((new Signer(self::PING_KEY))->address(), $accepted['payTo']);
+    $this->assertSame('100', $accepted['amount']);
+
+    // Paid: delivered, with the receipt, logged as a sale of the listing.
+    $payment = (new EvmExact(new Signer(self::BUYER_KEY)))->pay($required['structuredContent'], $accepted);
+    $paid = $call([X402McpMiddleware::PAYMENT => $payment]);
+    $this->assertArrayNotHasKey("isError", $paid, json_encode($paid));
+    $this->assertSame((new Signer(self::PING_KEY))->address(), json_decode($paid['content'][0]['text'], TRUE)['signer']);
+    $this->assertTrue($paid['_meta'][X402McpMiddleware::PAYMENT_RESPONSE]['success']);
+    $this->assertSame('settled', $this->logged());
+    $this->assertSame((string) $ping->id(), \Drupal::database()->select('x402_pay_log', 'l')->fields('l', ['entity_id'])->execute()->fetchField());
+
+    // The same payment buys one delivery.
+    $this->assertTrue($call([X402McpMiddleware::PAYMENT => $payment])['isError']);
+    $this->assertSame(1, $ran, 'Unpaid and replayed calls did not run the seller; only the paid one did.');
+
+    // Without the middleware (another transport) a priced listing sells nothing.
+    $this->expectExceptionMessage('Payment required.');
+    $tool->execute(['id' => (int) $ping->id()], $this->createStub(ClientGateway::class));
+  }
+
   private function listing(string $service, string $key, string $price): Product {
     $listing = Product::create([
       'type' => 'listing',
@@ -279,12 +342,7 @@ final class SellersTest extends CommerceKernelTestBase {
    * A paid POST with the service's input; the facilitator says yes.
    */
   private function buy(Product $listing, array $input): Response {
-    $facilitator = $this->createMock(Facilitator::class);
-    $facilitator->method('verify')->willReturn(['isValid' => TRUE, 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
-    $facilitator->method('settle')->willReturn(['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
-    $facilitators = $this->createMock(Facilitators::class);
-    $facilitators->method('for')->willReturn($facilitator);
-    $this->container->set('x402_pay.facilitators', $facilitators);
+    $this->facilitatorSaysYes();
 
     // Signed for real: the library checks it offline before the facilitator.
     $required = $this->required($listing);
@@ -293,6 +351,18 @@ final class SellersTest extends CommerceKernelTestBase {
     $request->headers->set('Content-Type', 'application/json');
     $request->headers->set(PaymentHeaders::SIGNATURE, PaymentHeaders::encode((new EvmExact(new Signer(self::BUYER_KEY)))->pay($required, $accepted)));
     return $this->container->get('http_kernel')->handle($request);
+  }
+
+  /**
+   * A facilitator that verifies and settles whatever it is given.
+   */
+  private function facilitatorSaysYes(): void {
+    $facilitator = $this->createMock(Facilitator::class);
+    $facilitator->method('verify')->willReturn(['isValid' => TRUE, 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
+    $facilitator->method('settle')->willReturn(['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
+    $facilitators = $this->createMock(Facilitators::class);
+    $facilitators->method('for')->willReturn($facilitator);
+    $this->container->set('x402_pay.facilitators', $facilitators);
   }
 
   private function logged(): string {

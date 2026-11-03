@@ -15,6 +15,7 @@ use Drupal\Core\Url;
 use Drupal\ombu\Markdown;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * For agents, in the footer: this page as markdown, and the whole site.
@@ -53,10 +54,20 @@ final class AgentsBlock extends BlockBase implements ContainerFactoryPluginInter
     }
     $md = Markdown::url($this->routeMatch, $cacheability, $query);
     $llms = Url::fromRoute('llms_txt.llms_txt')->toString();
-    // Every placeholder must be a string, even one the text does not use.
-    $build['#markup'] = $md
-      ? $this->t('For agents: <a href=":md" rel="alternate" type="text/markdown">this page in markdown</a> · <a href=":llms">the whole site, from /llms.txt</a>', [':md' => $md, ':llms' => $llms])
-      : $this->t('For agents: <a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
+    $links = [];
+    if ($md) {
+      $links[] = $this->t('<a href=":md" rel="alternate" type="text/markdown">this page in markdown</a>', [':md' => $md]);
+    }
+    $links[] = $this->t('<a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
+    // Only where the MCP server is on (mcp_server module).
+    $cacheability->addCacheTags(['routes']);
+    try {
+      $mcp = Url::fromRoute('mcp_server.handle')->toString();
+      $links[] = $this->t('<a href=":mcp">MCP server, at @mcp</a>', [':mcp' => $mcp, '@mcp' => $mcp]);
+    }
+    catch (RouteNotFoundException) {
+    }
+    $build['#markup'] = $this->t('For agents:') . ' ' . implode(' · ', $links);
     $cacheability->applyTo($build);
     return $build;
   }

@@ -10,5 +10,8 @@ services:
   web:
     volumes:
       - ../../x402_pay:/var/www/html/web/sites/default/modules/x402_pay
+      # If x402_pay has its own test scaffold (web/), its symlinks dangle in
+      # this container and break the module scan: hide it with an empty volume.
+      # - /var/www/html/web/sites/default/modules/x402_pay/web
       - ../../wallet_auth:/var/www/html/web/sites/default/modules/wallet_auth
       - ../../ai_provider_universal:/var/www/html/web/sites/default/modules/ai_provider_universal

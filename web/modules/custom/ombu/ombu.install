@@ -24,9 +24,15 @@ function ombu_install(): void {
 
 /**
  * Writes /llms.txt from the module's llms.txt.md.
+ *
+ * Its MCP section stays only where the mcp_server module is on.
  */
 function _ombu_llms_txt(): void {
   $text = file_get_contents(\Drupal::service('extension.list.module')->getPath('ombu') . '/llms.txt.md');
+  if (!\Drupal::moduleHandler()->moduleExists('mcp_server')) {
+    $text = preg_replace('/<!-- mcp -->.*?<!-- \/mcp -->\n\n/s', '', $text);
+  }
+  $text = str_replace(["<!-- mcp -->\n", "<!-- /mcp -->\n"], '', $text);
   \Drupal::configFactory()->getEditable('llms_txt.settings')->set('content', $text)->save();
 }
 
@@ -612,5 +618,12 @@ function ombu_update_10033(): void {
  * Rewrites /llms.txt: listings and the market as markdown too.
  */
 function ombu_update_10034(): void {
+  _ombu_llms_txt();
+}
+
+/**
+ * Rewrites /llms.txt: the MCP server, where it is on.
+ */
+function ombu_update_10035(): void {
   _ombu_llms_txt();
 }

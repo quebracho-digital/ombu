@@ -8,6 +8,7 @@ use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -53,10 +54,12 @@ final class AgentsBlock extends BlockBase implements ContainerFactoryPluginInter
     }
     $md = Markdown::url($this->routeMatch, $cacheability, $query);
     $llms = Url::fromRoute('llms_txt.llms_txt')->toString();
-    // Every placeholder must be a string, even one the text does not use.
-    $build['#markup'] = $md
-      ? $this->t('For agents: <a href=":md" rel="alternate" type="text/markdown">this page in markdown</a> · <a href=":llms">the whole site, from /llms.txt</a>', [':md' => $md, ':llms' => $llms])
-      : $this->t('For agents: <a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
+    $links = [];
+    if ($md) {
+      $links[] = $this->t('<a href=":md" rel="alternate" type="text/markdown">this page in markdown</a>', [':md' => $md]);
+    }
+    $links[] = $this->t('<a href=":llms">the whole site, from /llms.txt</a>', [':llms' => $llms]);
+    $build['#markup'] = $this->t('For agents: @links', ['@links' => Markup::create(implode(' · ', $links))]);
     $cacheability->applyTo($build);
     return $build;
   }

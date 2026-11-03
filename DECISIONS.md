@@ -97,3 +97,22 @@ the lock change (1.41.0 → 1.43.0, only search_api) was tested in DDEV and
 committed as f01fe08 on `chore/search-api-1.43`.
 
 Decidido por Leo (2026-11-01 14:50): "commit, push, luego git pull en ser5", with "Sí, avanzá 1.0.x" for x402_pay and "Sí, en este deploy" for symfony/mime. One deploy carries the x402_pay refactor (lock to the new `1.0.x`), 4ed8361, search_api 1.43 and symfony/mime 7.4.22 (CVE-2026-45070, email header injection). The lock is updated once on this branch, so `chore/search-api-1.43` (f01fe08) is not merged.
+
+### An MCP endpoint, read-only and free, in dev first
+
+Decidido por Leo (2026-11-03 09:30): "el mcp deberia hacerlo una sesion experta en ombu". For the Symfony AI & MCP hackathon, Ombú serves `/mcp` with the contrib `drupal/mcp_server` (official `mcp/sdk`), two tools that call `CatalogueController`, so they answer what `/market.json` answers: `ombu_search_services` and `ombu_get_service`. Anonymous may use them: the module's `access mcp server` permission is granted to the anonymous role, which is safe only because both tools are read-only over what anonymous already sees. Any tool that writes or charges must check its own access.
+
+The module and that permission are enabled in DDEV only and are not in `config/sync`, so a deploy does not turn the endpoint on in SER5. Turning it on there is Leo's call.
+
+Decidido por Leo (2026-11-03): "si, agrega mis listados al mcp" (answering whether to sell our own listings over MCP, charging with `quebracho/x402`), and the footer and `/llms.txt` link to it. One paid tool, `ombu_call_service`, instead of one per seller: any listing with a `field_service` is sold through it, so a new seller needs no code. The payment is the library's `X402McpMiddleware` wired in `McpPayments` with the site's facilitators, claims and payment log, so a sale over MCP counts for reviews like one over HTTP. The tool runs only for a call that middleware admitted: Drush's STDIO transport has no middleware and sells nothing. `/llms.txt` mentions the MCP only where `mcp_server` is on (`_ombu_llms_txt()`); the footer link follows the route.
+
+Decidido por Leo (2026-11-03): "podemos actualizar ombu para que use los modulos x composer en lugar de mapear el volumen?". DDEV no longer mounts `x402_pay`, `wallet_auth` or `ai_provider_universal`: they run from `web/modules/contrib`, as in prod. The mounts stay available in `.ddev/docker-compose.dev-modules.yaml.example` for working on a module.
+
+
+### The listings index keeps who may view each item
+
+Decidido por Leo (2026-11-03): "puedes ajustar los indices de search_api para que no indexen no publicados y respeten los niveles de permisos?". Unpublished listings were already out of the index (`entity_status`, with `index_directly`). The `listings` index now also has Search API's `role_access` processor: it stores, per item, the roles whose entity access allows `view`, and every query is filtered by the current user's roles. Its hidden field `role_access` is in the index config (`config/sync` and the module's `config/optional`); importing the processor alone does not add it, because `preIndexSave()` only runs when the index is saved through its form or code.
+
+Caveat: the roles are decided when an item is indexed. Changing who can view listings (a permission, a role) needs `drush search-api:reset-tracker listings && drush search-api:index listings` (about a minute for 2,800 listings). So does the deploy that first brings the processor: until then the items have no roles and the market is empty. The Meilisearch index is not touched.
+
+The link to `/mcp` in the footer is a link of the `footer` menu (`ombu.links.menu.yml`), so the menu system checks access, caches and translates it; `AgentHooks` removes it where `mcp_server` is not installed.

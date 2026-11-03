@@ -9,3 +9,11 @@ ombu.similar_settings:
   description: 'How listings are matched with similar ones: shared terms, similar texts.'
   route_name: ombu.similar_settings
   parent: system.admin_config_search
+# Where mcp_server is on (AgentHooks drops it otherwise). The menu checks
+# access and caches, so the link shows only to who may use the endpoint.
+ombu.mcp:
+  title: 'MCP server'
+  description: 'The market as an MCP server, for AI agents.'
+  route_name: mcp_server.handle
+  menu_name: footer
+  weight: 20

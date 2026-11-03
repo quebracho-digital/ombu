@@ -34,7 +34,7 @@ final class CatalogueTest extends CommerceKernelTestBase {
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
     'link', 'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image', 'views',
-    'search_api', 'search_api_db', 'facets', 'better_exposed_filters', 'facets_exposed_filters', 'language',
+    'search_api', 'search_api_db', 'facets', 'better_exposed_filters', 'facets_exposed_filters', 'language', 'mcp_server',
   ];
 
   /**
@@ -71,6 +71,33 @@ final class CatalogueTest extends CommerceKernelTestBase {
     // one more widens the search.
     $this->assertSame(['gateway' => 2, 'vanilla' => 1], $this->counts($page, 'payment'));
     $this->assertSame(['Infrastructure' => 1, 'Web search research' => 1], $this->counts($page, 'category'));
+  }
+
+  public function testMcpToolsAnswerLikeTheCatalogue(): void {
+    $manager = \Drupal::service('plugin.manager.mcp_server.tool');
+    $gateway = $this->createMock(\Mcp\Server\ClientGateway::class);
+    $search = $manager->createInstance('ombu_search_services')
+      ->execute(['search' => 'Captcha', 'category' => 'INFRASTRUCTURE'], $gateway);
+    $this->assertSame(['Captcha'], array_column(array_column($search["items"], "metadata"), "description"));
+    $this->assertSame(1, $search['pagination']['total']);
+
+    $one = $manager->createInstance('ombu_get_service')->execute(['id' => 2], $gateway);
+    $this->assertSame('Captcha', $one['metadata']['description']);
+    $this->expectException(\Mcp\Exception\ToolCallException::class);
+    $manager->createInstance('ombu_get_service')->execute(['id' => 999], $gateway);
+  }
+
+  public function testARoleThatCannotViewListingsDoesNotFindThem(): void {
+    $this->assertNotEmpty($this->titles($this->get('/market.json')));
+    // The index keeps who may view each item (role_access): take the
+    // permission away, index again, and the search finds nothing.
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->revokePermission('view commerce_product')->save();
+    // This process remembers who could view before; a new one would not.
+    \Drupal::entityTypeManager()->getAccessControlHandler('commerce_product')->resetCache();
+    $index = \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings');
+    $index->reindex();
+    $index->indexItems();
+    $this->assertSame([], $this->titles($this->get('/market.json')));
   }
 
   public function testSeveralValuesMatchAnyOfThem(): void {

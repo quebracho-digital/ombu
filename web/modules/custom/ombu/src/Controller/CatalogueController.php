@@ -161,7 +161,7 @@ final class CatalogueController implements ContainerInjectionInterface {
    *   products (ProductInterface[], this page), total, limit, offset and
    *   facets.
    */
-  private function search(Request $request): array {
+  public function search(Request $request): array {
     $limit = max(1, min(100, (int) $request->query->get('limit', 50)));
     $offset = max(0, (int) $request->query->get('offset', 0));
 
@@ -247,7 +247,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     return $out;
   }
 
-  private function item(ProductInterface $product, Request $request): array {
+  public function item(ProductInterface $product, Request $request): array {
     [$resource, $accepts] = $this->sale($product, $request) ?? [
       $product->get('field_endpoint')->value,
       json_decode($product->get('field_accepts')->value ?? '[]', TRUE) ?: [],

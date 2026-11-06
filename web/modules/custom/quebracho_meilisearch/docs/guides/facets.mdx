@@ -1,0 +1,16 @@
+---
+title: Facets
+---
+
+Install [Facets](https://www.drupal.org/project/facets) and create facets on a Meilisearch index as usual; no extra module is needed.
+
+Supported facet options:
+
+- **Operator**: AND, and OR. OR facets ignore their own active values so the other values stay selectable.
+- **Minimum count**, including 0 (values without results in the current search).
+- **Missing**: counts results without a value.
+- **Limit**.
+
+Extra computations (OR facets, zero counts, missing values) run in the same multi-search request as the results.
+
+Meilisearch returns at most 1,000 values per facet. Facets on fulltext fields count whole field values, not words.

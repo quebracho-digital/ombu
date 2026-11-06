@@ -1,0 +1,7 @@
+name: 'Meilisearch'
+type: module
+description: 'Official Meilisearch backend for Search API.'
+core_version_requirement: ^10.3 || ^11
+package: 'Search'
+dependencies:
+  - search_api:search_api

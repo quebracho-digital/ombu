@@ -1,0 +1,25 @@
+# drupal.org GitLab CI, based on https://git.drupalcode.org/project/gitlab_templates
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+variables:
+  OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+  OPT_IN_TEST_NEXT_MINOR: '1'
+
+phpunit:
+  services:
+    - !reference [.with-database]
+    - !reference [.with-chrome]
+    - name: getmeili/meilisearch:v1.54
+      alias: meilisearch
+      variables:
+        MEILI_MASTER_KEY: testMasterKey123
+        MEILI_NO_ANALYTICS: 'true'
+  variables:
+    MEILISEARCH_TEST_URL: http://meilisearch:7700
+    MEILISEARCH_TEST_KEY: testMasterKey123

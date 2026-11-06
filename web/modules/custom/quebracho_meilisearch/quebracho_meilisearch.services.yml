@@ -1,0 +1,55 @@
+services:
+  logger.channel.meilisearch:
+    parent: logger.channel_base
+    arguments: ['meilisearch']
+
+  meilisearch.api_factory:
+    class: Drupal\quebracho_meilisearch\Api\MeilisearchApiFactory
+    arguments: ['@http_client_factory']
+
+  meilisearch.document_converter:
+    class: Drupal\quebracho_meilisearch\Converter\DocumentConverter
+
+  meilisearch.more_like_this:
+    class: Drupal\quebracho_meilisearch\Search\MoreLikeThis
+    arguments: ['@entity_type.manager']
+
+  meilisearch.filter_builder:
+    class: Drupal\quebracho_meilisearch\Filter\FilterBuilder
+    tags:
+      - { name: service_collector, tag: meilisearch.condition_parser, call: addConditionParser }
+
+  meilisearch.condition_parser.scalar:
+    class: Drupal\quebracho_meilisearch\Filter\ScalarValueParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 10 }
+
+  meilisearch.condition_parser.boolean:
+    class: Drupal\quebracho_meilisearch\Filter\BooleanValueParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 20 }
+
+  meilisearch.condition_parser.null:
+    class: Drupal\quebracho_meilisearch\Filter\NullValueParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 15 }
+
+  meilisearch.condition_parser.between:
+    class: Drupal\quebracho_meilisearch\Filter\BetweenOperatorParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 15 }
+
+  meilisearch.condition_parser.not_between:
+    class: Drupal\quebracho_meilisearch\Filter\NotBetweenOperatorParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 15 }
+
+  meilisearch.condition_parser.in:
+    class: Drupal\quebracho_meilisearch\Filter\InOperatorParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 15 }
+
+  meilisearch.condition_parser.not_in:
+    class: Drupal\quebracho_meilisearch\Filter\NotInOperatorParser
+    tags:
+      - { name: meilisearch.condition_parser, priority: 15 }

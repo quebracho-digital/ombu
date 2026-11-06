@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Meilisearch Analytics module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\search_api\ServerInterface;
+
+/**
+ * Implements hook_meilisearch_request_headers_alter().
+ *
+ * Asks Meilisearch for the query UID of searches, and tells it who searches.
+ */
+function quebracho_meilisearch_analytics_meilisearch_request_headers_alter(array &$headers, ?ServerInterface $server): void {
+  $headers['Meili-Include-Metadata'] = 'true';
+  $user_id = \Drupal::service('quebracho_meilisearch_analytics.user_id')->getUserId();
+  if ($user_id !== NULL) {
+    $headers['X-MS-USER-ID'] = $user_id;
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views_view_unformatted.
+ */
+function quebracho_meilisearch_analytics_preprocess_views_view_unformatted(array &$variables): void {
+  \Drupal::service('quebracho_meilisearch_analytics.row_attributes')->apply($variables);
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for views_view_list.
+ */
+function quebracho_meilisearch_analytics_preprocess_views_view_list(array &$variables): void {
+  \Drupal::service('quebracho_meilisearch_analytics.row_attributes')->apply($variables);
+}

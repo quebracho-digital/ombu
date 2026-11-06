@@ -40,6 +40,7 @@
         "kornrunner/keccak": "^1.1",
         "kornrunner/secp256k1": "^0.4",
         "league/html-to-markdown": "^5.1",
+        "meilisearch/meilisearch-php": "^1.16",
         "quebracho/x402": "^0.2"
     },
     "conflict": {

@@ -1,0 +1,54 @@
+plugin.plugin_configuration.search_api_backend.meilisearch:
+  type: mapping
+  label: 'Meilisearch backend configuration'
+  mapping:
+    url:
+      type: uri
+      label: 'Meilisearch URL'
+    api_key:
+      type: string
+      label: 'API key'
+    index_prefix:
+      type: string
+      label: 'Index prefix'
+    search_mode:
+      type: string
+      label: 'Search mode (keyword, hybrid or semantic)'
+    semantic_ratio:
+      type: float
+      label: 'Semantic ratio'
+    embedder:
+      type: string
+      label: 'Embedder name'
+    embedder_dimensions:
+      type: integer
+      label: 'Dimensions of the vectors Drupal provides'
+    matching_strategy:
+      type: string
+      label: 'Matching strategy (last, all or frequency)'
+    max_total_hits:
+      type: integer
+      label: 'Maximum number of results'
+
+plugin.plugin_configuration.search_api_processor.quebracho_meilisearch_highlighting:
+  type: search_api.default_processor_configuration
+  label: 'Meilisearch highlighting processor configuration'
+  mapping:
+    fields:
+      type: sequence
+      label: 'Fields to build the excerpt from (empty: all fulltext fields)'
+      sequence:
+        type: string
+        label: 'Field ID'
+    pre_tag:
+      type: string
+      label: 'Highlight opening tag'
+    post_tag:
+      type: string
+      label: 'Highlight closing tag'
+    crop_length:
+      type: integer
+      label: 'Excerpt length, in words'
+    crop_marker:
+      type: string
+      label: 'Crop marker'

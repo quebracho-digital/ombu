@@ -1,0 +1,25 @@
+---
+title: Development
+---
+
+The test suite runs against a real Meilisearch, including Search API's backend conformance suite.
+
+```bash
+scripts/test.sh                        # everything
+scripts/test.sh tests/src/Unit         # a subset
+MEILISEARCH_VERSION=v1.16 scripts/test.sh
+```
+
+For a watch loop:
+
+```bash
+docker compose watch
+docker compose exec tests web/modules/custom/meilisearch/scripts/phpunit
+```
+
+Coding standards and static analysis, as on drupal.org CI:
+
+```bash
+docker compose run --rm tests vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/custom/meilisearch
+docker compose run --rm tests vendor/bin/phpstan analyse -c web/modules/custom/meilisearch/phpstan.neon
+```

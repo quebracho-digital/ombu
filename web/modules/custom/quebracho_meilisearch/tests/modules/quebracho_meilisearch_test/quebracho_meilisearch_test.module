@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Hooks of the Meilisearch test module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\search_api\IndexInterface;
+use Drupal\search_api\Query\QueryInterface;
+
+/**
+ * Implements hook_meilisearch_search_params_alter().
+ *
+ * Adds the filter stored in the "quebracho_meilisearch_test.extra_filter" state, and
+ * records the parameters in "quebracho_meilisearch_test.params" when
+ * "quebracho_meilisearch_test.record_params" is set.
+ */
+function quebracho_meilisearch_test_meilisearch_search_params_alter(array &$params, QueryInterface $query, array $context): void {
+  // What was sent, by query, when a test asks.
+  if (\Drupal::state()->get('quebracho_meilisearch_test.record_params')) {
+    $recorded = \Drupal::state()->get('quebracho_meilisearch_test.params', []);
+    $recorded[$context['query']][] = $params;
+    \Drupal::state()->set('quebracho_meilisearch_test.params', $recorded);
+  }
+  $filter = \Drupal::state()->get('quebracho_meilisearch_test.extra_filter');
+  if ($filter) {
+    $params['filter'] = isset($params['filter']) ? "({$params['filter']}) AND ($filter)" : $filter;
+  }
+}
+
+/**
+ * Implements hook_meilisearch_documents_alter().
+ *
+ * Adds the vectors stored in the "quebracho_meilisearch_test.vectors" state, keyed by
+ * entity ID or by "ID:langcode" for a translation's own, under the embedder
+ * whose vectors Drupal provides. Keeps its context in the
+ * "quebracho_meilisearch_test.documents_context" state, and throws when
+ * "quebracho_meilisearch_test.documents_throw" is set: an \Error when it is "error".
+ */
+function quebracho_meilisearch_test_meilisearch_documents_alter(array &$documents, IndexInterface $index, array $context): void {
+  \Drupal::state()->set('quebracho_meilisearch_test.documents_context', [
+    'embedder' => $context['embedder'],
+    'dimensions' => $context['dimensions'],
+    'items' => array_keys($context['items']),
+  ]);
+  $throw = \Drupal::state()->get('quebracho_meilisearch_test.documents_throw');
+  if ($throw) {
+    throw $throw === 'error' ? new \Error('Broken hook.') : new \RuntimeException('Broken hook.');
+  }
+  if ($context['embedder'] === NULL) {
+    return;
+  }
+  $vectors = \Drupal::state()->get('quebracho_meilisearch_test.vectors', []);
+  foreach ($documents as &$document) {
+    // "entity:entity_test_mulrev_changed/1:en": a translation's own vector,
+    // else the entity's.
+    [$entity_id, $langcode] = explode(':', explode('/', $document['search_api_id'])[1]);
+    $vector = $vectors["$entity_id:$langcode"] ?? $vectors[(int) $entity_id] ?? NULL;
+    if ($vector !== NULL) {
+      $document['_vectors'][$context['embedder']] = $vector;
+    }
+  }
+}

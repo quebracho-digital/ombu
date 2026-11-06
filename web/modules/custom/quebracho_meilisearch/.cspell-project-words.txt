@@ -1,0 +1,17 @@
+Aentity
+Ataxonomy
+drupl
+getmeili
+healthcheck
+injective
+kevinquillen
+libsqlite
+libzip
+Meili
+mintlify
+mymodule
+pseudonymously
+stopwords
+tbachert
+topbar
+unparseable

@@ -1,0 +1,19 @@
+id: quebracho_meilisearch_test_server
+name: 'Meilisearch test server'
+description: 'A server used for testing. The URL and key are overridden from the environment.'
+backend: meilisearch
+backend_config:
+  url: 'http://localhost:7700'
+  api_key: ''
+  index_prefix: 'drupal_test_'
+  search_mode: keyword
+  semantic_ratio: 0.5
+  embedder: ''
+  embedder_dimensions: 0
+  matching_strategy: last
+  max_total_hits: 10000
+status: true
+langcode: en
+dependencies:
+  module:
+    - meilisearch

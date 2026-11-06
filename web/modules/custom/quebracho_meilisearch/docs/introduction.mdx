@@ -1,0 +1,28 @@
+---
+title: Introduction
+description: The official Meilisearch backend for Drupal's Search API.
+---
+
+`drupal/meilisearch` lets any Search API index live in [Meilisearch](https://www.meilisearch.com), self-hosted or on Meilisearch Cloud. Views, Facets and every Search API processor keep working: Meilisearch brings typo tolerance, prefix search and relevancy out of the box.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">From zero to a working search page.</Card>
+  <Card title="Meilisearch Cloud" icon="cloud" href="/guides/meilisearch-cloud">Connect a Cloud project.</Card>
+  <Card title="Facets" icon="filter" href="/guides/facets">AND and OR facets, counts and missing values.</Card>
+  <Card title="Search behavior" icon="magnifying-glass" href="/reference/search-behavior">How Search API queries map to Meilisearch.</Card>
+</CardGroup>
+
+<Tip>See it working first: [Meili Kitchen](https://github.com/meilisearch/drupal-meilisearch-demo) is a recipe search site built with this module. Clone it and run `docker compose up --build`.</Tip>
+
+## Features
+
+- Full-text search with typo tolerance and prefix matching
+- Keyword, hybrid and semantic search (with an embedder configured in Meilisearch)
+- Filters for every Search API condition, including language and datasource
+- Facets through [Facets](https://www.drupal.org/project/facets): limits, minimum counts, missing values and OR facets
+- Highlighted, cropped excerpts in Views
+- Location search through [Search API Location](https://www.drupal.org/project/search_api_location)
+- Click analytics on Meilisearch Cloud (submodule)
+- Several sites or environments on one Meilisearch instance, with index prefixes
+
+Server-level relevancy settings (synonyms, stop words, ranking rules, embedders) stay in Meilisearch: manage them in the Cloud dashboard, the CLI or the API.

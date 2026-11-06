@@ -1,0 +1,17 @@
+services:
+  quebracho_meilisearch_analytics.user_id:
+    class: Drupal\quebracho_meilisearch_analytics\UserIdResolver
+    arguments: ['@current_user', '@request_stack', '@settings']
+
+  quebracho_meilisearch_analytics.events:
+    class: Drupal\quebracho_meilisearch_analytics\AnalyticsEvents
+    arguments: ['@quebracho_meilisearch_analytics.user_id', '@logger.channel.meilisearch']
+
+  quebracho_meilisearch_analytics.row_attributes:
+    class: Drupal\quebracho_meilisearch_analytics\RowAttributes
+    arguments: ['@page_cache_kill_switch']
+
+  quebracho_meilisearch_analytics.uncacheable_query_subscriber:
+    class: Drupal\quebracho_meilisearch_analytics\EventSubscriber\UncacheableQuerySubscriber
+    tags:
+      - { name: event_subscriber }

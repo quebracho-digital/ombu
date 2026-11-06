@@ -1,0 +1,63 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Meilisearch for Drupal",
+  "colors": {
+    "primary": "#FF5CAA",
+    "light": "#FF8CC4",
+    "dark": "#E0428F"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "links": [
+      {
+        "label": "drupal.org",
+        "href": "https://www.drupal.org/project/meilisearch"
+      },
+      {
+        "label": "GitHub",
+        "href": "https://github.com/meilisearch/meilisearch-drupal"
+      }
+    ]
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/configuration",
+          "guides/meilisearch-cloud",
+          "guides/facets",
+          "guides/highlighting",
+          "guides/multilingual",
+          "guides/semantic-search",
+          "guides/location",
+          "guides/analytics"
+        ]
+      },
+      {
+        "group": "Deployment",
+        "pages": [
+          "deployment/docker-compose",
+          "deployment/ddev"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/search-behavior",
+          "reference/hooks",
+          "reference/development"
+        ]
+      }
+    ]
+  }
+}

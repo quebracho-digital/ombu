@@ -1,6 +1,0 @@
-click_tracking:
-  js:
-    js/click-tracking.js: {}
-  dependencies:
-    - core/drupal
-    - core/once

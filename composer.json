@@ -10,6 +10,11 @@
     },
     "repositories": [
         {
+            "name": "quebracho_meilisearch",
+            "type": "vcs",
+            "url": "https://github.com/quebracho-digital/quebracho_meilisearch"
+        },
+        {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         }
@@ -41,6 +46,7 @@
         "kornrunner/secp256k1": "^0.4",
         "league/html-to-markdown": "^5.1",
         "meilisearch/meilisearch-php": "^1.16",
+        "quebracho/quebracho_meilisearch": "dev-main#7b0e45a",
         "quebracho/x402": "^0.2"
     },
     "conflict": {

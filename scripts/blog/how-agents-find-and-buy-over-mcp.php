@@ -14,6 +14,7 @@
 $img = '/modules/custom/ombu/images/blog';
 
 return [
+  'categories' => ['how-it-works'],
   'image' => 'ombu-tree.jpg',
   'alt' => [
     'en' => 'An ombú tree growing from the old walls of Rhodes Castle',

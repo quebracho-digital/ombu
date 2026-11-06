@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.blog.body
+    - field.field.node.blog.field_blog_category
     - field.field.node.blog.field_image
     - image.style.thumbnail
     - node.type.blog
@@ -29,6 +30,12 @@ content:
   created:
     type: datetime_timestamp
     weight: 10
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_blog_category:
+    type: options_buttons
+    weight: 5
     region: content
     settings: {  }
     third_party_settings: {  }

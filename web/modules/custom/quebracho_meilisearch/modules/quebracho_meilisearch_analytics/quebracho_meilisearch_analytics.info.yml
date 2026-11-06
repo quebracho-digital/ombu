@@ -1,7 +1,0 @@
-name: 'Meilisearch Analytics'
-type: module
-description: 'Sends search result clicks to Meilisearch Cloud analytics.'
-core_version_requirement: ^10.3 || ^11
-package: 'Search'
-dependencies:
-  - quebracho_meilisearch:meilisearch

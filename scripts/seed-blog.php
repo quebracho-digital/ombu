@@ -7,6 +7,8 @@
  * updates it, except a post edited on the site since this script wrote it,
  * which is left alone and named (OMBU_SEED_FORCE=1 overwrites it anyway).
  *
+ * A post with 'draft' => TRUE is saved unpublished.
+ *
  * Run: ddev drush php:script ../scripts/seed-blog.php
  */
 
@@ -32,6 +34,27 @@ $link = function (string $body, string $lang) {
     return $variation->getProduct()->toUrl('canonical', ['language' => $language])->toString();
   }, $body);
 };
+// The blog's categories, by key: terms are content, so the seed creates them
+// (translated) and a post names them in 'categories'. "whats-new" marks the
+// post of each deploy.
+$categories = [
+  'whats-new' => ['en' => "What's new", 'es' => 'Novedades', 'pt-br' => 'Novidades'],
+  'how-it-works' => ['en' => 'How it works', 'es' => 'Cómo funciona', 'pt-br' => 'Como funciona'],
+  'story' => ['en' => 'Story', 'es' => 'Historia', 'pt-br' => 'História'],
+];
+$terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+$tids = [];
+foreach ($categories as $key => $names) {
+  $found = $terms->loadByProperties(['vid' => 'blog_category', 'name' => $names['en'], 'langcode' => 'en']);
+  $term = $found ? reset($found) : $terms->create(['vid' => 'blog_category', 'name' => $names['en'], 'langcode' => 'en']);
+  foreach ($names as $lang => $name) {
+    if ($lang !== 'en') {
+      $term->hasTranslation($lang) ? $term->getTranslation($lang)->setName($name) : $term->addTranslation($lang, ['name' => $name]);
+    }
+  }
+  $term->save();
+  $tids[$key] = $term->id();
+}
 $hash = fn($e) => sha1($e->label() . "\n" . $e->get('body')->value . "\n" . $e->get('body')->summary);
 
 foreach (glob(__DIR__ . '/blog/*.php') as $file) {
@@ -53,7 +76,7 @@ foreach (glob(__DIR__ . '/blog/*.php') as $file) {
       echo "$key: edited on the site, left as it is (OMBU_SEED_FORCE=1 to overwrite)\n";
       continue;
     }
-    $values = ['title' => $title, 'field_image' => ['target_id' => $photo($post['image']), 'alt' => $post['alt'][$lang] ?? $title], 'body' => ['value' => $body, 'summary' => $summary, 'format' => 'full_html'], 'status' => 1, 'path' => ['alias' => $alias, 'pathauto' => 0]];
+    $values = ['title' => $title, 'field_image' => ['target_id' => $photo($post['image']), 'alt' => $post['alt'][$lang] ?? $title], 'body' => ['value' => $body, 'summary' => $summary, 'format' => 'full_html'], 'field_blog_category' => array_map(fn($k) => ['target_id' => $tids[$k] ?? throw new \RuntimeException("No blog category $k.")], $post['categories'] ?? []), 'status' => empty($post['draft']) ? 1 : 0, 'path' => ['alias' => $alias, 'pathauto' => 0]];
     if (!$node) {
       $node = $nodes->create(['type' => 'blog', 'uid' => 1, 'langcode' => $lang, 'created' => strtotime($post['date'])] + $values);
       $entity = $node;

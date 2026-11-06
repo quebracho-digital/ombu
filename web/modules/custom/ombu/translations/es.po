@@ -175,3 +175,12 @@ msgstr "Para agentes: <a href=\":llms\">todo el sitio, desde /llms.txt</a>"
 
 msgid "For agents"
 msgstr "Para agentes"
+
+msgid "Sovereign infrastructure by <a href=\"https://quebracho.digital/\" rel=\"noopener\">Quebracho</a>"
+msgstr "Infraestructura soberana por <a href=\"https://quebracho.digital/\" rel=\"noopener\">Quebracho</a>"
+
+msgid "Powered by <a href=\"https://www.drupal.org/\" rel=\"noopener\">Drupal</a> and <a href=\"https://www.drupal.org/project/commerce\" rel=\"noopener\">Drupal Commerce</a>"
+msgstr "Funciona con <a href=\"https://www.drupal.org/\" rel=\"noopener\">Drupal</a> y <a href=\"https://www.drupal.org/project/commerce\" rel=\"noopener\">Drupal Commerce</a>"
+
+msgid "Credits"
+msgstr "Créditos"

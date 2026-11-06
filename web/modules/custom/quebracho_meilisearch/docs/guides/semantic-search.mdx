@@ -12,7 +12,7 @@ title: Semantic and hybrid search
 When another module already computes embeddings (an AI provider, a vector table), Meilisearch can store them instead of calling a model itself:
 
 1. On the server, enter the **Embedder** name and the number of dimensions under **Vectors provided by Drupal**. The module declares a `userProvided` embedder on its indexes and re-indexes. It owns that name: an embedder of the same name already on the index is replaced, and changing the name, or setting 0, removes it. Declaring a new embedder empties the indexes before they are indexed again, as Meilisearch refuses one that existing documents have no vectors for. New dimensions for the same embedder keep the documents and their old vectors: until they are indexed again, searches that send a vector fail with `invalid_vector_dimensions`.
-2. Implement [`hook_meilisearch_documents_alter()`](/reference/hooks#hook_meilisearch_documents_alter) to add each document's vector under `_vectors`.
+2. Implement [`hook_quebracho_meilisearch_documents_alter()`](/reference/hooks#hook_quebracho_meilisearch_documents_alter) to add each document's vector under `_vectors`.
 
 A `userProvided` embedder cannot embed search keys: on a *Hybrid* server, searches without a vector of their own find keyword matches only, and *Semantic* search is refused.
 

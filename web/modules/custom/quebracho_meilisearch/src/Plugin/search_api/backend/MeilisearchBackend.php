@@ -199,7 +199,7 @@ class MeilisearchBackend extends BackendPluginBase implements PluginFormInterfac
    * Returns the API service of this server.
    *
    * Other modules can add HTTP headers through
-   * hook_meilisearch_request_headers_alter().
+   * hook_quebracho_meilisearch_request_headers_alter().
    */
   public function getApi(): MeilisearchApiServiceInterface {
     if ($this->api === NULL) {
@@ -292,7 +292,7 @@ class MeilisearchBackend extends BackendPluginBase implements PluginFormInterfac
       '#default_value' => $this->configuration['embedder_dimensions'],
       '#min' => 0,
       '#field_suffix' => $this->t('dimensions'),
-      '#description' => $this->t("0: the embedder is configured in Meilisearch, which computes the vectors. Otherwise this module declares it as a <em>userProvided</em> embedder with this many dimensions, and modules add each document's vector with hook_meilisearch_documents_alter(). An embedder of that name already on the index is replaced, and removed when this is set back to 0 or the name changes. Declaring a new one empties the indexes until they are indexed again; new dimensions keep the documents, but queries with vectors fail until then. Semantic search needs a vector in every query then: use Keyword or Hybrid search."),
+      '#description' => $this->t("0: the embedder is configured in Meilisearch, which computes the vectors. Otherwise this module declares it as a <em>userProvided</em> embedder with this many dimensions, and modules add each document's vector with hook_quebracho_meilisearch_documents_alter(). An embedder of that name already on the index is replaced, and removed when this is set back to 0 or the name changes. Declaring a new one empties the indexes until they are indexed again; new dimensions keep the documents, but queries with vectors fail until then. Semantic search needs a vector in every query then: use Keyword or Hybrid search."),
     ];
 
     $form['semantic_ratio'] = [
@@ -601,7 +601,7 @@ class MeilisearchBackend extends BackendPluginBase implements PluginFormInterfac
     }
     catch (\Throwable $e) {
       // Search API's indexing handles its own exceptions only.
-      $this->logger->error('hook_meilisearch_documents_alter() failed: @message', ['@message' => $e->getMessage()]);
+      $this->logger->error('hook_quebracho_meilisearch_documents_alter() failed: @message', ['@message' => $e->getMessage()]);
       throw new SearchApiException('Could not prepare the documents for Meilisearch: ' . $e->getMessage(), 0, $e);
     }
     $this->prepareVectors($documents);
@@ -623,7 +623,7 @@ class MeilisearchBackend extends BackendPluginBase implements PluginFormInterfac
    * documents are sent with NULL, "no vector", and invalid ones are logged.
    *
    * @param array[] $documents
-   *   The documents, after hook_meilisearch_documents_alter().
+   *   The documents, after hook_quebracho_meilisearch_documents_alter().
    */
   protected function prepareVectors(array &$documents): void {
     $embedder = $this->declaredEmbedder($this->configuration);
@@ -722,7 +722,7 @@ class MeilisearchBackend extends BackendPluginBase implements PluginFormInterfac
    *
    * Similarity comes from the server's embedder, so the option's "fields",
    * the keys, sorts and facets do not apply; conditions, languages and
-   * location do. hook_meilisearch_search_params_alter() runs with the
+   * location do. hook_quebracho_meilisearch_search_params_alter() runs with the
    * "similar" context.
    *
    * @param \Drupal\search_api\Query\QueryInterface $query

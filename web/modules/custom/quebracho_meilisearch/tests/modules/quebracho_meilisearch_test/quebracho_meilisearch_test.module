@@ -11,13 +11,13 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Query\QueryInterface;
 
 /**
- * Implements hook_meilisearch_search_params_alter().
+ * Implements hook_quebracho_meilisearch_search_params_alter().
  *
  * Adds the filter stored in the "quebracho_meilisearch_test.extra_filter" state, and
  * records the parameters in "quebracho_meilisearch_test.params" when
  * "quebracho_meilisearch_test.record_params" is set.
  */
-function quebracho_meilisearch_test_meilisearch_search_params_alter(array &$params, QueryInterface $query, array $context): void {
+function quebracho_meilisearch_test_quebracho_meilisearch_search_params_alter(array &$params, QueryInterface $query, array $context): void {
   // What was sent, by query, when a test asks.
   if (\Drupal::state()->get('quebracho_meilisearch_test.record_params')) {
     $recorded = \Drupal::state()->get('quebracho_meilisearch_test.params', []);
@@ -31,7 +31,7 @@ function quebracho_meilisearch_test_meilisearch_search_params_alter(array &$para
 }
 
 /**
- * Implements hook_meilisearch_documents_alter().
+ * Implements hook_quebracho_meilisearch_documents_alter().
  *
  * Adds the vectors stored in the "quebracho_meilisearch_test.vectors" state, keyed by
  * entity ID or by "ID:langcode" for a translation's own, under the embedder
@@ -39,7 +39,7 @@ function quebracho_meilisearch_test_meilisearch_search_params_alter(array &$para
  * "quebracho_meilisearch_test.documents_context" state, and throws when
  * "quebracho_meilisearch_test.documents_throw" is set: an \Error when it is "error".
  */
-function quebracho_meilisearch_test_meilisearch_documents_alter(array &$documents, IndexInterface $index, array $context): void {
+function quebracho_meilisearch_test_quebracho_meilisearch_documents_alter(array &$documents, IndexInterface $index, array $context): void {
   \Drupal::state()->set('quebracho_meilisearch_test.documents_context', [
     'embedder' => $context['embedder'],
     'dimensions' => $context['dimensions'],

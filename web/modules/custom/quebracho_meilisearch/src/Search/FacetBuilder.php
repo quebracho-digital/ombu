@@ -111,7 +111,7 @@ final class FacetBuilder {
    * @param callable|null $alter
    *   Called with each query (by reference) and a context array ("query" is
    *   "facet_values", "facet_all_values" or "facet_missing", "facet" is the
-   *   facet ID), so hook_meilisearch_search_params_alter() also applies to
+   *   facet ID), so hook_quebracho_meilisearch_search_params_alter() also applies to
    *   facet counts. The keys the counts depend on are restored afterwards.
    *
    * @return array[]

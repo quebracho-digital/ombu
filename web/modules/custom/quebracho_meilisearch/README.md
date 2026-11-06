@@ -49,7 +49,7 @@ Use a dedicated key with the `search`, `documents.*`, `indexes.*`, `settings.*`,
 - Exact result counts, ranking scores, magic-field sorts
 - Index prefixes, so sites and environments can share one instance
 - `quebracho_meilisearch_analytics` submodule: click analytics on Meilisearch Cloud
-- `hook_meilisearch_search_params_alter()` and `hook_meilisearch_request_headers_alter()`
+- `hook_quebracho_meilisearch_search_params_alter()` and `hook_quebracho_meilisearch_request_headers_alter()`
 
 Synonyms, stop words, ranking rules and embedders are Meilisearch settings: manage them in the Cloud dashboard, the CLI or the API. The module only sends the attribute lists, pagination and faceting limits, and makes `sort` the first ranking rule of the indexes it creates so explicit sorts are strict.
 

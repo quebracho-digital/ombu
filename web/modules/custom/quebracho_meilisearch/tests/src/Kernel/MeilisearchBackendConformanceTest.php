@@ -22,7 +22,7 @@ class MeilisearchBackendConformanceTest extends BackendTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'meilisearch',
+    'quebracho_meilisearch',
     'quebracho_meilisearch_test',
   ];
 

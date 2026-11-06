@@ -10,7 +10,7 @@ label: 'Meilisearch test view'
 module: views
 description: ''
 tag: ''
-base_table: search_api_index_meilisearch_test_index
+base_table: search_api_index_quebracho_meilisearch_test_index
 base_field: search_api_id
 display:
   default:
@@ -49,7 +49,7 @@ display:
       sorts:
         id:
           id: id
-          table: search_api_index_meilisearch_test_index
+          table: search_api_index_quebracho_meilisearch_test_index
           field: id
           plugin_id: search_api
           order: ASC

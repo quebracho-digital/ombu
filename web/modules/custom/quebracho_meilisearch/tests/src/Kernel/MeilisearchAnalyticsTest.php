@@ -35,7 +35,7 @@ class MeilisearchAnalyticsTest extends KernelTestBase {
     'text',
     'views',
     'search_api_test_example_content',
-    'meilisearch',
+    'quebracho_meilisearch',
     'quebracho_meilisearch_test',
     'quebracho_meilisearch_analytics',
   ];

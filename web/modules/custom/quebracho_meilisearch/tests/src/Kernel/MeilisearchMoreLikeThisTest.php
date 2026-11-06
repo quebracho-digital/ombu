@@ -237,7 +237,7 @@ class MeilisearchMoreLikeThisTest extends MeilisearchVectorsTestBase {
     $view->setDisplay('default');
     $view->setHandler('default', 'argument', 'search_api_more_like_this', [
       'id' => 'search_api_more_like_this',
-      'table' => 'search_api_index_meilisearch_test_index',
+      'table' => 'search_api_index_quebracho_meilisearch_test_index',
       'field' => 'search_api_more_like_this',
       'plugin_id' => 'search_api_more_like_this',
       'default_action' => 'empty',

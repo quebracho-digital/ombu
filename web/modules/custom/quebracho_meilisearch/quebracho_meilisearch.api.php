@@ -30,7 +30,7 @@
  * @param \Drupal\search_api\ServerInterface|null $server
  *   The Search API server, if known.
  */
-function hook_meilisearch_request_headers_alter(array &$headers, ?\Drupal\search_api\ServerInterface $server): void {
+function hook_quebracho_meilisearch_request_headers_alter(array &$headers, ?\Drupal\search_api\ServerInterface $server): void {
   $headers['X-MS-USER-ID'] = 'user-' . \Drupal::currentUser()->id();
 }
 
@@ -55,7 +55,7 @@ function hook_meilisearch_request_headers_alter(array &$headers, ?\Drupal\search
  *   https://www.meilisearch.com/docs/reference/api/similar, without "id",
  *   so there is no "q".
  */
-function hook_meilisearch_search_params_alter(array &$params, \Drupal\search_api\Query\QueryInterface $query, array $context): void {
+function hook_quebracho_meilisearch_search_params_alter(array &$params, \Drupal\search_api\Query\QueryInterface $query, array $context): void {
   // Only show the current tenant's documents, in results and facet counts.
   $tenant = \Drupal::service('mymodule.tenant')->id();
   $params['filter'] = isset($params['filter']) ? "({$params['filter']}) AND tenant = $tenant" : "tenant = $tenant";
@@ -85,7 +85,7 @@ function hook_meilisearch_search_params_alter(array &$params, \Drupal\search_api
  *     NULL when the server has none.
  *   - dimensions: how many numbers each of its vectors has.
  */
-function hook_meilisearch_documents_alter(array &$documents, \Drupal\search_api\IndexInterface $index, array $context): void {
+function hook_quebracho_meilisearch_documents_alter(array &$documents, \Drupal\search_api\IndexInterface $index, array $context): void {
   if ($context['embedder'] === NULL) {
     return;
   }

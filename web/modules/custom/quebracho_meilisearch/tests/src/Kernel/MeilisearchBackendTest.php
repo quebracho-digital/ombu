@@ -36,7 +36,7 @@ class MeilisearchBackendTest extends KernelTestBase {
     'filter',
     'text',
     'search_api_test_example_content',
-    'meilisearch',
+    'quebracho_meilisearch',
     'quebracho_meilisearch_test',
   ];
 

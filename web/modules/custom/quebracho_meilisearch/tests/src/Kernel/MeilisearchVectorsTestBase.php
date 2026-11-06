@@ -36,7 +36,7 @@ abstract class MeilisearchVectorsTestBase extends KernelTestBase {
     'text',
     'views',
     'search_api_test_example_content',
-    'meilisearch',
+    'quebracho_meilisearch',
     'quebracho_meilisearch_test',
   ];
 
@@ -106,7 +106,7 @@ abstract class MeilisearchVectorsTestBase extends KernelTestBase {
    * Returns the parameters sent to Meilisearch since recording started.
    *
    * @return array<string, array[]>
-   *   Parameter arrays, keyed by hook_meilisearch_search_params_alter()
+   *   Parameter arrays, keyed by hook_quebracho_meilisearch_search_params_alter()
    *   context ("main", "facet_values"…).
    */
   protected function recordedParams(): array {

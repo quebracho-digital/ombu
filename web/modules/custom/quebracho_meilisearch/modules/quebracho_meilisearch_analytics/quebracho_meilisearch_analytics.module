@@ -10,11 +10,11 @@ declare(strict_types=1);
 use Drupal\search_api\ServerInterface;
 
 /**
- * Implements hook_meilisearch_request_headers_alter().
+ * Implements hook_quebracho_meilisearch_request_headers_alter().
  *
  * Asks Meilisearch for the query UID of searches, and tells it who searches.
  */
-function quebracho_meilisearch_analytics_meilisearch_request_headers_alter(array &$headers, ?ServerInterface $server): void {
+function quebracho_meilisearch_analytics_quebracho_meilisearch_request_headers_alter(array &$headers, ?ServerInterface $server): void {
   $headers['Meili-Include-Metadata'] = 'true';
   $user_id = \Drupal::service('quebracho_meilisearch_analytics.user_id')->getUserId();
   if ($user_id !== NULL) {

@@ -158,7 +158,9 @@ Decided:
 
 - **On-chain verification, with a rate-limit plan.** Decidido por Leo (2026-11-06 13:26): "Verificamos on chain". The public RPC rate-limited us; the plan (failover, cache, keyed provider only if Leo creates the account) is still to be decided. Leo asked whether accounts are needed; that is his decision.
 
-- **Experimental decision model.** `ai_provider_universal_decision` is marked experimental and its operation is still changing upstream; any use goes behind an Ombú interface, with a pinned version and a fail-closed answer.
+- **Experimental decision model.** `ai_provider_universal_decision` is marked experimental and its operation is still changing upstream; any use goes behind an Ombú interface, with a pinned version and a fail-closed answer. Decidido por Leo (2026-11-06 13:47): "el modulo es nuestro, soy el manteiner (somos)". The label stays because the upstream AI core's Decision operation (AI 1.6) is still moving, not because the module belongs to someone else.
+
+- **Alchemy first for on-chain checks.** Decidido por Leo (2026-11-06 13:47): "vamos con Alchemy primero". App `ombu.quebracho.digital` (Marketplace), with the Node API and the chains Base, Ethereum, OP, Polygon, Solana, Arbitrum and Avalanche. The key is in `.ddev/.env` as `ALCHEMY_API_KEY` (git-ignored), never in the repo or in chat. Seven chains answered `eth_blockNumber` / `getSlot` with the key on 2026-11-06. Leo paid the plan and redeemed the $1,000 credit himself.
 
 - **jcode stopped after the survey; the survey was fixed.** Decidido por Leo (2026-11-06 12:22): "jcode no paro, yo lo detuve, ya habia arrancado la fase 1" (no phase 1 file exists on disk or in any branch, checked the same day). Decidido por Leo (2026-11-06 12:22): "puedes corregir los 4 puntos. mueve a un branch nuevo". The four review points are fixed in `f95d46c`; jcode's two commits moved from `feat/blog` to `feat/8004scan-importer`, which is based on the `feat/blog` tip (`7589498`) so DDEV keeps its enabled modules.
 

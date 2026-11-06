@@ -206,3 +206,13 @@ Decidido por Leo (2026-11-06 15:21): "no vamos a usar el modulo de drupal, vamos
 ### The blog's list reads as markdown
 
 Decidido por Leo (2026-11-06 15:21): "los listados de blog tambien deberian poder verse en .md". `/blog.md` and `Accept: text/markdown` on `/blog` answer with the published posts (commit `28559a3`), because x402_pay does not render view pages as markdown.
+
+### No merge until every test passes; the verifier agent is Claude's design
+
+Decidido por Leo (2026-11-06 15:50): "no se mergea hasta que no den todos los tests ok, tu decide sobre el agente verificador". So `feat/blog` (today this branch's tip) does not reach `main` while any suite of ombu or quebracho_meilisearch fails (21 failures and 2 errors in Meilisearch at the time).
+
+The verifier, as Claude decided it on Leo's delegation:
+
+- **One service, `ResourceVerifier`, for the importers and the paid product.** The importers run the same checks before a listing exists; the paid agent sells them. The checks: the live 402 and its `accepts` match the catalogue (`SellerProbe`); payTo not frozen by the token (`TokenBlacklist`); payTo not on OFAC's SDN list (Chainalysis' sanctions oracle, `0x40C5…C8fb`, `isSanctioned`, asked on Ethereum for every EVM address, since the list is the same everywhere: it answered on Ethereum, Polygon, Arbitrum, OP and Avalanche, not on Base, on 2026-11-06); payTo has received USDC before (Alchemy transfers, a count, informational); payTo or owner registered on ERC-8004 (8004scan, informational). Anything that cannot be asked is reported "unchecked", never as clean.
+- **Paid by x402 in two parts, per URL checked.** $0.003 when the job is started (it returns an id; at most 20 URLs per job), $0.007 per URL when the report is fetched; a job not finished answers 202 and charges nothing; a job that failed charges nothing more. $0.01 per URL in all.
+- **First the service with tests, then the paid route, then an MCP tool.** Built on `feat/catalog-importer`, in dev only; nothing is deployed without Leo's OK.

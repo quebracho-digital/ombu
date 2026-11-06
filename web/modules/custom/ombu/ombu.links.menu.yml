@@ -22,5 +22,5 @@ ombu.blog:
   title: 'Blog'
   description: 'News from Ombú.'
   route_name: view.blog.page_1
-  menu_name: footer
-  weight: -18
+  menu_name: main
+  weight: -49

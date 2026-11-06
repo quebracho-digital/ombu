@@ -226,6 +226,9 @@ final class ListingHooks {
       $view->element['#attached']['library'][] = 'ombu/market';
       $view->attachment_before[] = Sales::build();
     }
+    elseif ($view->id() === 'blog') {
+      $view->element['#attached']['library'][] = 'ombu/blog';
+    }
   }
 
   #[Hook('page_attachments')]

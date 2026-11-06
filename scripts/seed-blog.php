@@ -15,6 +15,13 @@ $state = \Drupal::state();
 $seeded = $state->get('ombu.seed_blog', []);
 $force = (bool) getenv('OMBU_SEED_FORCE');
 // A body names a listing as {{sku}}: ids differ between databases, SKUs do not.
+// The card's photo: a copy of the module's file as a managed file, once.
+$photo = function (string $name) {
+  $dir = 'public://blog';
+  \Drupal::service('file_system')->prepareDirectory($dir, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY);
+  $data = file_get_contents(__DIR__ . "/../web/modules/custom/ombu/images/blog/$name");
+  return \Drupal::service('file.repository')->writeData($data, "$dir/$name", \Drupal\Core\File\FileExists::Replace)->id();
+};
 $link = function (string $body, string $lang) {
   return preg_replace_callback('/\{\{([a-z0-9-]+)\}\}/', function ($m) use ($lang) {
     $variation = \Drupal::entityTypeManager()->getStorage('commerce_product_variation')->loadBySku($m[1]);
@@ -25,7 +32,7 @@ $link = function (string $body, string $lang) {
     return $variation->getProduct()->toUrl('canonical', ['language' => $language])->toString();
   }, $body);
 };
-$hash = fn($e) => sha1($e->label() . "\n" . $e->get('body')->value);
+$hash = fn($e) => sha1($e->label() . "\n" . $e->get('body')->value . "\n" . $e->get('body')->summary);
 
 foreach (glob(__DIR__ . '/blog/*.php') as $file) {
   $slug = basename($file, '.php');
@@ -36,7 +43,7 @@ foreach (glob(__DIR__ . '/blog/*.php') as $file) {
     if (!isset($post[$lang])) {
       continue;
     }
-    [$title, $body] = $post[$lang];
+    [$title, $body, $summary] = $post[$lang] + [2 => ''];
     $body = $link($body, $lang);
     $key = "$alias:$lang";
     $path = \Drupal::service('path_alias.repository')->lookupByAlias($alias, $lang);
@@ -46,7 +53,7 @@ foreach (glob(__DIR__ . '/blog/*.php') as $file) {
       echo "$key: edited on the site, left as it is (OMBU_SEED_FORCE=1 to overwrite)\n";
       continue;
     }
-    $values = ['title' => $title, 'body' => ['value' => $body, 'format' => 'full_html'], 'status' => 1, 'path' => ['alias' => $alias, 'pathauto' => 0]];
+    $values = ['title' => $title, 'field_image' => ['target_id' => $photo($post['image']), 'alt' => $post['alt'][$lang] ?? $title], 'body' => ['value' => $body, 'summary' => $summary, 'format' => 'full_html'], 'status' => 1, 'path' => ['alias' => $alias, 'pathauto' => 0]];
     if (!$node) {
       $node = $nodes->create(['type' => 'blog', 'uid' => 1, 'langcode' => $lang, 'created' => strtotime($post['date'])] + $values);
       $entity = $node;

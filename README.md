@@ -24,6 +24,8 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Run it:** `ddev start && ddev composer install`, then the seeds under [Run it](#run-it).
 - **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
 - **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher; and `/mcp`, an [MCP server](#mcp-for-agents) (where it is on: see below), linked from the footer.
+- **Blog:** the home page (`/blog`, and `/blog.md` for agents), posts in three languages seeded from `scripts/blog/`.
+- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces
@@ -116,6 +118,15 @@ catalogue), weights at `/admin/config/search/similar-services`. The block
 is the first view that answers: `ombu_similar_meilisearch` (Meilisearch's
 `/similar` with the same vectors, optional) or `ombu_similar` (the
 database server), else the scores as cards.
+
+**Meilisearch:** our own module, `quebracho_meilisearch` (from our fork of
+the contrib backend; `drupal/meilisearch` is not a dependency). Its server,
+the `listings_meilisearch` index and the view are in `config/sync`. The
+block pings the server first, so a site without Meilisearch falls back to
+the database view. In DDEV the server is `.ddev/docker-compose.meilisearch.yaml`
+(master key `ddev`, set for Drupal in `settings.php` only under DDEV); index
+with `drush sapi-i listings_meilisearch`. Production needs its own server
+and key before the Meilisearch list is served there.
 
 **What was shown, and what people did:** `ombu_similar_log` records each
 list shown (engine, order, reasons), the clicks (`js/similar.js` →

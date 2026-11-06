@@ -201,7 +201,8 @@ Decidido por Leo (2026-11-06): "agrega blog al menu principal, usa el blog como 
 Decidido por Leo (2026-11-06 15:21): "no vamos a usar el modulo de drupal, vamos a crear nuestro propio modulo custom que quizas lo hagamos contrib en base a nuestro fork". So `quebracho_meilisearch` (from our fork, commit `02951a5`) is the module; the contrib `drupal/meilisearch` is not a dependency, and the tests enable `quebracho_meilisearch`, not `meilisearch`. Whether it becomes contrib later is a decision for Leo, not for the tests.
 
 - **Tests:** namespace `Drupal\Tests\quebracho_meilisearch`, the test module's config names match its IDs, and the Meilisearch key comes from `MEILISEARCH_TEST_KEY`.
-- **Server:** DDEV's Meilisearch is in `.ddev/docker-compose.meilisearch.yaml`. The key committed there is not the one the running container uses (4 characters against 26), which needs to be settled before anything is installed in production.
+- **Server:** DDEV's Meilisearch is in `.ddev/docker-compose.meilisearch.yaml`. Checked 2026-11-06: there is no key mismatch. The container runs with the addon's default `ddev`, and `settings.php` gives Drupal the same key under DDEV; the "26" was the size of `.ddev/.env.meilisearch`, which holds only `MEILISEARCH_TAG`. Production needs its own server and key.
+- **Config in `config/sync` (2026-11-06):** the server, the `listings_meilisearch` index and `ombu_similar_meilisearch` moved from `config/meilisearch/`, and `quebracho_meilisearch` is in `core.extension`. Uninstalling the contrib `meilisearch` had deleted DDEV's server (it depended on that module) and disabled the index; the server now depends on `quebracho_meilisearch`, the three files were imported alone (`cim --partial --source=../config/meilisearch`) and the 2,814 listings re-indexed. `Similar` pings the server first, so a site without Meilisearch serves the database view.
 
 ### The blog's list reads as markdown
 

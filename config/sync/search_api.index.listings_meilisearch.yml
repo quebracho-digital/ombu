@@ -194,4 +194,3 @@ options:
   index_directly: true
   track_changes_in_references: true
 server: meilisearch
-

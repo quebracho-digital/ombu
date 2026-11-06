@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
-    - meilisearch
+    - quebracho_meilisearch
 id: meilisearch
 name: Meilisearch
 description: 'Listings in Meilisearch, with the vectors of ombu_listing_vector (userProvided embedder "ombu"). In parallel to market_db while /market stays on the database.'
@@ -18,4 +18,3 @@ backend_config:
   embedder_dimensions: 4096
   matching_strategy: last
   max_total_hits: 10000
-

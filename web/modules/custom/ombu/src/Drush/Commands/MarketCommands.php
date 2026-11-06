@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Drush\Commands;
 
+use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
+use Drupal\ombu\SellerProbe;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\TransferStats;
-use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -19,6 +19,21 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 final class MarketCommands extends DrushCommands {
 
   use AutowireTrait;
+
+  /**
+   * The public 8004scan API.
+   */
+  private const API = 'https://api.8004scan.io/api/v1';
+
+  /**
+   * Milliseconds between calls to 8004scan, set by the survey's --delay.
+   */
+  private int $delayMs = 2100;
+
+  /**
+   * The seller probe the survey asks each agent's endpoint with.
+   */
+  private ?SellerProbe $probe = NULL;
 
   public function __construct(
     #[Autowire(service: 'ombu.circle_importer')]
@@ -72,223 +87,249 @@ final class MarketCommands extends DrushCommands {
   }
 
   /**
-   * Survey the 8004scan API to measure how many agents are importable.
+   * Surveys the 8004scan agents that claim x402 and count the importable ones.
    *
-   * Reads the ~77 candidates (x402_supported, is_testnet=false,
-   * is_endpoint_verified=true), fetches each agent's detail, probes its
-   * endpoint with a simple HTTP request (no 402 guard: just status 402),
-   * matches wallets to existing listings, and inspects feedbacks for
-   * proofOfPayment.
+   * Reads every candidate (x402_supported, is_testnet=false,
+   * is_endpoint_verified=true), follows its detail, asks its web endpoint for
+   * a 402 with accepts (SellerProbe: public addresses only), matches its x402
+   * wallet and owner to existing listings, and checks the feedbacks of the
+   * agents that answer 402 for a proofOfPayment that resolves.
    *
-   * This is a read-only command: no entities are written.
+   * Read-only: no entities are written. Every failure is counted with its
+   * reason, so a low number can be told apart from a broken survey.
    */
   #[CLI\Command(name: 'ombu:8004scan-survey')]
+  #[CLI\Option(name: 'delay', description: 'Milliseconds between calls to 8004scan (anonymous limit: 30 a minute, so 2100).')]
   #[CLI\Usage(name: 'drush ombu:8004scan-survey', description: 'Survey 8004scan candidates and print a table.')]
-  public function survey8004scan(): void {
-    $api = 'https://api.8004scan.io/api/v1';
-    $this->logger()->warning('Starting 8004scan survey...');
+  public function survey8004scan(array $options = ['delay' => 2100]): void {
+    if (!class_exists(PageFetcher::class)) {
+      throw new \RuntimeException('The survey needs ai_provider_universal_factcheck (SellerProbe, PageFetcher).');
+    }
+    $this->delayMs = (int) $options['delay'];
+    $this->probe = new SellerProbe($this->httpClient);
 
-    // Step 1: Get the candidate list.
-    $candidates = $this->getCandidates($api);
-    if (empty($candidates)) {
-      $this->logger()->warning('No candidates returned from /agents.');
+    $this->logger()->warning('Starting 8004scan survey...');
+    $reasons = [];
+
+    $candidates = $this->getCandidates();
+    $this->logger()->warning('Candidates: ' . count($candidates) . '.');
+    if (!$candidates) {
       return;
     }
-    $this->logger()->warning('Found ' . count($candidates) . ' candidates.');
 
-    // Step 2: Fetch details for each candidate.
     $agents = [];
-    $detailErrors = 0;
-    foreach ($candidates as $i => $agent) {
-      if (($i + 1) % 10 === 0) {
-        $this->logger()->warning("Fetched details: $i/" . count($candidates) . " (errors: $detailErrors)");
+    foreach ($candidates as $candidate) {
+      try {
+        $agents[] = $this->api('/agents/' . $candidate['chain_id'] . '/' . $candidate['token_id']);
       }
-      $detail = $this->getAgentDetail($api, (string) $agent['chain_id'], (string) $agent['token_id']);
-      if ($detail === NULL) {
-        $detailErrors++;
-        continue;
+      catch (\RuntimeException $e) {
+        $this->tally($reasons, 'detail: ' . $e->getMessage());
       }
-      $agents[] = $detail;
     }
-    $this->logger()->warning("Agent details fetched: " . count($agents) . " (errors: $detailErrors)");
+    $this->logger()->warning('Details fetched: ' . count($agents) . ' of ' . count($candidates) . '.');
 
-    // Step 3: Probe each agent's endpoint and gather metrics.
-    $results = $this->probeAgents($agents, $api);
-
-    // Step 4: Match wallets to existing listings.
-    $listingWallets = $this->getListingWallets();
-    $this->matchWallets($results, $listingWallets);
-
-    // Step 5: Check feedbacks for proofOfPayment.
-    $feedbackResults = $this->checkFeedbacks($api, $results);
-
-    // Step 6: Print the table.
-    $this->printTable($results, $feedbackResults);
+    $results = $this->probeAgents($agents, $reasons);
+    $this->matchWallets($results, $this->getListingWallets());
+    $this->checkFeedbacks($results, $reasons);
+    $this->printTable($results, $reasons, count($candidates));
   }
 
   /**
-   * Get the list of candidates from /agents.
+   * Every candidate, following the cursor (the API pages 20 by default).
    */
-  private function getCandidates(string $api): array {
+  private function getCandidates(): array {
+    $candidates = [];
+    $query = [
+      'x402_supported' => 'true',
+      'is_testnet' => 'false',
+      'is_endpoint_verified' => 'true',
+      'limit' => 100,
+    ];
+    $pages = 0;
+    do {
+      $page = $this->api('/agents', $query);
+      $candidates = array_merge($candidates, $page['items'] ?? []);
+      $query['cursor'] = (string) ($page['next_cursor'] ?? '');
+      $pages++;
+    } while (!empty($page['has_more']) && $query['cursor'] !== '' && $pages < 50);
+    return $candidates;
+  }
+
+  /**
+   * One GET to 8004scan, paced to the anonymous limit. Throws with the reason.
+   */
+  private function api(string $path, array $query = []): array {
+    usleep($this->delayMs * 1000);
     try {
-      $response = $this->httpClient->request('GET', "$api/agents", [
-        'query' => [
-          'x402_supported' => 'true',
-          'is_testnet' => 'false',
-          'is_endpoint_verified' => 'true',
-        ],
+      $response = $this->httpClient->request('GET', self::API . $path, [
+        'query' => $query,
         'timeout' => 30,
       ]);
-      $body = json_decode((string) $response->getBody(), TRUE);
-      return $body['items'] ?? [];
     }
-    catch (\Exception $e) {
-      $this->logger()->error('Failed to fetch candidates: @e', ['@e' => $e->getMessage()]);
-      return [];
+    catch (RequestException $e) {
+      $status = $e->getResponse()?->getStatusCode();
+      throw new \RuntimeException($status ? "HTTP $status" : 'unreachable', 0, $e);
     }
+    $body = json_decode((string) $response->getBody(), TRUE);
+    if (!is_array($body)) {
+      throw new \RuntimeException('HTTP ' . $response->getStatusCode() . ', not JSON');
+    }
+    return $body;
   }
 
   /**
-   * Get the detail of a single agent.
+   * Asks each agent's web endpoint for its 402, through SellerProbe.
    */
-  private function getAgentDetail(string $api, string $chainId, string $tokenId): ?array {
-    try {
-      $response = $this->httpClient->request('GET', "$api/agents/$chainId/$tokenId", [
-        'timeout' => 30,
-      ]);
-      return json_decode((string) $response->getBody(), TRUE);
-    }
-    catch (\Exception) {
-      return NULL;
-    }
-  }
-
-  /**
-   * Probe each agent's endpoint for 402 and gather metrics.
-   */
-  private function probeAgents(array $agents, string $api): array {
+  private function probeAgents(array $agents, array &$reasons): array {
     $results = [];
-
     foreach ($agents as $agent) {
       $result = [
         'chain_id' => $agent['chain_id'] ?? '',
         'token_id' => $agent['token_id'] ?? '',
         'agent_id' => $agent['agent_id'] ?? '',
         'name' => $agent['name'] ?? '',
-        'owner_address' => strtolower($agent['owner_address'] ?? $agent['agent_wallet'] ?? ''),
-        'has_endpoint' => FALSE,
+        'owner_address' => strtolower((string) ($agent['owner_address'] ?? '')),
+        'agent_wallet' => strtolower((string) ($agent['agent_wallet'] ?? '')),
         'endpoint_url' => NULL,
         'has_402' => FALSE,
         'accepts' => [],
         'wallet_match' => FALSE,
         'wallet_match_id' => NULL,
-        'has_feedback' => FALSE,
-        'feedback_score' => 0,
         'feedback_count' => 0,
-        'proofOfPayment' => FALSE,
-        'probe_error' => NULL,
+        'feedback_score' => 0,
+        'proof_count' => 0,
+        'feedbacks' => [],
       ];
 
-      // Get the endpoint URL from services or agent_url.
       $endpoint = $this->findEndpoint($agent);
       if ($endpoint === NULL) {
+        $this->tally($reasons, 'probe: no http(s) endpoint');
+        $results[] = $result;
         continue;
       }
-
-      $result['has_endpoint'] = TRUE;
       $result['endpoint_url'] = $endpoint;
 
-      // Probe the endpoint for 402 using plain HTTP (no SSRF guard needed
-      // for a survey: we just check status code).
       try {
-        $response = $this->httpClient->request('GET', $endpoint, [
-          'timeout' => 15,
-          'allow_redirects' => FALSE,
-          'http_errors' => FALSE,
-          'headers' => ['Accept' => 'application/json'],
-        ]);
-        $statusCode = $response->getStatusCode();
-        if ($statusCode === 402) {
-          $body = json_decode((string) $response->getBody(), TRUE);
-          // Prefer PAYMENT-REQUIRED header (x402 v2), fall back to body.
-          $header = $response->getHeaderLine('PAYMENT-REQUIRED');
-          if ($header !== '') {
-            $headerDecoded = json_decode(base64_decode($header, TRUE), TRUE);
-            $body = $headerDecoded ?: $body;
-          }
-          if (is_array($body['accepts'] ?? NULL)) {
-            $result['has_402'] = TRUE;
-            $result['accepts'] = $body['accepts'];
-          }
-        }
+        [, $result['accepts']] = $this->probe->requirements($endpoint, 'GET');
+        $result['has_402'] = TRUE;
+        $this->tally($reasons, 'probe: 402 with accepts');
       }
-      catch (\Exception $e) {
-        $result['probe_error'] = $e->getMessage();
+      catch (\RuntimeException $e) {
+        $this->tally($reasons, 'probe: ' . $this->shortReason($e->getMessage()));
       }
-
-      // Check feedbacks for this agent.
-      $result['feedbacks'] = $this->getAgentFeedbacks($api, $result['agent_id']);
-      $result['has_feedback'] = !empty($result['feedbacks']);
-      $result['feedback_count'] = count($result['feedbacks']);
-      if (!empty($result['feedbacks'])) {
-        $totalScore = array_sum(array_column($result['feedbacks'], 'score'));
-        $result['feedback_score'] = round($totalScore / count($result['feedbacks']), 1);
-      }
-
       $results[] = $result;
     }
-
     return $results;
   }
 
   /**
-   * Find the HTTP(S) endpoint URL from an agent detail.
+   * The endpoint to ask: services.web first (the HTTP one), then agent_url.
+   *
+   * services is an object keyed by protocol: {"web": {"endpoint": "..."}}.
    */
   private function findEndpoint(array $agent): ?string {
-    // agent_url is the top-level endpoint.
-    if (!empty($agent['agent_url']) && str_starts_with($agent['agent_url'], 'http')) {
-      return $agent['agent_url'];
-    }
-    // services may contain multiple endpoints.
-    if (!empty($agent['services']) && is_array($agent['services'])) {
-      foreach ($agent['services'] as $service) {
-        if (isset($service['endpoint']) && str_starts_with((string) $service['endpoint'], 'http')) {
-          return (string) $service['endpoint'];
-        }
+    $candidates = [$agent['services']['web']['endpoint'] ?? NULL, $agent['agent_url'] ?? NULL];
+    foreach ($candidates as $url) {
+      if (!is_string($url) || $url === '') {
+        continue;
       }
-    }
-    // agent_url without http prefix: try https.
-    if (!empty($agent['agent_url'])) {
-      return 'https://' . ltrim($agent['agent_url'], 'http:/');
+      if (!str_contains($url, '://')) {
+        $url = 'https://' . $url;
+      }
+      if (preg_match('#^https?://#i', $url)) {
+        return $url;
+      }
     }
     return NULL;
   }
 
   /**
-   * Get feedbacks for an agent.
+   * Feedbacks of each agent that answers 402, and whether they prove a payment.
    */
-  private function getAgentFeedbacks(string $api, string $agentId): array {
-    try {
-      $response = $this->httpClient->request('GET', "$api/feedbacks", [
-        'query' => [
-          'agent_id' => $agentId,
-          'limit' => 10,
-        ],
-        'timeout' => 15,
-      ]);
-      $body = json_decode((string) $response->getBody(), TRUE);
-      return $body['items'] ?? [];
+  private function checkFeedbacks(array &$results, array &$reasons): void {
+    foreach ($results as &$result) {
+      if (!$result['has_402']) {
+        continue;
+      }
+      try {
+        $page = $this->api('/feedbacks', ['agent_id' => $result['agent_id'], 'limit' => 50]);
+      }
+      catch (\RuntimeException $e) {
+        $this->tally($reasons, 'feedbacks: ' . $e->getMessage());
+        continue;
+      }
+      $scores = [];
+      foreach ($page['items'] ?? [] as $feedback) {
+        if (!empty($feedback['is_revoked'])) {
+          $this->tally($reasons, 'feedback: revoked');
+          continue;
+        }
+        $result['feedbacks'][] = $feedback;
+        if (is_numeric($feedback['score'] ?? NULL)) {
+          $scores[] = (float) $feedback['score'];
+        }
+        $proof = $this->feedbackProof($feedback);
+        $this->tally($reasons, 'feedback proof: ' . $proof['status']);
+        if ($proof['proof'] !== NULL) {
+          $result['proof_count']++;
+        }
+      }
+      $result['feedback_count'] = count($result['feedbacks']);
+      $result['feedback_score'] = $scores ? round(array_sum($scores) / count($scores), 1) : 0;
     }
-    catch (\Exception) {
-      return [];
-    }
+    unset($result);
   }
 
   /**
-   * Get all existing listing wallets (field_seller_address and payTo).
+   * The proofOfPayment of a feedback, read from its off-chain file.
+   *
+   * The file is the offchain_data inline, or the feedback_uri over https (the
+   * same SSRF guard as the seller probe). ipfs:// and ar:// are not fetched.
+   *
+   * @return array{status: string, proof: ?array}
+   */
+  private function feedbackProof(array $feedback): array {
+    $files = [];
+    if (is_array($feedback['offchain_data'] ?? NULL)) {
+      $files[] = $feedback['offchain_data'];
+    }
+    $uri = $feedback['feedback_uri'] ?? NULL;
+    if (is_string($uri) && $uri !== '') {
+      if (!preg_match('#^https?://#i', $uri)) {
+        return ['status' => 'uri not fetched (' . (parse_url($uri, PHP_URL_SCHEME) ?: 'unknown') . ')', 'proof' => NULL];
+      }
+      try {
+        $decoded = json_decode($this->probe->fetch($uri), TRUE);
+        $files[] = is_array($decoded) ? $decoded : [];
+      }
+      catch (\Throwable $e) {
+        return ['status' => 'uri error: ' . $this->shortReason($e->getMessage()), 'proof' => NULL];
+      }
+    }
+    foreach ($files as $file) {
+      $proof = $file['proofOfPayment'] ?? NULL;
+      if (is_array($proof) && $this->wellFormedProof($proof)) {
+        return ['status' => 'resolves', 'proof' => $proof];
+      }
+    }
+    return ['status' => 'no proof', 'proof' => NULL];
+  }
+
+  /**
+   * The fields a payment proof must carry to point at a transaction.
+   */
+  private function wellFormedProof(array $proof): bool {
+    return preg_match('/^0x[0-9a-fA-F]{40}$/', (string) ($proof['fromAddress'] ?? '')) === 1
+      && preg_match('/^0x[0-9a-fA-F]{40}$/', (string) ($proof['toAddress'] ?? '')) === 1
+      && preg_match('/^0x[0-9a-fA-F]{64}$/', (string) ($proof['txHash'] ?? '')) === 1
+      && is_numeric($proof['chainId'] ?? NULL);
+  }
+
+  /**
+   * Every existing listing wallet (field_seller_address and payTo), lowercase.
    *
    * @return array
-   *   ['address' => listing_id] for EVM addresses (lowercase).
+   *   ['address' => listing_id] for EVM addresses.
    */
   private function getListingWallets(): array {
     $wallets = [];
@@ -321,106 +362,85 @@ final class MarketCommands extends DrushCommands {
   }
 
   /**
-   * Match agent wallets to existing listing wallets.
+   * Matches the agent's x402 wallet, then its owner, to an existing listing.
    */
   private function matchWallets(array &$results, array $listingWallets): void {
     foreach ($results as &$result) {
-      if (empty($result['owner_address'])) {
-        continue;
-      }
-      if (isset($listingWallets[$result['owner_address']])) {
-        $result['wallet_match'] = TRUE;
-        $result['wallet_match_id'] = $listingWallets[$result['owner_address']];
-      }
-    }
-  }
-
-  /**
-   * Check feedbacks for proofOfPayment on each agent.
-   */
-  private function checkFeedbacks(string $api, array &$results): array {
-    $proofCount = 0;
-    $noProof = 0;
-    foreach ($results as &$result) {
-      if (!$result['has_endpoint'] || !$result['has_feedback']) {
-        continue;
-      }
-      $hasProof = FALSE;
-      foreach ($result['feedbacks'] as $fb) {
-        // The prompt says proofOfPayment lives in the off-chain file
-        // pointed to by feedback_uri / offchain_data. We check both.
-        $offchain = $fb['offchain_data'] ?? NULL;
-        $feedbackUri = $fb['feedback_uri'] ?? NULL;
-        if ((is_string($offchain) && !empty($offchain)) || (is_string($feedbackUri) && !empty($feedbackUri))) {
-          $hasProof = TRUE;
-          $proofCount++;
-          continue 2;
+      foreach (array_unique(array_filter([$result['agent_wallet'], $result['owner_address']])) as $wallet) {
+        if (isset($listingWallets[$wallet])) {
+          $result['wallet_match'] = TRUE;
+          $result['wallet_match_id'] = $listingWallets[$wallet];
+          break;
         }
-        $noProof++;
-      }
-      if ($hasProof) {
-        $result['proofOfPayment'] = TRUE;
       }
     }
-    return ['proof_count' => $proofCount, 'no_proof' => $noProof];
+    unset($result);
   }
 
   /**
-   * Print the survey results table.
+   * Prints the survey: the counts, every failure reason, and the matches.
    */
-  private function printTable(array $results, array $feedbackResults): void {
-    $total = count($results);
-    $hasEndpoint = count(array_filter($results, fn($r) => $r['has_endpoint']));
-    $has402 = count(array_filter($results, fn($r) => $r['has_402']));
-    $has402AndNoProbeError = count(array_filter($results, fn($r) => $r['has_endpoint'] && $r['has_402'] && empty($r['probe_error'])));
-    $walletMatch = count(array_filter($results, fn($r) => $r['has_402'] && $r['wallet_match']));
-    $hasFeedback = count(array_filter($results, fn($r) => $r['has_feedback']));
-    $hasFeedbackWithProof = count(array_filter($results, fn($r) => $r['proofOfPayment']));
-    $noEndpoint = count(array_filter($results, fn($r) => !$r['has_endpoint']));
+  private function printTable(array $results, array $reasons, int $candidates): void {
+    $with402 = array_filter($results, fn($r) => $r['has_402']);
+    $matching = array_filter($with402, fn($r) => $r['wallet_match']);
+    $proofs = array_sum(array_column($with402, 'proof_count'));
+    $feedbacks = array_sum(array_column($with402, 'feedback_count'));
 
     $this->logger()->warning('=== 8004scan Survey Results ===');
-    $this->logger()->warning("Candidates with agent details: $total");
-    $this->logger()->warning("With HTTP(S) endpoint: $hasEndpoint");
-    $this->logger()->warning("No usable endpoint: $noEndpoint");
-    $this->logger()->warning("Responds 402 with accepts: $has402AndNoProbeError");
-    $this->logger()->warning("Wallet matches existing listing: $walletMatch");
-    $this->logger()->warning("Has feedbacks: $hasFeedback");
-    $this->logger()->warning("Has feedbacks with proofOfPayment: $hasFeedbackWithProof");
+    $this->logger()->warning("Candidates: $candidates; with a 402 and accepts: " . count($with402));
+    $this->logger()->warning('Wallet matches an existing listing: ' . count($matching));
+    $this->logger()->warning("Feedbacks of those agents: $feedbacks; with a proofOfPayment that resolves: $proofs");
 
-    // Print matching agents.
-    $matching = array_filter($results, fn($r) => $r['has_402'] && $r['wallet_match']);
+    arsort($reasons);
+    $this->logger()->warning('Reasons (every result is counted once):');
+    foreach ($reasons as $reason => $n) {
+      $this->logger()->warning(sprintf('  %4d  %s', $n, $reason));
+    }
+
     if ($matching) {
-      $this->logger()->warning('Agents matching existing listings:');
+      $this->logger()->warning('Agents with a 402 that match an existing listing:');
       foreach ($matching as $agent) {
         $this->logger()->warning(sprintf(
           '  %s (%s) -> listing #%d, wallet %s, score %.1f, %d feedbacks',
           $agent['name'],
           $agent['agent_id'],
           $agent['wallet_match_id'],
-          $agent['owner_address'],
+          $agent['agent_wallet'] ?: $agent['owner_address'],
           $agent['feedback_score'],
           $agent['feedback_count']
         ));
       }
     }
 
-    // If fewer than 5 agents pass 402, stop and inform Leo.
-    if ($has402 < 5) {
-      $this->logger()->error("Less than 5 agents pass the 402 probe ($has402). Work should stop for Leo's review.");
-    }
-
-    // Print breakdown by chain.
     $chains = [];
-    foreach ($results as $r) {
-      if ($r['has_402']) {
-        $chain = $r['chain_id'] ?: 'unknown';
-        $chains[$chain] = ($chains[$chain] ?? 0) + 1;
-      }
+    foreach ($with402 as $r) {
+      $chain = $r['chain_id'] ?: 'unknown';
+      $chains[$chain] = ($chains[$chain] ?? 0) + 1;
     }
     if ($chains) {
       $chainStr = implode(', ', array_map(fn($c, $n) => "$c: $n", array_keys($chains), $chains));
       $this->logger()->warning("Agents with 402 by chain: $chainStr");
     }
+
+    // The stop rule from the task: fewer than 5 passing the 402 means Leo decides.
+    if (count($with402) < 5) {
+      $this->logger()->error('Fewer than 5 agents pass the 402 probe (' . count($with402) . "). Work should stop for Leo's review.");
+    }
+  }
+
+  /**
+   * Counts one outcome under its reason.
+   */
+  private function tally(array &$reasons, string $reason): void {
+    $reasons[$reason] = ($reasons[$reason] ?? 0) + 1;
+  }
+
+  /**
+   * A failure message short enough for a table row, with its URLs hidden.
+   */
+  private function shortReason(string $message): string {
+    $message = preg_replace('#https?://\S+#', '<url>', $message) ?? $message;
+    return mb_substr($message, 0, 70);
   }
 
 }

@@ -103,7 +103,7 @@ final class MarketCommands extends DrushCommands {
       if (($i + 1) % 10 === 0) {
         $this->logger()->warning("Fetched details: $i/" . count($candidates) . " (errors: $detailErrors)");
       }
-      $detail = $this->getAgentDetail($api, $agent['chain_id'], $agent['token_id']);
+      $detail = $this->getAgentDetail($api, (string) $agent['chain_id'], (string) $agent['token_id']);
       if ($detail === NULL) {
         $detailErrors++;
         continue;
@@ -113,7 +113,7 @@ final class MarketCommands extends DrushCommands {
     $this->logger()->warning("Agent details fetched: " . count($agents) . " (errors: $detailErrors)");
 
     // Step 3: Probe each agent's endpoint and gather metrics.
-    $results = $this->probeAgents($agents);
+    $results = $this->probeAgents($agents, $api);
 
     // Step 4: Match wallets to existing listings.
     $listingWallets = $this->getListingWallets();
@@ -166,7 +166,7 @@ final class MarketCommands extends DrushCommands {
   /**
    * Probe each agent's endpoint for 402 and gather metrics.
    */
-  private function probeAgents(array $agents): array {
+  private function probeAgents(array $agents, string $api): array {
     $results = [];
 
     foreach ($agents as $agent) {

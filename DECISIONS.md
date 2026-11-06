@@ -183,7 +183,7 @@ Decidido por Leo (2026-11-06): "vamos a crear un blog dentro de ombu, antes que 
 - **The link is the module's, not a menu entry in the database:** `ombu.blog` in `ombu.links.menu.yml`, in the main menu (it was first in the footer).
 - **Posts are content, so they live in the database, not in config.** Each post is a file in `scripts/blog/` (one array: date, and a title and body per language); `scripts/seed-blog.php` creates or updates them, idempotently, and leaves alone a post that was edited on the site (`OMBU_SEED_FORCE=1` to overwrite). That is how a post reaches production: `drush php:script ../scripts/seed-blog.php`, as with `seed-pages.php`.
 - **A post names a listing by its SKU (`{{ours-ping}}`, `{{circle-…}}`), never by its id.** Ids differ between databases; SKUs do not. The seed turns each into the listing's URL in the post's language and stops with an error if no listing has that SKU.
-- **Not done:** RSS, and a mention in `/llms.txt`. The blog's pages are not answered as markdown yet.
+- **Not done:** RSS, and a mention in `/llms.txt`. The blog's list is answered as markdown since 2026-11-06 (`/blog.md`, `BlogMarkdownSubscriber`, commit `28559a3`); its Spanish date line still shows English month names.
 
 Decidido por Leo (2026-11-06): "agrega blog al menu principal, usa el blog como home, modifica el post para darle mas onda, usa fotos libres de derechos. luego agrega otro post contando como es el proceso de importacion de listings del market de arc".
 
@@ -194,3 +194,14 @@ Decidido por Leo (2026-11-06): "agrega blog al menu principal, usa el blog como 
 - **Second post:** how Circle's catalogue is imported (`scripts/blog/how-the-arc-market-gets-in.php`). Every claim in it was checked against `CircleCatalogImporter`; it says nothing of what is not deployed yet (the 8004scan importer, the blacklist).
 - **Known:** the menu now has "Home" and "Blog", which lead to the same page.
 
+
+### Our own Meilisearch module, not the contrib one
+
+Decidido por Leo (2026-11-06 15:21): "no vamos a usar el modulo de drupal, vamos a crear nuestro propio modulo custom que quizas lo hagamos contrib en base a nuestro fork". So `quebracho_meilisearch` (from our fork, commit `02951a5`) is the module; the contrib `drupal/meilisearch` is not a dependency, and the tests enable `quebracho_meilisearch`, not `meilisearch`. Whether it becomes contrib later is a decision for Leo, not for the tests.
+
+- **Tests:** namespace `Drupal\Tests\quebracho_meilisearch`, the test module's config names match its IDs, and the Meilisearch key comes from `MEILISEARCH_TEST_KEY`.
+- **Server:** DDEV's Meilisearch is in `.ddev/docker-compose.meilisearch.yaml`. The key committed there is not the one the running container uses (4 characters against 26), which needs to be settled before anything is installed in production.
+
+### The blog's list reads as markdown
+
+Decidido por Leo (2026-11-06 15:21): "los listados de blog tambien deberian poder verse en .md". `/blog.md` and `Accept: text/markdown` on `/blog` answer with the published posts (commit `28559a3`), because x402_pay does not render view pages as markdown.

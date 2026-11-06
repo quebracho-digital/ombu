@@ -63,3 +63,8 @@ seller:
   css:
     theme:
       css/seller.css: {}
+# The blog as cards: the home page and /blog.
+blog:
+  css:
+    theme:
+      css/blog.css: {}

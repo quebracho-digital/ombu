@@ -1,0 +1,10 @@
+---
+title: Location search
+---
+
+With [Search API Location](https://www.drupal.org/project/search_api_location), index a field with the *Latitude/Longitude* type. The first location field of an item becomes its Meilisearch `_geo` point.
+
+- A location filter with a radius becomes a `_geoRadius` filter.
+- Sorting on the location field sorts by distance from the searched point.
+
+Meilisearch supports one point per document: extra values and extra location fields are ignored.

@@ -1,0 +1,29 @@
+---
+title: Click analytics
+---
+
+The **Meilisearch Analytics** submodule sends clicks on search results to [Meilisearch Cloud analytics](https://www.meilisearch.com/docs/capabilities/analytics/overview), which then reports click-through rate and average click position. Self-hosted Meilisearch has no analytics: the submodule does nothing there.
+
+```bash
+drush en quebracho_meilisearch_analytics -y
+```
+
+## How it works
+
+- Searches ask Meilisearch for their query UID and send a pseudonymous visitor ID: a keyed hash of the user ID for authenticated users, a random first-party cookie (`quebracho_meilisearch_uid`) for anonymous visitors.
+- Rows of views on Meilisearch indexes, in the *Unformatted list* and *HTML list* styles, get `data-meilisearch-*` attributes, and a small script reports clicks on links inside them.
+- Clicks go to `/meilisearch/analytics/click` on your site, never to Meilisearch directly, so no key reaches the browser. The endpoint validates its input, refuses cross-site requests and accepts 60 clicks per minute per client.
+
+Pages showing tracked results are not cached, and Search API does not cache Meilisearch results while the submodule is on, since each search has its own query UID.
+
+## Conversions
+
+Record conversions (a purchase, a sign-up) from code:
+
+```php
+\Drupal::service('quebracho_meilisearch_analytics.events')->conversion($index, $document_id, $query_uid, 'Purchase');
+```
+
+`$document_id` is `\Drupal\quebracho_meilisearch\Utility\MeilisearchUtils::encodeDocumentId($item_id)`.
+
+<Warning>The anonymous visitor cookie may need consent under GDPR and ePrivacy rules. Only enable the submodule where your consent setup allows it.</Warning>

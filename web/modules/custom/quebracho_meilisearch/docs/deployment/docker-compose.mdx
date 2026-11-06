@@ -1,0 +1,31 @@
+---
+title: Docker Compose
+---
+
+Add Meilisearch next to your Drupal service:
+
+```yaml
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.54
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 5s
+      retries: 10
+
+  drupal:
+    # ... your Drupal service
+    depends_on:
+      meilisearch:
+        condition: service_healthy
+
+volumes:
+  meili_data:
+```
+
+In Drupal, the server URL is `http://meilisearch:7700`.

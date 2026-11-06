@@ -280,6 +280,7 @@ ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='�
   drush php:script ../scripts/seed-legal.php        # terms, privacy, report and withdrawal forms
 ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
   drush php:script ../scripts/seed-pt-br.php        # all of the above in Portuguese (after drush updb)
+ddev drush php:script ../scripts/seed-blog.php      # the blog's posts, in every language (one file per post in scripts/blog/; photos credited in the module's images/blog/CREDITS.md)
 ddev test                                           # x402_pay, wallet_auth and ombu
 ```
 

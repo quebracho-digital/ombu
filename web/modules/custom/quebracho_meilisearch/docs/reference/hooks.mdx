@@ -1,0 +1,54 @@
+---
+title: Hooks
+---
+
+See `meilisearch.api.php`.
+
+## hook_quebracho_meilisearch_search_params_alter()
+
+Alter the [search parameters](https://www.meilisearch.com/docs/reference/api/search) of a query before it is sent. The hook runs for the main search and for every extra query computing facet counts, so a filter added here also restricts the counts. `$context['query']` says which: `main`, `facet_values`, `facet_all_values` or `facet_missing`; or `similar` for "More like this", whose parameters are the [similar documents route's](https://www.meilisearch.com/docs/reference/api/similar) (no `q`, no `hybrid`).
+
+```php
+function mymodule_quebracho_meilisearch_search_params_alter(array &$params, \Drupal\search_api\Query\QueryInterface $query, array $context): void {
+  if ($context['query'] === 'main') {
+    $params['rankingScoreThreshold'] = 0.2;
+  }
+}
+```
+
+## hook_quebracho_meilisearch_documents_alter()
+
+Alter the documents sent to Meilisearch when items are indexed. With a server whose **Vectors provided by Drupal** is set, this is where each document gets its vector. Documents replace the stored ones: one sent without a vector, or with an invalid one (logged), has none afterwards. Implementations must not throw, or the whole batch fails.
+
+`$context` has the `items` being indexed, the `embedder` whose vectors Drupal provides (NULL when none) and its `dimensions`. Load the whole batch's vectors at once.
+
+```php
+function mymodule_quebracho_meilisearch_documents_alter(array &$documents, \Drupal\search_api\IndexInterface $index, array $context): void {
+  if ($context['embedder'] === NULL) {
+    return;
+  }
+  // The IDs are item IDs, with the language ("entity:node/12:en"), not entity
+  // IDs. The service returns the vectors keyed by them: a list of floats each.
+  $vectors = \Drupal::service('mymodule.vectors')->getMultiple(array_column($documents, 'search_api_id'));
+  foreach ($documents as &$document) {
+    if (isset($vectors[$document['search_api_id']])) {
+      $document['_vectors'][$context['embedder']] = $vectors[$document['search_api_id']];
+    }
+  }
+  unset($document);
+}
+```
+
+## hook_quebracho_meilisearch_request_headers_alter()
+
+Add HTTP headers to every request of a server.
+
+```php
+function mymodule_quebracho_meilisearch_request_headers_alter(array &$headers, ?\Drupal\search_api\ServerInterface $server): void {
+  $headers['X-Custom'] = 'value';
+}
+```
+
+## Condition parsers
+
+Services tagged `meilisearch.condition_parser` (implementing `ConditionParserInterface`) translate Search API conditions to filter expressions; higher priorities are tried first.

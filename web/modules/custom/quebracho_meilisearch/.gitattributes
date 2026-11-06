@@ -1,0 +1,7 @@
+# Development files, left out of release archives.
+/.github export-ignore
+/compose.yaml export-ignore
+/Dockerfile.dev export-ignore
+/.dockerignore export-ignore
+/scripts export-ignore
+/docs/superpowers export-ignore

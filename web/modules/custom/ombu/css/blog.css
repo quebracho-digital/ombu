@@ -1,0 +1,57 @@
+/* The blog, as cards: the home page and /blog. A photo, a date, a title, a teaser. */
+.view-blog .view-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1.5rem;
+  margin: 1rem 0 2rem;
+}
+.blog-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: .75rem;
+  background: var(--bs-body-bg, #fff);
+  transition: box-shadow .15s, transform .15s;
+}
+.blog-card:hover,
+.blog-card:focus-within {
+  box-shadow: 0 .5rem 1.25rem rgb(0 0 0 / .1);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .blog-card { transition: none; }
+}
+.blog-card__image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.blog-card__date {
+  margin: 1rem 1.25rem 0;
+  font-size: .8rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color, #6c757d);
+}
+.blog-card__title {
+  margin: .25rem 1.25rem .5rem;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+/* The whole card opens the post: the title's link stretches over it. */
+.blog-card__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.blog-card__summary {
+  margin: 0 1.25rem 1.25rem;
+  color: var(--bs-body-color, inherit);
+}
+/* A post: photos the width of the text, captions quiet. */
+.node--type-blog .figure-caption {
+  font-size: .85rem;
+}

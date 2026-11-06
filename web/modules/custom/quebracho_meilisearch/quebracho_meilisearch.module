@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Contains hook implementations for the Meilisearch module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function quebracho_meilisearch_help(string $route_name, RouteMatchInterface $route_match): string {
+  if ($route_name === 'help.page.meilisearch') {
+    return '<p>' . t('Provides a Meilisearch backend for the Search API module.') . '</p>';
+  }
+  return '';
+}

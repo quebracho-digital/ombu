@@ -1,0 +1,194 @@
+uuid: 12febbed-75a6-4ec8-86e6-55421dc0597f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - field.storage.node.field_image
+    - image.style.large
+    - node.type.blog
+  module:
+    - image
+    - node
+    - text
+    - user
+id: blog
+label: Blog
+module: views
+description: "The blog, as cards: latest posts in the visitor's language. Also the home page."
+tag: ''
+base_table: node_field_data
+base_field: nid
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    position: 0
+    display_options:
+      title: Blog
+      fields:
+        field_image:
+          id: field_image
+          table: node__field_image
+          field: field_image
+          plugin_id: field
+          label: ''
+          element_class: blog-card__image
+          element_label_colon: false
+          hide_empty: true
+          type: image
+          settings:
+            image_link: content
+            image_style: large
+            image_loading:
+              attribute: lazy
+        created:
+          id: created
+          table: node_field_data
+          field: created
+          entity_type: node
+          entity_field: created
+          plugin_id: field
+          label: ''
+          element_type: p
+          element_class: blog-card__date
+          element_label_colon: false
+          type: timestamp
+          settings:
+            date_format: custom
+            custom_date_format: 'j M Y'
+            timezone: ''
+            tooltip:
+              date_format: ''
+              custom_date_format: ''
+            time_diff:
+              enabled: false
+              future_format: '@interval hence'
+              past_format: '@interval ago'
+              granularity: 2
+              refresh: 60
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          entity_type: node
+          entity_field: title
+          plugin_id: field
+          label: ''
+          element_type: h2
+          element_class: blog-card__title
+          element_label_colon: false
+          type: string
+          settings:
+            link_to_entity: true
+        body:
+          id: body
+          table: node__body
+          field: body
+          plugin_id: field
+          label: ''
+          element_class: blog-card__summary
+          element_label_colon: false
+          type: text_summary_or_trimmed
+          settings:
+            trim_length: 220
+      pager:
+        type: full
+        options:
+          items_per_page: 12
+      access:
+        type: perm
+        options:
+          perm: 'access content'
+      cache:
+        type: tag
+      empty:
+        area_text_custom:
+          id: area_text_custom
+          table: views
+          field: area_text_custom
+          plugin_id: text_custom
+          empty: true
+          content: 'No posts yet.'
+      sorts:
+        created:
+          id: created
+          table: node_field_data
+          field: created
+          entity_type: node
+          entity_field: created
+          plugin_id: date
+          order: DESC
+      filters:
+        status:
+          id: status
+          table: node_field_data
+          field: status
+          entity_type: node
+          entity_field: status
+          plugin_id: boolean
+          value: '1'
+        type:
+          id: type
+          table: node_field_data
+          field: type
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          value:
+            blog: blog
+        langcode:
+          id: langcode
+          table: node_field_data
+          field: langcode
+          entity_type: node
+          entity_field: langcode
+          plugin_id: language
+          value:
+            '***LANGUAGE_language_content***': '***LANGUAGE_language_content***'
+      style:
+        type: default
+        options:
+          row_class: blog-card
+          default_row_class: false
+          uses_fields: false
+      row:
+        type: fields
+        options:
+          default_field_elements: true
+          inline: {  }
+          hide_empty: false
+      query:
+        type: views_query
+      display_extenders: {  }
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url.query_args
+        - 'user.node_grants:view'
+        - user.permissions
+      tags:
+        - 'config:field.storage.node.body'
+        - 'config:field.storage.node.field_image'
+  page_1:
+    id: page_1
+    display_title: Page
+    display_plugin: page
+    position: 1
+    display_options:
+      display_extenders: {  }
+      path: blog
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - url.query_args
+        - 'user.node_grants:view'
+        - user.permissions
+      tags:
+        - 'config:field.storage.node.body'
+        - 'config:field.storage.node.field_image'

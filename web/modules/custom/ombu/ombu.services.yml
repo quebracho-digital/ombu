@@ -64,6 +64,12 @@ services:
     arguments: ['@ombu.similar', '@ombu.similar_log', '@entity_type.manager', '@entity.repository', '@string_translation', '@x402_pay.delivery', '@language_manager']
     tags:
       - { name: event_subscriber }
+  # The blog's list as markdown (/blog.md): a view page, which x402_pay does not render.
+  ombu.blog_markdown_subscriber:
+    class: Drupal\ombu\EventSubscriber\BlogMarkdownSubscriber
+    arguments: ['@entity_type.manager', '@entity.repository', '@language_manager', '@date.formatter', '@string_translation']
+    tags:
+      - { name: event_subscriber }
   ombu.similar_backend_subscriber:
     class: Drupal\ombu\EventSubscriber\SimilarBackendSubscriber
     tags:

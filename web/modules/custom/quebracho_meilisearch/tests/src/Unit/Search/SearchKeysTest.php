@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Search;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Search;
 
 use Drupal\quebracho_meilisearch\Search\SearchKeys;
 use PHPUnit\Framework\TestCase;

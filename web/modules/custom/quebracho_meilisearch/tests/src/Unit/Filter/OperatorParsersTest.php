@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Filter;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Filter;
 
 use Drupal\quebracho_meilisearch\Filter\BetweenOperatorParser;
 use Drupal\quebracho_meilisearch\Filter\InOperatorParser;

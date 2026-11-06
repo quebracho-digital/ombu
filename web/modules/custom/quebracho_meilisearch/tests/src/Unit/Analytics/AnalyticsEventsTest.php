@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Analytics;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Analytics;
 
 use Drupal\quebracho_meilisearch\Api\MeilisearchApiServiceInterface;
 use Drupal\quebracho_meilisearch\Plugin\search_api\backend\MeilisearchBackend;

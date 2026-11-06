@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Api;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Api;
 
 use Drupal\Core\Http\ClientFactory;
 use Drupal\quebracho_meilisearch\Api\MeilisearchApiException;

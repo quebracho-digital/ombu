@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Filter;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Filter;
 
 use Drupal\quebracho_meilisearch\Filter\BooleanValueParser;
 use Drupal\quebracho_meilisearch\Filter\NullValueParser;

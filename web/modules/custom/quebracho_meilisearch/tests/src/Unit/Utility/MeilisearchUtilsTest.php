@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Utility;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Utility;
 
 use Drupal\quebracho_meilisearch\Utility\MeilisearchUtils;
 use PHPUnit\Framework\TestCase;

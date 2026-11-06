@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Kernel;
+namespace Drupal\Tests\quebracho_meilisearch\Kernel;
 
 use Drupal\quebracho_meilisearch\Plugin\search_api\backend\MeilisearchBackend;
 use Drupal\search_api\Entity\Server;

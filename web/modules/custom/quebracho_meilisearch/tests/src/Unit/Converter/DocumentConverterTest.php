@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Unit\Converter;
+namespace Drupal\Tests\quebracho_meilisearch\Unit\Converter;
 
 use Drupal\quebracho_meilisearch\Converter\DocumentConverter;
 use Drupal\search_api\Item\FieldInterface;

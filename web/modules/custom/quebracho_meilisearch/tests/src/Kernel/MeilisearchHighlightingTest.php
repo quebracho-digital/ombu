@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\Tests\meilisearch\Kernel;
+namespace Drupal\Tests\quebracho_meilisearch\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;

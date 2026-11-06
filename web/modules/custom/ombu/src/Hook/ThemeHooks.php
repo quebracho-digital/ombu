@@ -23,6 +23,8 @@ final class ThemeHooks {
       'menu__account' => ['base hook' => 'menu'],
       'links__language_block' => ['base hook' => 'links'],
       // Listings as cards (Cards): a theme can override either template.
+      // The footer's credits (CreditsBlock): text only, no logos.
+      'ombu_credits' => ['variables' => []],
       'ombu_cards' => [
         'variables' => ['title' => '', 'cards' => [], 'slider' => FALSE, 'attributes' => []],
       ],

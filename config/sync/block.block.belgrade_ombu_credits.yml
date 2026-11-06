@@ -1,0 +1,20 @@
+uuid: 67394c70-6338-465d-8924-e0eb9ee37075
+langcode: en
+status: true
+dependencies:
+  module:
+    - ombu
+  theme:
+    - belgrade
+id: belgrade_ombu_credits
+theme: belgrade
+region: footer
+weight: -2
+provider: null
+plugin: ombu_credits
+settings:
+  id: ombu_credits
+  label: Credits
+  label_display: '0'
+  provider: ombu
+visibility: {  }

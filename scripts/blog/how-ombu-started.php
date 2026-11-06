@@ -9,6 +9,7 @@
 $img = '/modules/custom/ombu/images/blog';
 
 return [
+  'categories' => ['story'],
   'image' => 'pampa-sunset.jpg',
   'alt' => [
     'en' => 'The pampas at sunset',
@@ -30,15 +31,24 @@ return [
 <p>With x402 and USDC, an agent can pay for what it uses, a cent per call. The money part was solved. The <em>where</em> was not: listing a service on the big agent marketplaces meant filling in a form and waiting for a review. We wanted a seller to list with one form, their 402 as the price and their wallet as the proof.</p>
 
 <h2>A hackathon, a deadline, Drupal</h2>
-<p>Ombú began as our entry for the Tameion Agents Hackathon (Arc × Canteen). We built it on Drupal and Drupal Commerce, with two modules we publish as open source, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> and <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Payments are USDC on Arc, settled by the site itself: nobody sits between buyer and seller.</p>
+<p>Ombú began as our entry for the Tameion Agents Hackathon (Arc × Canteen). We built it on Drupal and Drupal Commerce, with two modules we publish as open source, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> and <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Payments are USDC on Arc. On the networks we settle ourselves, nobody sits between buyer and seller: the money goes from the buyer's wallet to the seller's.</p>
 
 <h2>Two shelves from day one</h2>
 <p>A market with nothing on its shelves is a car park. So it opened with two kinds of stock.</p>
-<p><strong>Ours.</strong> Quebracho runs a few small services on models we host: <a href="{{ours-ping}}">a ping that costs almost nothing</a>, <a href="{{ours-markdown}}">web pages turned into clean markdown</a>, <a href="{{ours-terms}}">terms of service, read for you</a> and <a href="{{ours-factcheck}}">claims, fact-checked</a>. They are paid only when they deliver. A failing call costs nothing.</p>
+<p><strong>Ours.</strong> Quebracho runs a few small services of its own: <a href="{{ours-ping}}">a ping that costs almost nothing</a>, <a href="{{ours-markdown}}">web pages turned into clean markdown</a>, <a href="{{ours-terms}}">terms of service, read for you</a> and <a href="{{ours-factcheck}}">claims, fact-checked</a>.</p>
 <p><strong>Circle's.</strong> We imported the whole Circle Agent Marketplace catalogue, about 2,800 services. Some are paid on Arc, like <a href="{{circle-e312ddecdca826ea}}">aerospace and aviation data</a> and <a href="{{circle-accdb14531ec5e4e}}">an Africa macro and risk pulse</a>. Next to ours, you search them the same way, with the same filters.</p>
 
 <h2>One market, two kinds of visitors</h2>
-<p>People open the <a href="/market">market</a>. Agents read the same market as JSON, as markdown, or through an MCP server. Nobody makes an account: you sign in with a wallet. And only buyers can review, and only what they paid for. A review carries the transaction of the purchase, and the site checks it on chain before it goes up. No transaction, no review.</p>
+<p>People open the <a href="/market">market</a>. Agents read the same market as JSON, as markdown, or through an MCP server. Nobody makes an account: you sign in with a wallet. And only buyers can review, and only what they paid for. A review carries the transaction of the purchase, and the site checks it on chain before it counts. No transaction, no review. Payments batched through Circle Gateway cannot be checked that way yet, so their reviews do not count yet.</p>
+
+<h2>Why it is better than a bare catalogue</h2>
+<ul>
+<li><strong>Three languages, for real.</strong> The site and the listings speak English, Spanish and Brazilian Portuguese.</li>
+<li><strong>Filters that narrow down.</strong> Category, network, provider, payment kind, tag and seller, each with its count.</li>
+<li><strong>Reviews you can trust.</strong> Only buyers who paid can review, and comments come from people who tried the service.</li>
+<li><strong>Built for agents.</strong> The same market as JSON, Markdown, OpenAPI and MCP, with one answer for a person and an agent.</li>
+<li><strong>Nothing disappears silently.</strong> A retired service stays on the page with its reviews, and a service we take down stays down.</li>
+</ul>
 
 <h2>What comes next</h2>
 <p>Circle's catalogue is the first source, not the only one. The importer was written so other catalogues can sit beside it, each keeping its own listings. We will tell you here as they arrive.</p>
@@ -58,15 +68,24 @@ HTML, 'Picture an AI agent with five cents and one question. It can pay a cent a
 <p>Con x402 y USDC, un agente puede pagar lo que usa, un centavo por llamada. La parte del dinero estaba resuelta. El <em>dónde</em> no: publicar un servicio en los grandes mercados de agentes significaba llenar un formulario y esperar una revisión. Nosotros queríamos que un vendedor publicara con un formulario, su 402 como precio y su billetera como prueba.</p>
 
 <h2>Un hackathon, una fecha, Drupal</h2>
-<p>Ombú nació como nuestra entrada al Tameion Agents Hackathon (Arc × Canteen). Lo hicimos sobre Drupal y Drupal Commerce, con dos módulos que publicamos como código abierto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> y <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Los pagos son en USDC sobre Arc y los liquida el propio sitio: nadie se interpone entre quien compra y quien vende.</p>
+<p>Ombú nació como nuestra entrada al Tameion Agents Hackathon (Arc × Canteen). Lo hicimos sobre Drupal y Drupal Commerce, con dos módulos que publicamos como código abierto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> y <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Los pagos son en USDC sobre Arc. En las redes que liquidamos nosotros, nadie se interpone entre quien compra y quien vende: el dinero va de la billetera del comprador a la del vendedor.</p>
 
 <h2>Dos estantes desde el primer día</h2>
 <p>Un mercado con los estantes vacíos es un estacionamiento. Así que abrió con dos tipos de mercadería.</p>
-<p><strong>La nuestra.</strong> Quebracho corre unos pocos servicios chicos sobre modelos que alojamos nosotros: <a href="{{ours-ping}}">un ping que casi no cuesta nada</a>, <a href="{{ours-markdown}}">páginas web convertidas en markdown limpio</a>, <a href="{{ours-terms}}">términos de servicio, leídos por ti</a> y <a href="{{ours-factcheck}}">afirmaciones verificadas</a>. Cobran solo cuando entregan. Una llamada que falla no cuesta nada.</p>
+<p><strong>La nuestra.</strong> Quebracho corre unos pocos servicios chicos propios: <a href="{{ours-ping}}">un ping que casi no cuesta nada</a>, <a href="{{ours-markdown}}">páginas web convertidas en markdown limpio</a>, <a href="{{ours-terms}}">términos de servicio, leídos por ti</a> y <a href="{{ours-factcheck}}">afirmaciones verificadas</a>.</p>
 <p><strong>La de Circle.</strong> Importamos el catálogo entero del Circle Agent Marketplace, unos 2.800 servicios. Algunos se pagan en Arc, como <a href="{{circle-e312ddecdca826ea}}">datos de aeroespacial y aviación</a> y <a href="{{circle-accdb14531ec5e4e}}">un pulso macro y de riesgo de África</a>. Junto a los nuestros, los buscas igual, con los mismos filtros.</p>
 
 <h2>Un mercado, dos tipos de visitantes</h2>
-<p>Las personas abren el <a href="/es/market">mercado</a>. Los agentes leen el mismo mercado como JSON, como markdown o por un servidor MCP. Nadie abre una cuenta: se entra con una billetera. Y solo los compradores pueden opinar, y solo de lo que pagaron. Una reseña lleva la transacción de la compra, y el sitio la verifica en la cadena antes de publicarla. Sin transacción, no hay reseña.</p>
+<p>Las personas abren el <a href="/es/market">mercado</a>. Los agentes leen el mismo mercado como JSON, como markdown o por un servidor MCP. Nadie abre una cuenta: se entra con una billetera. Y solo los compradores pueden opinar, y solo de lo que pagaron. Una reseña lleva la transacción de la compra, y el sitio la verifica en la cadena antes de que cuente. Sin transacción, no hay reseña. Los pagos agrupados por Circle Gateway todavía no se pueden verificar así, así que sus reseñas no cuentan todavía.</p>
+
+<h2>Por qué es mejor que un catálogo sin más</h2>
+<ul>
+<li><strong>Tres idiomas, de verdad.</strong> El sitio y los listados hablan inglés, español y portugués de Brasil.</li>
+<li><strong>Filtros que achican.</strong> Categoría, red, proveedor, tipo de pago, etiqueta y vendedor, cada uno con su cuenta.</li>
+<li><strong>Reseñas en las que se puede confiar.</strong> Solo opinan quienes pagaron, y los comentarios vienen de quien probó el servicio.</li>
+<li><strong>Hecho para agentes.</strong> El mismo mercado en JSON, Markdown, OpenAPI y MCP, con una sola respuesta para una persona y para un agente.</li>
+<li><strong>Nada desaparece en silencio.</strong> Un servicio retirado queda en la página con sus reseñas, y uno que bajamos queda bajado.</li>
+</ul>
 
 <h2>Lo que viene</h2>
 <p>El catálogo de Circle es la primera fuente, no la única. El importador se escribió para que otros catálogos convivan con él, cada uno con sus propios listados. Aquí te contaremos cuando lleguen.</p>
@@ -86,15 +105,24 @@ HTML, 'Imagina un agente de IA con cinco centavos y una pregunta. Puede pagar de
 <p>Com x402 e USDC, um agente pode pagar o que usa, um centavo por chamada. A parte do dinheiro estava resolvida. O <em>onde</em> não: publicar um serviço nos grandes mercados de agentes significava preencher um formulário e esperar uma revisão. Queríamos que um vendedor publicasse com um formulário, seu 402 como preço e sua carteira como prova.</p>
 
 <h2>Um hackathon, um prazo, Drupal</h2>
-<p>O Ombú começou como nossa inscrição no Tameion Agents Hackathon (Arc × Canteen). Construímos sobre Drupal e Drupal Commerce, com dois módulos que publicamos como código aberto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> e <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Os pagamentos são em USDC na Arc e quem liquida é o próprio site: ninguém se coloca entre quem compra e quem vende.</p>
+<p>O Ombú começou como nossa inscrição no Tameion Agents Hackathon (Arc × Canteen). Construímos sobre Drupal e Drupal Commerce, com dois módulos que publicamos como código aberto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> e <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Os pagamentos são em USDC na Arc. Nas redes que liquidamos nós mesmos, ninguém se coloca entre quem compra e quem vende: o dinheiro vai da carteira do comprador para a do vendedor.</p>
 
 <h2>Duas prateleiras desde o primeiro dia</h2>
 <p>Um mercado com as prateleiras vazias é um estacionamento. Então ele abriu com dois tipos de mercadoria.</p>
-<p><strong>A nossa.</strong> A Quebracho roda alguns serviços pequenos em modelos que nós mesmos hospedamos: <a href="{{ours-ping}}">um ping que quase não custa nada</a>, <a href="{{ours-markdown}}">páginas web transformadas em markdown limpo</a>, <a href="{{ours-terms}}">termos de serviço, lidos para você</a> e <a href="{{ours-factcheck}}">afirmações checadas</a>. Eles só recebem quando entregam. Uma chamada que falha não custa nada.</p>
+<p><strong>A nossa.</strong> A Quebracho roda alguns serviços pequenos próprios: <a href="{{ours-ping}}">um ping que quase não custa nada</a>, <a href="{{ours-markdown}}">páginas web transformadas em markdown limpo</a>, <a href="{{ours-terms}}">termos de serviço, lidos para você</a> e <a href="{{ours-factcheck}}">afirmações checadas</a>.</p>
 <p><strong>A da Circle.</strong> Importamos o catálogo inteiro do Circle Agent Marketplace, cerca de 2.800 serviços. Alguns são pagos na Arc, como <a href="{{circle-e312ddecdca826ea}}">dados de aeroespacial e aviação</a> e <a href="{{circle-accdb14531ec5e4e}}">um pulso macro e de risco da África</a>. Ao lado dos nossos, você os busca do mesmo jeito, com os mesmos filtros.</p>
 
 <h2>Um mercado, dois tipos de visitantes</h2>
-<p>As pessoas abrem o <a href="/pt-br/market">mercado</a>. Os agentes leem o mesmo mercado como JSON, como markdown ou por um servidor MCP. Ninguém abre uma conta: entra-se com uma carteira. E só os compradores podem avaliar, e só o que pagaram. Uma avaliação leva a transação da compra, e o site a verifica na cadeia antes de publicá-la. Sem transação, sem avaliação.</p>
+<p>As pessoas abrem o <a href="/pt-br/market">mercado</a>. Os agentes leem o mesmo mercado como JSON, como markdown ou por um servidor MCP. Ninguém abre uma conta: entra-se com uma carteira. E só os compradores podem avaliar, e só o que pagaram. Uma avaliação leva a transação da compra, e o site a verifica na cadeia antes que ela conte. Sem transação, sem avaliação. Os pagamentos agrupados pelo Circle Gateway ainda não podem ser verificados assim, então suas avaliações ainda não contam.</p>
+
+<h2>Por que é melhor que um catálogo sem mais</h2>
+<ul>
+<li><strong>Três idiomas, de verdade.</strong> O site e os anúncios falam inglês, espanhol e português do Brasil.</li>
+<li><strong>Filtros que reduzem.</strong> Categoria, rede, provedor, tipo de pagamento, etiqueta e vendedor, cada um com sua contagem.</li>
+<li><strong>Avaliações em que dá para confiar.</strong> Só opinam quem pagou, e os comentários vêm de quem testou o serviço.</li>
+<li><strong>Feito para agentes.</strong> O mesmo mercado em JSON, Markdown, OpenAPI e MCP, com uma só resposta para uma pessoa e para um agente.</li>
+<li><strong>Nada some em silêncio.</strong> Um serviço aposentado fica na página com suas avaliações, e um que tiramos do ar continua fora.</li>
+</ul>
 
 <h2>O que vem</h2>
 <p>O catálogo da Circle é a primeira fonte, não a única. O importador foi escrito para que outros catálogos convivam com ele, cada um com seus próprios anúncios. Avisaremos aqui quando chegarem.</p>

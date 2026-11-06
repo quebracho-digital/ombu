@@ -10,7 +10,8 @@ use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\HttpFactory;
-use Quebracho\X402\AddressCheck;
+use Drupal\ombu\ResourceVerifier;
+use Quebracho\X402\Rpc;
 use Quebracho\X402\Networks;
 use Quebracho\X402\TokenBlacklist;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -21,9 +22,9 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *
  * Read-only: no entity is written. For a random sample of unique resources it
  * asks the endpoint for its 402 (SellerProbe), checks the live accepts against
- * the catalogue's (amount, payTo, asset, network), and asks the token contract
- * whether payTo is frozen (quebracho/x402 TokenBlacklist). Every failure is
- * counted with its reason.
+ * the catalogue's, and asks whether payTo is frozen or on OFAC's list
+ * (ResourceVerifier, the importers' own checks). Every failure is counted
+ * with its reason; "unchecked" (no freeze list, node down) is never importable.
  */
 final class CatalogSurveyCommands extends DrushCommands {
 
@@ -77,7 +78,8 @@ final class CatalogSurveyCommands extends DrushCommands {
     }
     $factory = new HttpFactory();
     $blacklist = new TokenBlacklist($this->httpClient, $factory, $factory, FALSE, $tokens);
-    $probe = new SellerProbe($this->httpClient);
+    $ethereum = new Rpc($this->httpClient, $factory, $factory, 'https://eth-mainnet.g.alchemy.com/v2/' . $key);
+    $verifier = new ResourceVerifier(new SellerProbe($this->httpClient), $blacklist, $ethereum, $this->transfers($key), $tokens);
     mt_srand((int) $options['seed']);
 
     $sources = $options['source'] === 'all' ? array_keys(self::SOURCES) : [$options['source']];
@@ -93,9 +95,9 @@ final class CatalogSurveyCommands extends DrushCommands {
       $tally = [];
       $hosts = [];
       foreach ($urls as $url) {
-        $verdict = $this->check($resources[$url], $url, $probe, $blacklist);
+        $verdict = $this->check($resources[$url], $url, $verifier);
         $tally[$verdict] = ($tally[$verdict] ?? 0) + 1;
-        if ($verdict === 'importable' || $verdict === 'importable: payTo unchecked') {
+        if ($verdict === 'importable') {
           $hosts[parse_url($url, PHP_URL_HOST)] = TRUE;
         }
       }
@@ -132,64 +134,41 @@ final class CatalogSurveyCommands extends DrushCommands {
   /**
    * One resource's verdict: "importable" or the first reason it is not.
    */
-  private function check(array $item, string $url, SellerProbe $probe, TokenBlacklist $blacklist): string {
+  private function check(array $item, string $url, ResourceVerifier $verifier): string {
     $method = strtoupper((string) ($item['extensions']['bazaar']['info']['input']['method']
       ?? $item['accepts'][0]['outputSchema']['input']['method'] ?? 'GET'));
-    try {
-      [, $accepts] = $probe->requirements($url, $method === 'POST' ? 'POST' : 'GET');
+    $report = $verifier->verify($url, $method, $item['accepts'] ?? []);
+    if ($report['verdict'] === ResourceVerifier::PASS) {
+      return 'importable';
     }
-    catch (\RuntimeException $e) {
-      // Group by the message's start: "answered 404", "could not be reached"...
-      return 'probe: ' . preg_replace('/^(The endpoint (answered \d+|could not be reached)|[^:.]+).*/s', '$1', $e->getMessage());
-    }
-
-    // Each live requirement must be one the catalogue announced: same
-    // network, asset, payTo and amount. Otherwise the catalogue lies.
-    $announced = [];
-    foreach ($item['accepts'] ?? [] as $a) {
-      $announced[] = $this->fingerprint($a);
-    }
-    $unchecked = FALSE;
-    foreach ($accepts as $req) {
-      if (!is_array($req) || ($req['scheme'] ?? '') !== 'exact' || empty($req['network']) || empty($req['payTo']) || empty($req['asset'])) {
-        return 'accepts: malformed or not exact';
-      }
-      $amount = (string) ($req['amount'] ?? $req['maxAmountRequired'] ?? '');
-      if (!ctype_digit($amount) || ltrim($amount, '0') === '') {
-        return 'accepts: amount not a positive integer';
-      }
-      if (!in_array($this->fingerprint($req), $announced, TRUE)) {
-        return 'accepts: differs from the catalogue (amount, payTo or asset)';
-      }
-      $chain = str_starts_with($req['network'], 'eip155:') ? (int) substr($req['network'], 7) : 0;
-      if (!isset(self::USDC[$chain]) || strtolower((string) $req['asset']) !== self::USDC[$chain][0]) {
-        $unchecked = TRUE;
-        continue;
-      }
-      $check = new AddressCheck(AddressCheck::PAY_TO, $req['network'], (string) $req['payTo'], $req);
-      try {
-        $blacklist($check);
-      }
-      catch (\Throwable) {
-        return 'blacklist: node did not answer (not imported)';
-      }
-      if ($check->reason() !== NULL) {
-        return 'blacklist: ' . $check->reason();
+    foreach ($report['checks'] as $name => [$result, $detail]) {
+      if ($result === $report['verdict'] && !str_ends_with($name, '.transfers')) {
+        // Group by check and the detail's start: "answered 404", "frozen"...
+        $name = preg_replace('/^accepts\[\d+\]/', 'accepts', $name);
+        return $report['verdict'] . ' ' . $name . ': ' . preg_replace('/^(The endpoint (answered \d+|could not be reached)|[^:.(]+).*/s', '$1', $detail);
       }
     }
-    return $unchecked ? 'importable: payTo unchecked' : 'importable';
+    return $report['verdict'];
   }
 
   /**
-   * What must match between the catalogue and the live 402.
+   * USDC transfers payTo received, through Alchemy (capped at 100).
    */
-  private function fingerprint(array $a): string {
-    return strtolower(implode('|', [
-      $a['network'] ?? '',
-      $a['asset'] ?? '',
-      $a['payTo'] ?? '',
-      $a['amount'] ?? $a['maxAmountRequired'] ?? '',
-    ]));
+  private function transfers(string $key): \Closure {
+    return function (string $network, string $asset, string $payTo) use ($key): int {
+      $chain = str_starts_with($network, 'eip155:') ? (int) substr($network, 7) : 0;
+      if (!isset(self::USDC[$chain])) {
+        throw new \RuntimeException("No index for $network.");
+      }
+      $response = $this->httpClient->request('POST', 'https://' . self::USDC[$chain][1] . ".g.alchemy.com/v2/$key", [
+        'timeout' => 15,
+        'json' => ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'alchemy_getAssetTransfers', 'params' => [[
+          'toAddress' => $payTo, 'contractAddresses' => [$asset], 'category' => ['erc20'], 'maxCount' => '0x64', 'excludeZeroValue' => TRUE,
+        ]]],
+      ]);
+      $transfers = json_decode((string) $response->getBody(), TRUE)['result']['transfers'] ?? NULL;
+      return is_array($transfers) ? count($transfers) : throw new \RuntimeException('No answer.');
+    };
   }
 
 }

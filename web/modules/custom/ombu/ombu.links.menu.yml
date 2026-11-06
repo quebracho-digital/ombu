@@ -17,3 +17,10 @@ ombu.mcp:
   route_name: mcp_server.handle
   menu_name: footer
   weight: 20
+# The blog is a view (config/sync), so its link lives with the module's.
+ombu.blog:
+  title: 'Blog'
+  description: 'News from Ombú.'
+  route_name: view.blog.page_1
+  menu_name: footer
+  weight: -18

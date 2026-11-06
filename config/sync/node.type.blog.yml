@@ -1,0 +1,11 @@
+uuid: 30609871-133c-451d-9962-dc9eaf23a17a
+langcode: en
+status: true
+dependencies: {  }
+name: 'Blog post'
+type: blog
+description: 'News from Ombú, in every language.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

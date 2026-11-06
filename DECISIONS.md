@@ -118,3 +118,43 @@ Caveat: the roles are decided when an item is indexed. Changing who can view lis
 The link to `/mcp` in the footer is a link of the `footer` menu (`ombu.links.menu.yml`), so the menu system checks access, caches and translates it; `AgentHooks` removes it where `mcp_server` is not installed.
 
 Decidido por Leo (2026-11-03 11:30): enabled the MCP in SER5 himself, giving `access mcp server` to the anonymous role (he asked which permissions; the answer was that one only, not the prompts one): "ya lo habilite, podes probarlo". Claude tested `https://ombu.quebracho.digital/mcp` right after (`initialize`, `tools/list`, `ombu_search_services`, and an unpaid `ombu_call_service` returning the PaymentRequired). `/llms.txt` already announces it. A `drush deploy` right after switched it off, because `config/sync` did not carry the module; Leo turned it on again and asked for production's configuration to be exported into `config/sync` ("exporta la configuracion actual de ser5 a config/sync asi el proximo deploy no rompe nada"), so the next deploy keeps it.
+
+## 2026-11-06
+
+### 8004scan: an importer next to Circle's, measured first
+
+Decidido por Leo (2026-11-06): "creo que cambie de opinion, quizas si podamos hacer el importer de 8004 y que conviva con el de arc y los que vayamos agregando, entonces tambien tendria sentido agregar los campos o un campo general json y actualizar sus valores con el importer de arc?" Then: "consulta cuantos agentes tienen endpoints y cuantos tienen reviews verificados", and a detailed prompt for jcode (`prompt_jcode_8004scan.md`, not tracked).
+
+What 8004scan's documentation says (site, API page, OpenAPI file, ERC-8004 spec, still a Draft):
+
+- The REST API (`https://api.8004scan.io/api/v1`, key in `X-API-Key`) lists agents, filters them by `owner_address` and lists feedback. Anonymous use is 30 requests a minute and 1,000 a day; a free key is 600 and 100,000. It documents no way to register an agent or send feedback; those are on-chain.
+- An agent's endpoints are in its detail (`GET /agents/{chain_id}/{token_id}`), not in the list.
+- `giveFeedback` needs no permission from the agent (anyone but its owner or operator). The optional feedback file has a `proofOfPayment` (`fromAddress`, `toAddress`, `chainId`, `txHash`) that can carry an x402 payment.
+
+What was measured on 2026-11-06:
+
+- 2,332,699 agents; 415,854 with `x402_supported`; 145,092 of those on mainnet; **77** of those with a verified endpoint (41 on Base, 4 on Arc); 7,403 on mainnet with at least one feedback.
+- Verified reviews: none found in a sample of the 100 latest feedbacks (no `offchain_data`, no `proofOfPayment`). A small sample; phase 0 widens it.
+
+Decided:
+
+- **An importer for 8004scan that lives beside Circle's.** It reuses `upsert($item, $source)` and the multi-catalogue `field_markets`; what assumes `'circle'` (`block()`, `retireMissing()`, `unmarkMissing()`, the published status) is generalized so one importer never retires another's listings.
+- **Only agents with a callable endpoint.** An agent becomes a listing only if its endpoint answers 402 with valid `accepts` (`SellerProbe`). No "discovery" listings: they cannot be sold or tested.
+- **One general JSON field, `field_registry`, one key per registry** (`erc8004` first). It is outside `field_source_hash`, and Circle's `upsert()` does not overwrite it. A separate enrichment step fills it by matching `field_seller_address` with `owner_address` (EVM only); the import command can call it.
+- **Measure first.** Phase 0 is a read-only drush survey and stops for Leo's look: if fewer than about 20 agents pass the 402 probe, the importer is not worth building.
+- **The label is "Registered on ERC-8004", never "verified".** 8004scan's `is_verified` is self-declared; Ombú's `field_verified` means something else.
+- **Rules for the developer session (jcode):** drupal.org's AI policy (disclosure line, a human responsible), and look for what Drupal's API already offers before writing any function of our own.
+
+Not decided, Leo's call: registering Ombú listings as ERC-8004 agents or publishing verified-purchase reviews as feedback (on-chain, costs gas, goes out under Ombú's name); badges; a cron; the push of this work to the public repo.
+
+Unverified: how many of the 77 pass the 402 probe, and how many agents carry proof of payment. Phase 0 answers both.
+
+### A blog inside Ombú, its posts seeded from files
+
+Decidido por Leo (2026-11-06): "vamos a crear un blog dentro de ombu, antes que nada, snapshot de lo que hay ahora, config y db, luego agrega el blog, crea una primera entrada en todos los idiomas contando como empezo ombu, con listados propios de quebracho y con los del market de arc". Before the change: the DDEV database and the active config were saved in `~/backups/ombu/2026-11-06_0901/` (plus a DDEV snapshot, `pre-blog-2026-11-06_0901`).
+
+- **A new content type `blog`**, not the existing `article`: `article` is the paid x402 demo (priced, summarised), and a blog post is free and public. Translated in English, Spanish and Portuguese like the pages; `/blog/[title]` aliases through Pathauto; `/blog` is a view that lists only the posts in the visitor's language. All of it is in `config/sync`.
+- **The link is the module's, not a menu entry in the database:** `ombu.blog` in `ombu.links.menu.yml`, in the footer, as `/mcp` is.
+- **Posts are content, so they live in the database, not in config.** Each post is a file in `scripts/blog/` (one array: date, and a title and body per language); `scripts/seed-blog.php` creates or updates them, idempotently, and leaves alone a post that was edited on the site (`OMBU_SEED_FORCE=1` to overwrite). That is how a post reaches production: `drush php:script ../scripts/seed-blog.php`, as with `seed-pages.php`.
+- **A post names a listing by its SKU (`{{ours-ping}}`, `{{circle-…}}`), never by its id.** Ids differ between databases; SKUs do not. The seed turns each into the listing's URL in the post's language and stops with an error if no listing has that SKU.
+- **Not done:** RSS, and a mention in `/llms.txt`. The blog's pages are not answered as markdown yet.

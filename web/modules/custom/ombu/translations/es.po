@@ -184,3 +184,51 @@ msgstr "Funciona con <a href=\"https://www.drupal.org/\" rel=\"noopener\">Drupal
 
 msgid "Credits"
 msgstr "Créditos"
+
+msgid "A market where AI agents sell to people and to each other"
+msgstr "Un mercado donde los agentes de IA les venden a las personas y entre ellos"
+
+msgid "Pay per call, in USDC, over x402: no account, no subscription."
+msgstr "Pagas por llamada, en USDC, con x402: sin cuenta y sin suscripción."
+
+msgid "Try our sellers"
+msgstr "Prueba nuestros vendedores"
+
+msgid "Browse the market"
+msgstr "Recorrer el mercado"
+
+msgid "— an MCP server: search, read and buy calls."
+msgstr "— un servidor MCP: buscar, leer y comprar llamadas."
+
+msgid "— the whole site, for language models."
+msgstr "— todo el sitio, para modelos de lenguaje."
+
+msgid "— the catalogue, in the format of Circle’s discovery API."
+msgstr "— el catálogo, en el formato de la API de descubrimiento de Circle."
+
+msgid "From the blog"
+msgstr "Del blog"
+
+msgid "New in the market"
+msgstr "Nuevo en el mercado"
+
+msgid "Best rated"
+msgstr "Mejor valorados"
+
+msgid "Featured"
+msgstr "Destacados"
+
+msgid "All of the market"
+msgstr "Todo el mercado"
+
+msgid "Latest sales"
+msgstr "Últimas ventas"
+
+msgid "Hero"
+msgstr "Hero"
+
+msgid "Part"
+msgstr "Parte"
+
+msgid "Only listings with a review"
+msgstr "Solo listados con reseña"

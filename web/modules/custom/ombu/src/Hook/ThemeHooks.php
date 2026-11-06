@@ -25,6 +25,14 @@ final class ThemeHooks {
       // Listings as cards (Cards): a theme can override either template.
       // The footer's credits (CreditsBlock): text only, no logos.
       'ombu_credits' => ['variables' => []],
+      // The home (the ombu_home view): its two fixed parts (HomePart), and
+      // one template per display, its own and blog's "home".
+      'ombu_home_hero' => ['variables' => ['sellers' => NULL, 'market' => NULL]],
+      'ombu_home_agents' => ['variables' => ['mcp' => NULL, 'llms' => NULL, 'catalogue' => NULL]],
+      'views_view__ombu_home__page_1' => ['base hook' => 'views_view'],
+      'views_view__ombu_home__featured' => ['base hook' => 'views_view'],
+      'views_view__ombu_home__top' => ['base hook' => 'views_view'],
+      'views_view__blog__home' => ['base hook' => 'views_view'],
       'ombu_cards' => [
         'variables' => ['title' => '', 'cards' => [], 'slider' => FALSE, 'attributes' => []],
       ],

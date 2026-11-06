@@ -1,0 +1,14 @@
+label: Portada
+display:
+  default:
+    display_options:
+      title: 'Nuevo en el mercado'
+      use_more_text: 'Todo el mercado'
+  page_1:
+    display_title: Portada
+  featured:
+    display_options:
+      title: Destacados
+  top:
+    display_options:
+      title: 'Mejor valorados'

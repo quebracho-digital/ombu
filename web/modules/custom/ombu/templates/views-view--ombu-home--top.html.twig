@@ -1,0 +1,15 @@
+{#
+/**
+ * @file
+ * The home's "top" block (ombu_home, top): listings as cards, titled by the
+ * cards themselves (ListingCards). Nothing at all when there are none.
+ */
+#}
+{% if rows %}
+  <section{{ attributes.addClass(['ombu-home-section', 'ombu-home-top', dom_id ? 'js-view-dom-id-' ~ dom_id]) }}>
+    {{ title_prefix }}
+    {{ title_suffix }}
+    {{ rows }}
+    {{ more }}
+  </section>
+{% endif %}

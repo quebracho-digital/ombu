@@ -25,6 +25,8 @@ final class ThemeHooks {
       // Listings as cards (Cards): a theme can override either template.
       // The footer's credits (CreditsBlock): text only, no logos.
       'ombu_credits' => ['variables' => []],
+      // The share block (ShareBlock): links to each network and a copy button.
+      'ombu_share' => ['variables' => ['links' => [], 'url' => '']],
       // The home (the ombu_home view): its two fixed parts (HomePart), and
       // one template per display, its own and blog's "home".
       'ombu_home_hero' => ['variables' => ['sellers' => NULL, 'market' => NULL]],

@@ -73,3 +73,14 @@ home:
   css:
     theme:
       css/home.css: {}
+
+# The share block (ShareBlock): its links and the copy button.
+share:
+  css:
+    theme:
+      css/share.css: {}
+  js:
+    js/share.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

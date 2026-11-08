@@ -1,0 +1,14 @@
+{#
+/**
+ * @file
+ * The home's strip for agents (HomePart "agents"): where a machine starts.
+ */
+#}
+<section class="ombu-home-section ombu-home-agents">
+  <h2 class="ombu-home-section__title">{{ 'For agents'|t }}</h2>
+  <ul class="ombu-home-agents__list">
+    <li><a href="{{ mcp }}"><code>/mcp</code></a> {{ '— an MCP server: search, read and buy calls.'|t }}</li>
+    <li><a href="{{ llms }}"><code>/llms.txt</code></a> {{ '— the whole site, for language models.'|t }}</li>
+    <li><a href="{{ catalogue }}"><code>/market.json</code></a> {{ '— the catalogue, in the format of Circle’s discovery API.'|t }}</li>
+  </ul>
+</section>

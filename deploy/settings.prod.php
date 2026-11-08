@@ -65,6 +65,12 @@ if ($brevo_key = getenv('OMBU_BREVO_SMTP_KEY')) {
   ];
 }
 
+// Meilisearch (deploy/compose.yaml): the master key only from the env, so
+// config/sync keeps api_key empty and cim never writes it.
+if ($meili_key = getenv('MEILI_MASTER_KEY')) {
+  $config['search_api.server.meilisearch']['backend_config']['api_key'] = $meili_key;
+}
+
 // Solana sellers sell on mainnet (Sellers::network()), unless the env says
 // another network and its facilitator: dev, on devnet through x402.org's.
 if ($solana = getenv('OMBU_SOLANA_NETWORK')) {

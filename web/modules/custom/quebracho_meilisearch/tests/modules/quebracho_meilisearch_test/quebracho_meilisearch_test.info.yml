@@ -1,8 +1,0 @@
-type: module
-name: 'Meilisearch test'
-description: 'Provides a server and index for testing the Meilisearch backend.'
-package: Testing
-dependencies:
-  - quebracho_meilisearch:meilisearch
-  - search_api:search_api_test_example_content
-hidden: true

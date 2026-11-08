@@ -45,11 +45,13 @@ class ResourceVerifierTest extends UnitTestCase {
    * A verifier whose probe answers $accepts (or throws $error), whose Base
    * node answers $freeze and whose Ethereum node answers $ofac (NULL: down).
    */
-  private function verifier(array $accepts, ?string $freeze, ?string $ofac, ?\RuntimeException $error = NULL): ResourceVerifier {
-    $probe = $this->createMock(SellerProbe::class);
-    $error
-      ? $probe->method('requirements')->willThrowException($error)
-      : $probe->method('requirements')->willReturn(['https://seller.example/x', $accepts]);
+  private function verifier(array $accepts, ?string $freeze, ?string $ofac, ?\RuntimeException $error = NULL, ?SellerProbe $probe = NULL): ResourceVerifier {
+    if (!$probe) {
+      $probe = $this->createMock(SellerProbe::class);
+      $error
+        ? $probe->method('requirements')->willThrowException($error)
+        : $probe->method('requirements')->willReturn(['https://seller.example/x', $accepts]);
+    }
     $factory = new HttpFactory();
     $node = fn(?string $answer) => new Client(['handler' => HandlerStack::create(new MockHandler(array_fill(0, 4,
       $answer === NULL ? new Response(500, [], 'down') : new Response(200, [], json_encode(['jsonrpc' => '2.0', 'id' => 1, 'result' => $answer]))
@@ -57,6 +59,40 @@ class ResourceVerifierTest extends UnitTestCase {
     $blacklist = new TokenBlacklist($node($freeze), $factory, $factory, FALSE, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']);
     $ethereum = new Rpc($node($ofac), $factory, $factory, 'https://eth.invalid');
     return new ResourceVerifier($probe, $blacklist, $ethereum, fn() => 3, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']);
+  }
+
+  /**
+   * @covers ::verify
+   */
+  public function testAnnouncedPostIsProbedWithGetFirst(): void {
+    $methods = [];
+    $probe = $this->createMock(SellerProbe::class);
+    $probe->method('requirements')->willReturnCallback(function (string $url, string $method) use (&$methods): array {
+      $methods[] = $method;
+      if ($method === 'GET') {
+        throw new \RuntimeException('The endpoint answered 405, not 402 Payment Required.');
+      }
+      return [$url, []];
+    });
+    $verifier = $this->verifier([], self::FALSE, self::FALSE, NULL, $probe);
+    $verifier->verify('https://seller.example/x', 'POST');
+    $this->assertSame(['GET', 'POST'], $methods, 'POST only after the GET answered 404/405');
+  }
+
+  /**
+   * @covers ::verify
+   */
+  public function testPostIsNeverSentWhenGetFailsForAnotherReason(): void {
+    $methods = [];
+    $probe = $this->createMock(SellerProbe::class);
+    $probe->method('requirements')->willReturnCallback(function (string $url, string $method) use (&$methods): array {
+      $methods[] = $method;
+      throw new \RuntimeException('The endpoint answered 200, not 402 Payment Required.');
+    });
+    $verifier = $this->verifier([], self::FALSE, self::FALSE, NULL, $probe);
+    $report = $verifier->verify('https://seller.example/x', 'POST');
+    $this->assertSame(['GET'], $methods);
+    $this->assertSame(ResourceVerifier::FAIL, $report['verdict']);
   }
 
   /**

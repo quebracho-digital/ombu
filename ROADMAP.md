@@ -96,8 +96,8 @@ the commit), not a patch nor a custom copy.
   are confident. **To do, Leo:** open the
   issue and its fork; then composer switches from the `path` repository
   (local only: `composer.json`/`.lock` are not committed) to a `vcs` one
-  with `dev-<branch> as 1.0.0-alpha2`, and `config/meilisearch/` moves
-  into `config/sync` with `meilisearch` in `core.extension`.
+  with `dev-<branch> as 1.0.0-alpha2`. Superseded 2026-11-06: the module is
+  our own `quebracho_meilisearch`, and its config is in `config/sync`.
 - **Work on a dev stack from now on** (decided 2026-10-21): production
   stays as the Arc hackathons saw it. **Hostname: not
   `dev.ombu.quebracho.digital`**: Cloudflare's universal certificate covers
@@ -1086,9 +1086,8 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
     listing for re-indexing when its vector changes. `ombu_similar_meilisearch`
     is `ombu_similar` on the other index, untouched otherwise, and
     `ListingHooks` prefers it when it is enabled: a listing's page in DDEV
-    shows similar services from Meilisearch. Their config waits in
-    `config/meilisearch/`, outside `config/sync`, until the module is in
-    `composer.json`. `drush php:script scripts/check-similar.php` checks
+    shows similar services from Meilisearch. Their config is in
+    `config/sync` since 2026-11-06, with `quebracho_meilisearch`. `drush php:script scripts/check-similar.php` checks
     that `/similar` ranks by the same vectors as `Embeddings::nearest()`.
   - **Compared on "Check domain availability and current registration
     price"** (#2434, 2026-10-22). DDEV has no Fireworks key and production

@@ -201,7 +201,8 @@ Decidido por Leo (2026-11-06): "agrega blog al menu principal, usa el blog como 
 Decidido por Leo (2026-11-06 15:21): "no vamos a usar el modulo de drupal, vamos a crear nuestro propio modulo custom que quizas lo hagamos contrib en base a nuestro fork". So `quebracho_meilisearch` (from our fork, commit `02951a5`) is the module; the contrib `drupal/meilisearch` is not a dependency, and the tests enable `quebracho_meilisearch`, not `meilisearch`. Whether it becomes contrib later is a decision for Leo, not for the tests.
 
 - **Tests:** namespace `Drupal\Tests\quebracho_meilisearch`, the test module's config names match its IDs, and the Meilisearch key comes from `MEILISEARCH_TEST_KEY`.
-- **Server:** DDEV's Meilisearch is in `.ddev/docker-compose.meilisearch.yaml`. The key committed there is not the one the running container uses (4 characters against 26), which needs to be settled before anything is installed in production.
+- **Server:** DDEV's Meilisearch is in `.ddev/docker-compose.meilisearch.yaml`. Checked 2026-11-06: there is no key mismatch. The container runs with the addon's default `ddev`, and `settings.php` gives Drupal the same key under DDEV; the "26" was the size of `.ddev/.env.meilisearch`, which holds only `MEILISEARCH_TAG`. Production needs its own server and key.
+- **Config in `config/sync` (2026-11-06):** the server, the `listings_meilisearch` index and `ombu_similar_meilisearch` moved from `config/meilisearch/`, and `quebracho_meilisearch` is in `core.extension`. Uninstalling the contrib `meilisearch` had deleted DDEV's server (it depended on that module) and disabled the index; the server now depends on `quebracho_meilisearch`, the three files were imported alone (`cim --partial --source=../config/meilisearch`) and the 2,814 listings re-indexed. `Similar` pings the server first, so a site without Meilisearch serves the database view.
 
 ### The blog's list reads as markdown
 
@@ -216,3 +217,21 @@ The verifier, as Claude decided it on Leo's delegation:
 - **One service, `ResourceVerifier`, for the importers and the paid product.** The importers run the same checks before a listing exists; the paid agent sells them. The checks: the live 402 and its `accepts` match the catalogue (`SellerProbe`); payTo not frozen by the token (`TokenBlacklist`); payTo not on OFAC's SDN list (Chainalysis' sanctions oracle, `0x40C5…C8fb`, `isSanctioned`, asked on Ethereum for every EVM address, since the list is the same everywhere: it answered on Ethereum, Polygon, Arbitrum, OP and Avalanche, not on Base, on 2026-11-06); payTo has received USDC before (Alchemy transfers, a count, informational); payTo or owner registered on ERC-8004 (8004scan, informational). Anything that cannot be asked is reported "unchecked", never as clean.
 - **Paid by x402 in two parts, per URL checked.** $0.003 when the job is started (it returns an id; at most 20 URLs per job), $0.007 per URL when the report is fetched; a job not finished answers 202 and charges nothing; a job that failed charges nothing more. $0.01 per URL in all.
 - **First the service with tests, then the paid route, then an MCP tool.** Built on `feat/catalog-importer`, in dev only; nothing is deployed without Leo's OK.
+
+### quebracho_meilisearch gets its own repository
+
+Decidido por Leo (2026-11-06): "puedes separar el repo del modulo quebracho_meilisearch? y lo comiteamos a un repo de github bajo quebracho? ... quizas en algun momento lo aportemos como contrib a drupal", and public when asked ("Público"). So the module is at https://github.com/quebracho-digital/quebracho_meilisearch (local clone `~/Proyects/quebracho_meilisearch`). Its history is the contrib module's up to our three proposals, then one commit with the rename; composer name `quebracho/quebracho_meilisearch`, and the README and `.info.yml` say it is a fork, not the official package. Its suite passes on its own (112 tests, 988 assertions, `scripts/test.sh`).
+
+Decidido por Leo (2026-11-06): "por ahora no aportamos, vamos a darle unos dias mas al de meilisearch ... cuando deployemos a ser5, deberia usar el modulo custom", and, asked how: "Por composer desde GitHub". So Ombú drops its copy in `web/modules/custom/quebracho_meilisearch` and requires `quebracho/quebracho_meilisearch` from the GitHub repository, pinned to `dev-main#7b0e45a`; it installs into `web/modules/contrib/`. No drupal.org contribution for now: the upstream maintainer gets a few more days to answer. With the module from Composer: quebracho_meilisearch 112 tests, 988 assertions, 0 failures (against DDEV's Meilisearch, `MEILISEARCH_TEST_URL` set; `ddev test` alone skips 60 of them).
+
+### The home is a view
+
+Leo (2026-11-06 14:04) asked for "una home con una view" with blocks (market hero with "Try our sellers", latest posts, latest sales, featured, newest and best rated listings), a template per display, and for agents too; on 2026-11-06 he corrected a controller: "porque un controlador? no ibas a hacer una view para la home?". So `ombu_home` is a view (front page `/home`); other views' displays come in through Views' "Global: View" area, the hero, the sales and the strip for agents through `HomePart`, and Best rated through the `ombu_rating` sort. Not done: a markdown version of the home, and tests of its own for the sort and the view.
+
+### No import from 8004scan; Meilisearch in production; publish without the pt-br review
+
+Decidido por Leo (2026-11-08): "pense que no ibamos a importar de 8004scan, no habia nada serio como importar, por eso vamos a importar desde otros catalogos". So 8004scan stays a survey command; the next importer reads the x402 catalogues.
+
+Decidido por Leo (2026-11-08): "instala meilisearch en prod antes de deployar". So `deploy/compose.yaml` runs Meilisearch v1.55.0 beside web and db, its master key `MEILI_MASTER_KEY` in `deploy/.env`, handed to the search_api server by `settings.prod.php`.
+
+Decidido por Leo (2026-11-08): "Publica y traduce a todos los idiomas, es la primera vez que me pides revision del pt". The posts ship in en, es and pt-br without a native pt-br review. The first post keeps a record of Tameion and Arc Microgrants (the twenty winners by name, Ombú live on mainnet with no mention or feedback).

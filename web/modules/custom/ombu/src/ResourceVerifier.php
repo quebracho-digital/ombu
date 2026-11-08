@@ -70,7 +70,17 @@ class ResourceVerifier {
   public function verify(string $url, string $method = 'GET', array $announced = []): array {
     $checks = [];
     try {
-      [, $accepts] = $this->probe->requirements($url, $method === 'POST' ? 'POST' : 'GET');
+      // Ask with GET first: a POST to a seller that skips x402 could run the
+      // call unpaid. Only a POST-only endpoint (404/405 to GET) gets the POST.
+      try {
+        [, $accepts] = $this->probe->requirements($url, 'GET');
+      }
+      catch (\RuntimeException $e) {
+        if ($method !== 'POST' || !preg_match('/answered 40[45],/', $e->getMessage())) {
+          throw $e;
+        }
+        [, $accepts] = $this->probe->requirements($url, 'POST');
+      }
       $checks['probe'] = [self::PASS, count($accepts) . ' requirement(s)'];
     }
     catch (\RuntimeException $e) {

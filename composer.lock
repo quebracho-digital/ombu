@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97eadbb332ab0d9d308562da4fe1082e",
+    "content-hash": "385e882a3ddb5379434613b3db095d72",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -7770,6 +7770,47 @@
                 "source": "https://github.com/bobthecow/psysh/tree/v0.12.24"
             },
             "time": "2026-06-29T15:41:09+00:00"
+        },
+        {
+            "name": "quebracho/quebracho_meilisearch",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/quebracho-digital/quebracho_meilisearch.git",
+                "reference": "7b0e45a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/quebracho-digital/quebracho_meilisearch/zipball/7b0e45a",
+                "reference": "7b0e45a",
+                "shasum": ""
+            },
+            "require": {
+                "drupal/search_api": "^1.39",
+                "meilisearch/meilisearch-php": "^1.16",
+                "php": ">=8.1"
+            },
+            "suggest": {
+                "drupal/facets": "Faceted search on Meilisearch indexes."
+            },
+            "default-branch": true,
+            "type": "drupal-module",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "A Meilisearch backend for the Search API, forked from drupal/meilisearch, with user-provided vectors and More like this.",
+            "homepage": "https://github.com/quebracho-digital/quebracho_meilisearch",
+            "keywords": [
+                "Drupal",
+                "Meilisearch",
+                "Search",
+                "Search API"
+            ],
+            "support": {
+                "issues": "https://github.com/quebracho-digital/quebracho_meilisearch/issues",
+                "source": "https://github.com/quebracho-digital/quebracho_meilisearch"
+            },
+            "time": "2026-11-06T20:33:10+00:00"
         },
         {
             "name": "quebracho/x402",
@@ -17069,7 +17110,8 @@
         "drupal/ai_provider_universal": 20,
         "drupal/mcp_server": 10,
         "drupal/wallet_auth": 20,
-        "drupal/x402_pay": 20
+        "drupal/x402_pay": 20,
+        "quebracho/quebracho_meilisearch": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

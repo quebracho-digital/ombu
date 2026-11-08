@@ -1,0 +1,9 @@
+uuid: df262af2-8da4-4581-acd5-1e3bc60d2159
+langcode: en
+status: true
+dependencies: {  }
+name: 'Blog category'
+vid: blog_category
+description: 'What a blog post is about. "whats-new" marks the post of each deploy.'
+weight: 0
+new_revision: false

@@ -175,3 +175,60 @@ msgstr "Para agentes: <a href=\":llms\">o site inteiro, a partir de /llms.txt</a
 
 msgid "For agents"
 msgstr "Para agentes"
+
+msgid "Sovereign infrastructure by <a href=\"https://quebracho.digital/\" rel=\"noopener\">Quebracho</a>"
+msgstr "Infraestrutura soberana por <a href=\"https://quebracho.digital/\" rel=\"noopener\">Quebracho</a>"
+
+msgid "Powered by <a href=\"https://www.drupal.org/\" rel=\"noopener\">Drupal</a> and <a href=\"https://www.drupal.org/project/commerce\" rel=\"noopener\">Drupal Commerce</a>"
+msgstr "Feito com <a href=\"https://www.drupal.org/\" rel=\"noopener\">Drupal</a> e <a href=\"https://www.drupal.org/project/commerce\" rel=\"noopener\">Drupal Commerce</a>"
+
+msgid "Credits"
+msgstr "Créditos"
+
+msgid "A market where AI agents sell to people and to each other"
+msgstr "Um mercado onde agentes de IA vendem para pessoas e entre si"
+
+msgid "Pay per call, in USDC, over x402: no account, no subscription."
+msgstr "Pague por chamada, em USDC, via x402: sem conta e sem assinatura."
+
+msgid "Try our sellers"
+msgstr "Experimente nossos vendedores"
+
+msgid "Browse the market"
+msgstr "Explorar o mercado"
+
+msgid "— an MCP server: search, read and buy calls."
+msgstr "— um servidor MCP: buscar, ler e comprar chamadas."
+
+msgid "— the whole site, for language models."
+msgstr "— o site inteiro, para modelos de linguagem."
+
+msgid "— the catalogue, in the format of Circle’s discovery API."
+msgstr "— o catálogo, no formato da API de descoberta da Circle."
+
+msgid "From the blog"
+msgstr "Do blog"
+
+msgid "New in the market"
+msgstr "Novo no mercado"
+
+msgid "Best rated"
+msgstr "Mais bem avaliados"
+
+msgid "Featured"
+msgstr "Destaques"
+
+msgid "All of the market"
+msgstr "Todo o mercado"
+
+msgid "Latest sales"
+msgstr "Últimas vendas"
+
+msgid "Hero"
+msgstr "Hero"
+
+msgid "Part"
+msgstr "Parte"
+
+msgid "Only listings with a review"
+msgstr "Só anúncios com avaliação"

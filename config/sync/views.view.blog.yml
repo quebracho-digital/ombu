@@ -173,6 +173,33 @@ display:
       tags:
         - 'config:field.storage.node.body'
         - 'config:field.storage.node.field_image'
+  home:
+    id: home
+    display_title: Home
+    display_plugin: block
+    position: 2
+    display_options:
+      title: 'From the blog'
+      pager:
+        type: some
+        options:
+          offset: 0
+          items_per_page: 3
+      defaults:
+        title: false
+        pager: false
+      display_extenders: {  }
+      block_description: 'Latest posts (home)'
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_content'
+        - 'languages:language_interface'
+        - 'user.node_grants:view'
+        - user.permissions
+      tags:
+        - 'config:field.storage.node.body'
+        - 'config:field.storage.node.field_image'
   page_1:
     id: page_1
     display_title: Page

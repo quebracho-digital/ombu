@@ -1,4 +1,4 @@
-/* The home (ombu_home view): a hero over a photo of an ombú, then sections.
+/* The home (a Layout Builder page): a hero over a photo of an ombú, then sections.
    Belgrade's Bootstrap variables when present, plain fallbacks otherwise. */
 
 .ombu-home {
@@ -6,6 +6,34 @@
   flex-direction: column;
   gap: 3rem;
   margin-bottom: 3rem;
+}
+
+/* The home is a Layout Builder page: its blocks are children of one region,
+   which carries the width, the side padding and the space between sections
+   (a block with nothing in it, such as an empty "Featured", takes no space). */
+.node--type-home .layout__region--content {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 82.5rem;
+  margin-inline: auto;
+  padding: 1.5rem 1rem 3.5rem;
+}
+
+.node--type-home .layout__region--content > :not(:has(*)) {
+  display: none;
+}
+
+.node--type-home .ombu-home {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .node--type-home .layout__region--content {
+    padding-inline: 1.5rem;
+  }
 }
 
 .ombu-home-hero {

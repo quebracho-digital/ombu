@@ -66,7 +66,7 @@ third_party_settings:
               context_mapping: {  }
               views_label: ''
               items_per_page: 0
-            weight: 2
+            weight: 3
             additional:
               component_attributes:
                 block:
@@ -77,23 +77,6 @@ third_party_settings:
             region: content
             configuration:
               id: 'views_block:ombu_home-latest'
-              label: ''
-              label_display: '0'
-              provider: views
-              context_mapping: {  }
-              views_label: ''
-              items_per_page: 0
-            weight: 3
-            additional:
-              component_attributes:
-                block:
-                  attributes: {  }
-                  id: ''
-          47e08e09-8d5e-481e-a80a-9a0ae991ae29:
-            uuid: 47e08e09-8d5e-481e-a80a-9a0ae991ae29
-            region: content
-            configuration:
-              id: 'views_block:ombu_home-top'
               label: ''
               label_display: '0'
               provider: views
@@ -138,6 +121,23 @@ third_party_settings:
                 block:
                   attributes: {  }
                   id: ''
+          47e08e09-8d5e-481e-a80a-9a0ae991ae29:
+            uuid: 47e08e09-8d5e-481e-a80a-9a0ae991ae29
+            region: content
+            configuration:
+              id: 'views_block:ombu_home-top'
+              label: ''
+              label_display: '0'
+              provider: views
+              context_mapping: {  }
+              views_label: ''
+              items_per_page: 0
+            weight: 2
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
         third_party_settings: {  }
 id: node.home.default
 targetEntityType: node
@@ -148,3 +148,4 @@ hidden:
   langcode: true
   links: true
   search_api_excerpt: true
+

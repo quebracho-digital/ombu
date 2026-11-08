@@ -235,3 +235,11 @@ Decidido por Leo (2026-11-08): "pense que no ibamos a importar de 8004scan, no h
 Decidido por Leo (2026-11-08): "instala meilisearch en prod antes de deployar". So `deploy/compose.yaml` runs Meilisearch v1.55.0 beside web and db, its master key `MEILI_MASTER_KEY` in `deploy/.env`, handed to the search_api server by `settings.prod.php`.
 
 Decidido por Leo (2026-11-08): "Publica y traduce a todos los idiomas, es la primera vez que me pides revision del pt". The posts ship in en, es and pt-br without a native pt-br review. The first post keeps a record of Tameion and Arc Microgrants (the twenty winners by name, Ombú live on mainnet with no mention or feedback).
+
+### Bazaar and PayAI importers: only what has verified activity on chain
+
+Decidido por Leo (2026-11-08 17:20): "creo que no vamos a usar 8004scan para nada, no era muy util ni tienen nada verificado, puedes comenzar con los importers de Bazaar y PayAI? vamos a importar solo listados que tengan actividad verificada en la blockchain monto y payTo contra accepts". So 8004scan is dropped altogether (its survey command stays only as a measurement), and `DiscoveryCatalogImporter` (one class, two services: `ombu.bazaar_importer`, `ombu.payai_importer`) lists a resource only when `ResourceVerifier` passes it and payTo has received USDC on chain:
+
+- The live 402 must list the network, asset, payTo and amount the catalogue announced; payTo is not frozen by the token nor on OFAC's list; at least `$minTransfers` (1) incoming USDC transfers to payTo (Alchemy). Only the `exact` requirements on the six EVM mainnets whose USDC is checked are judged; Solana and Arc are not imported (no verified contract here).
+- What cannot be asked (a node, the seller) is not imported and, if it was, not retired; only a "no" retires. A listing whose entry did not change is not asked again; a run verifies at most 200 new or changed resources (`$budget`).
+- By hand only (`drush ombu:import-catalog bazaar|payai`), not from cron. Not deployed. Circle does not run these checks yet; moving them into `CatalogImporterInterface` and into Circle is still open.

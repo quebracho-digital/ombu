@@ -430,7 +430,7 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
       ->condition('field_source', $this->source());
     $ids = $query->condition($query->orConditionGroup()
       ->notExists('field_retired')
-      ->condition('field_retired', FALSE))
+      ->condition('field_retired', 0))
       ->execute();
     $n = 0;
     foreach ($products->loadMultiple($ids) as $product) {

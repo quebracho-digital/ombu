@@ -8,6 +8,36 @@ services:
       - '@lock'
       - '@?Drupal\ai_provider_universal_factcheck\Service\PageFetcher'
       - '@ombu.sellers'
+  # Checks a seller itself before a listing exists, with Alchemy's nodes
+  # (ALCHEMY_API_KEY): only built when an importer is asked for.
+  ombu.resource_verifier:
+    class: Drupal\ombu\ResourceVerifier
+    factory: ['Drupal\ombu\ResourceVerifierFactory', 'create']
+    arguments: ['@http_client']
+  ombu.bazaar_importer:
+    class: Drupal\ombu\DiscoveryCatalogImporter
+    arguments:
+      - bazaar
+      - 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources'
+      - '@http_client'
+      - '@entity_type.manager'
+      - '@logger.factory'
+      - '@lock'
+      - '@ombu.resource_verifier'
+      - '@state'
+      - '@datetime.time'
+  ombu.payai_importer:
+    class: Drupal\ombu\DiscoveryCatalogImporter
+    arguments:
+      - payai
+      - 'https://facilitator.payai.network/discovery/resources'
+      - '@http_client'
+      - '@entity_type.manager'
+      - '@logger.factory'
+      - '@lock'
+      - '@ombu.resource_verifier'
+      - '@state'
+      - '@datetime.time'
   logger.channel.ombu:
     parent: logger.channel_base
     arguments: ['ombu']

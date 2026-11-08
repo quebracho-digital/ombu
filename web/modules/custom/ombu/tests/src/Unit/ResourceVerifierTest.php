@@ -166,4 +166,48 @@ class ResourceVerifierTest extends UnitTestCase {
     $this->assertSame(ResourceVerifier::UNCHECKED, $report['verdict']);
   }
 
+  /**
+   * @covers ::verify
+   */
+  public function testActivityIsTheMostTransfersAnyPayToReceived(): void {
+    $report = $this->verifier([$this->req()], self::FALSE, self::FALSE)->verify('https://seller.example/x', 'GET', [$this->req()]);
+    $this->assertSame(3, $report['activity']);
+  }
+
+  /**
+   * @covers ::verify
+   */
+  public function testActivityIsUnknownWhenTheIndexDoesNotAnswer(): void {
+    $probe = $this->createMock(SellerProbe::class);
+    $probe->method('requirements')->willReturn(['https://seller.example/x', [$this->req()]]);
+    $factory = new HttpFactory();
+    $verifier = new ResourceVerifier($probe, new TokenBlacklist(new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['jsonrpc' => '2.0', 'id' => 1, 'result' => self::FALSE]))]))]), $factory, $factory, FALSE, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']), NULL, function () {
+      throw new \RuntimeException('down');
+    }, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']);
+    $report = $verifier->verify('https://seller.example/x');
+    $this->assertNull($report['activity']);
+    $this->assertSame(ResourceVerifier::UNCHECKED, $report['checks']['accepts[0].transfers'][0]);
+  }
+
+  /**
+   * @covers ::verify
+   */
+  public function testOnlyTheRequirementsOnTheAskedNetworksAreJudged(): void {
+    $solana = ['scheme' => 'exact', 'network' => 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'asset' => 'EPjF', 'payTo' => 'AQqn', 'amount' => '2303'];
+    $batch = $this->req(['scheme' => 'batch-settlement']);
+    $report = $this->verifier([$this->req(), $solana, $batch], self::FALSE, self::FALSE)->verify('https://seller.example/x', 'GET', [$this->req()], ['eip155:8453']);
+    $this->assertSame(ResourceVerifier::PASS, $report['verdict'], json_encode($report['checks']));
+    $this->assertSame([$this->req()], $report['accepts']);
+  }
+
+  /**
+   * @covers ::verify
+   */
+  public function testNothingOnTheAskedNetworksFails(): void {
+    $solana = ['scheme' => 'exact', 'network' => 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'asset' => 'EPjF', 'payTo' => 'AQqn', 'amount' => '2303'];
+    $report = $this->verifier([$solana], self::FALSE, self::FALSE)->verify('https://seller.example/x', 'GET', [], ['eip155:8453']);
+    $this->assertSame(ResourceVerifier::FAIL, $report['verdict']);
+    $this->assertSame([], $report['accepts']);
+  }
+
 }

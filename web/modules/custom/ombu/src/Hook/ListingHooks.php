@@ -16,6 +16,7 @@ use Drupal\Core\Url;
 use Drupal\ombu\Cards;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
+use Drupal\ombu\DiscoveryCatalogImporter;
 use Drupal\ombu\Rating;
 use Drupal\ombu\Sales;
 use Drupal\ombu\EventSubscriber\ListingMarkdownSubscriber;
@@ -192,13 +193,14 @@ final class ListingHooks {
   }
 
   /**
-   * Staff deleting a Circle listing is a takedown: it is not imported again.
+   * Staff deleting a listing of a catalogue (Circle, Bazaar, PayAI) is a takedown: it is not imported again.
    *
    * Listings Circle drops are retired, never deleted (CircleCatalogImporter).
    */
   #[Hook('commerce_product_delete')]
   public function delete(ProductInterface $product): void {
     CircleCatalogImporter::block($product);
+    DiscoveryCatalogImporter::block($product);
   }
 
   /**

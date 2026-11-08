@@ -36,6 +36,14 @@ class ResourceVerifier {
   public const OFAC_SELECTOR = '0xdf592f7d';
 
   /**
+   * Builds the verifier from its probe, its nodes and its token list.
+   *
+   * @param \Drupal\ombu\SellerProbe $probe
+   *   Asks the seller for its 402.
+   * @param \Quebracho\X402\TokenBlacklist $blacklist
+   *   Asks the token whether payTo is frozen.
+   * @param \Quebracho\X402\Rpc|null $ethereum
+   *   Ethereum's node, for OFAC's oracle.
    * @param \Closure|null $transfers
    *   fn(string $network, string $asset, string $payTo): int, the USDC
    *   transfers payTo has received (capped); throws when it cannot ask.
@@ -61,13 +69,25 @@ class ResourceVerifier {
   /**
    * Verifies one resource.
    *
+   * @param string $url
+   *   The resource.
+   * @param string $method
+   *   GET or POST: what the seller answers 402 to (GET is asked first).
    * @param array $announced
    *   The accepts its catalogue lists; empty to skip the comparison (a URL
    *   someone typed has no catalogue).
+   * @param string[] $networks
+   *   When not empty, only the live `exact` requirements on these networks are
+   *   checked (and returned): a resource that also takes Solana or a
+   *   batch-settlement is judged by the part Ombú can verify. None left is a
+   *   failure.
    *
-   * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array}
+   * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array, activity: ?int}
+   *   `accepts` are the requirements that were checked; `activity` is the most
+   *   USDC transfers any of their payTo addresses has received (NULL: not
+   *   asked, or the index did not answer).
    */
-  public function verify(string $url, string $method = 'GET', array $announced = []): array {
+  public function verify(string $url, string $method = 'GET', array $announced = [], array $networks = []): array {
     $checks = [];
     try {
       // Ask with GET first: a POST to a seller that skips x402 could run the
@@ -87,6 +107,16 @@ class ResourceVerifier {
       return $this->report(['probe' => [self::FAIL, $e->getMessage()]], []);
     }
 
+    if ($networks) {
+      $networks = array_map('strtolower', $networks);
+      $accepts = array_values(array_filter($accepts, fn($r) => is_array($r)
+        && ($r['scheme'] ?? '') === 'exact'
+        && in_array(strtolower((string) ($r['network'] ?? '')), $networks, TRUE)));
+      if (!$accepts) {
+        return $this->report($checks + ['accepts' => [self::FAIL, 'no exact requirement on a network Ombú verifies']], []);
+      }
+    }
+    $activity = NULL;
     $fingerprints = array_map([self::class, 'fingerprint'], array_filter($announced, 'is_array'));
     foreach (array_values($accepts) as $i => $req) {
       $at = "accepts[$i]";
@@ -106,9 +136,13 @@ class ResourceVerifier {
       $checks[$at] = [self::PASS, $req['network'] . ' ' . $amount];
       $checks["$at.freeze"] = $this->freeze($req);
       $checks["$at.ofac"] = $this->ofac((string) $req['network'], (string) $req['payTo']);
-      $checks["$at.transfers"] = $this->history($req);
+      $count = NULL;
+      $checks["$at.transfers"] = $this->history($req, $count);
+      if ($count !== NULL) {
+        $activity = max($activity ?? 0, $count);
+      }
     }
-    return $this->report($checks, $accepts);
+    return $this->report($checks, $accepts, $activity);
   }
 
   /**
@@ -142,7 +176,8 @@ class ResourceVerifier {
       return [self::UNCHECKED, 'no Ethereum node configured'];
     }
     try {
-      $answer = ($this->ethereum)('eth_call', [['to' => self::OFAC_ORACLE, 'data' => self::OFAC_SELECTOR . Rpc::word($payTo)], 'latest']);
+      $call = ['to' => self::OFAC_ORACLE, 'data' => self::OFAC_SELECTOR . Rpc::word($payTo)];
+      $answer = ($this->ethereum)('eth_call', [$call, 'latest']);
     }
     catch (\Throwable) {
       return [self::UNCHECKED, 'node did not answer'];
@@ -150,13 +185,15 @@ class ResourceVerifier {
     if (!is_string($answer) || !preg_match('/^0x[0-9a-fA-F]{64}$/', $answer)) {
       return [self::UNCHECKED, 'oracle gave no bool'];
     }
-    return gmp_cmp(Rpc::number($answer), 0) === 0 ? [self::PASS, 'not sanctioned'] : [self::FAIL, 'sanctioned (OFAC SDN)'];
+    return gmp_cmp(Rpc::number($answer), 0) === 0
+      ? [self::PASS, 'not sanctioned']
+      : [self::FAIL, 'sanctioned (OFAC SDN)'];
   }
 
   /**
    * How many USDC transfers payTo has received. Informational.
    */
-  private function history(array $req): array {
+  private function history(array $req, ?int &$count = NULL): array {
     if ($this->transfers === NULL) {
       return [self::UNCHECKED, 'no transfer index configured'];
     }
@@ -166,13 +203,14 @@ class ResourceVerifier {
     catch (\Throwable) {
       return [self::UNCHECKED, 'transfer index did not answer'];
     }
+    $count = (int) $count;
     return [self::PASS, $count . ' incoming transfer(s)'];
   }
 
   /**
    * The verdict over the required checks; transfers never decide it.
    */
-  private function report(array $checks, array $accepts): array {
+  private function report(array $checks, array $accepts, ?int $activity = NULL): array {
     $verdict = self::PASS;
     foreach ($checks as $name => [$result]) {
       if (str_ends_with($name, '.transfers')) {
@@ -186,7 +224,7 @@ class ResourceVerifier {
         $verdict = self::UNCHECKED;
       }
     }
-    return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $accepts];
+    return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $accepts, 'activity' => $activity];
   }
 
   /**

@@ -43,7 +43,7 @@ class SellerProbe extends PageFetcher {
       throw new \RuntimeException(sprintf('The endpoint answered %d, not 402 Payment Required.', $response->getStatusCode()));
     }
     // x402 v2 in its header, v1 (and most v2 servers too) in the body.
-    $header = $response->getHeaderLine('PAYMENT-REQUIRED');
+    $header = substr($response->getHeaderLine('PAYMENT-REQUIRED'), 0, 65536);
     $required = $header !== '' ? json_decode((string) base64_decode($header, TRUE), TRUE) : NULL;
     $required ??= json_decode(substr((string) $response->getBody(), 0, 65536), TRUE);
     if (!is_array($required['accepts'] ?? NULL) || !$required['accepts']) {

@@ -400,8 +400,10 @@ in). Draft answers and video script kept outside the repo.
   `192.168.1.66:8097`; minisforum's tunnel forwards `ombu.quebracho.digital`
   there over the LAN. The LLM stays on minisforum (sellers call it by LAN).
 - Drush on prod: `cd /data/docker/ombu/src/ombu/deploy && docker compose exec
-  -T web drush …`; deploy = `git push ssh://ser5/data/docker/ombu/src/<repo>`
-  (`updateInstead`). Secrets in `deploy/.env`; the gas wallet goes there.
+  -T web drush …`. Deploy = commit, push to GitHub, then `git pull --ff-only`
+  in `/data/docker/ombu/src/ombu` on SER5, `composer install --no-dev` and
+  `drush deploy` (the way since 2026-11-01; the `git push ssh://ser5/…` of the
+  first nights is retired). Secrets in `deploy/.env`; the gas wallet goes there.
 - Cron only on SER5. minisforum's DDEV stays in maintenance mode, as the
   rollback (restore `~/.cloudflared/config.yml.bak-2026-10-13-ser5`).
 - The DB is in SER5's nightly backup (`servicios.toml`, `[ombu]`).

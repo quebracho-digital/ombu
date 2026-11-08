@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Share links: plain links to each network's share page, and a button that
+ * copies the address. Nothing is loaded from the networks until a person
+ * follows a link. A theme can override this template.
+ *
+ * Variables:
+ * - links: name => {label, href, external}.
+ * - url: the address that is shared.
+ */
+#}
+<nav class="ombu-share" aria-label="{{ 'Share'|t }}">
+  <span class="ombu-share__title">{{ 'Share'|t }}</span>
+  <ul class="ombu-share__list">
+    {% for name, link in links %}
+      <li>
+        <a class="ombu-share__link ombu-share__link--{{ name }}" href="{{ link.href }}"{% if link.external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ link.label }}{% if link.external %}<span class="visually-hidden"> ({{ 'opens in a new tab'|t }})</span>{% endif %}</a>
+      </li>
+    {% endfor %}
+    <li>
+      <button type="button" class="ombu-share__link ombu-share__copy" data-ombu-share-url="{{ url }}">{{ 'Copy link'|t }}</button>
+    </li>
+  </ul>
+  <span class="ombu-share__status visually-hidden" role="status"></span>
+</nav>

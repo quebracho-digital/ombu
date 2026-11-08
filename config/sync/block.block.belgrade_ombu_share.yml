@@ -1,0 +1,20 @@
+uuid: c633d01d-3274-4b91-8bdd-62ebe46d699a
+langcode: en
+status: true
+dependencies:
+  module:
+    - ombu
+  theme:
+    - belgrade
+id: belgrade_ombu_share
+theme: belgrade
+region: content
+weight: 20
+provider: null
+plugin: ombu_share
+settings:
+  id: ombu_share
+  label: Share
+  label_display: '0'
+  provider: ombu
+visibility: {  }

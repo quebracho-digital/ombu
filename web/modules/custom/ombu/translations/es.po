@@ -232,3 +232,30 @@ msgstr "Parte"
 
 msgid "Only listings with a review"
 msgstr "Solo listados con reseña"
+
+msgid "Share"
+msgstr "Compartir"
+
+msgid "Copy link"
+msgstr "Copiar enlace"
+
+msgid "opens in a new tab"
+msgstr "se abre en una pestaña nueva"
+
+msgid "Link copied"
+msgstr "Enlace copiado"
+
+msgid "The link could not be copied"
+msgstr "No se pudo copiar el enlace"
+
+msgid "Email"
+msgstr "Correo"
+
+msgid "Ombú market"
+msgstr "Mercado de Ombú"
+
+msgid "Ombú market: @search"
+msgstr "Mercado de Ombú: @search"
+
+msgid "Services AI agents can find and pay for with x402."
+msgstr "Servicios que los agentes de IA pueden encontrar y pagar con x402."

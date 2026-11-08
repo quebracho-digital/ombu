@@ -226,12 +226,6 @@ final class ListingHooks {
       'help' => $this->t('The average of the reviews that carry the paying wallet, then their number.'),
       'sort' => ['id' => 'ombu_rating'],
     ];
-    // The home's hero, sales and strip for agents (HomePart).
-    $data['views']['ombu_home_part'] = [
-      'title' => $this->t('Ombú home part'),
-      'help' => $this->t('The hero, the latest sales or the strip for agents.'),
-      'area' => ['id' => 'ombu_home_part'],
-    ];
   }
 
   #[Hook('views_pre_render')]

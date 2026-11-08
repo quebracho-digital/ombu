@@ -193,70 +193,6 @@ display:
         - 'languages:language_interface'
         - user.permissions
       tags: {  }
-  page_1:
-    id: page_1
-    display_title: Home
-    display_plugin: page
-    position: 1
-    display_options:
-      defaults:
-        header: false
-        footer: false
-      header:
-        hero:
-          id: hero
-          table: views
-          field: ombu_home_part
-          plugin_id: ombu_home_part
-          empty: true
-          part: hero
-        featured:
-          id: featured
-          table: views
-          field: view
-          plugin_id: view
-          empty: true
-          view_to_insert: 'ombu_home:featured'
-          inherit_arguments: false
-        posts:
-          id: posts
-          table: views
-          field: view
-          plugin_id: view
-          empty: true
-          view_to_insert: 'blog:home'
-          inherit_arguments: false
-      footer:
-        top:
-          id: top
-          table: views
-          field: view
-          plugin_id: view
-          empty: true
-          view_to_insert: 'ombu_home:top'
-          inherit_arguments: false
-        sales:
-          id: sales
-          table: views
-          field: ombu_home_part
-          plugin_id: ombu_home_part
-          empty: true
-          part: sales
-        agents:
-          id: agents
-          table: views
-          field: ombu_home_part
-          plugin_id: ombu_home_part
-          empty: true
-          part: agents
-      display_extenders: {  }
-      path: home
-    cache_metadata:
-      max-age: -1
-      contexts:
-        - 'languages:language_interface'
-        - user.permissions
-      tags: {  }
   top:
     id: top
     display_title: 'Best rated'
@@ -278,6 +214,20 @@ display:
       use_more: false
       display_extenders: {  }
       block_description: 'Best rated listings'
+    cache_metadata:
+      max-age: -1
+      contexts:
+        - 'languages:language_interface'
+        - user.permissions
+      tags: {  }
+  latest:
+    id: latest
+    display_title: 'Latest listings'
+    display_plugin: block
+    position: 1
+    display_options:
+      display_extenders: {  }
+      block_description: 'Home: latest listings'
     cache_metadata:
       max-age: -1
       contexts:

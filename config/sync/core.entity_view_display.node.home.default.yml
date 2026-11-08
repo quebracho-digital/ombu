@@ -1,0 +1,150 @@
+uuid: 24fc4cf3-e5d5-41e5-97a2-97df47a81bf0
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.home
+    - views.view.blog
+    - views.view.ombu_home
+  module:
+    - layout_builder
+    - layout_discovery
+    - ombu
+    - user
+    - views
+third_party_settings:
+  layout_builder:
+    enabled: true
+    allow_custom: false
+    sections:
+      -
+        layout_id: layout_onecol
+        layout_settings:
+          label: Home
+        components:
+          d35c64be-8a40-4661-8ae6-8aeb6b648e70:
+            uuid: d35c64be-8a40-4661-8ae6-8aeb6b648e70
+            region: content
+            configuration:
+              id: ombu_home_part
+              label: ''
+              label_display: '0'
+              provider: ombu
+              context_mapping: {  }
+              part: hero
+            weight: 0
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          82176eee-e699-4ae2-b0bf-46288dd62743:
+            uuid: 82176eee-e699-4ae2-b0bf-46288dd62743
+            region: content
+            configuration:
+              id: 'views_block:ombu_home-featured'
+              label: ''
+              label_display: '0'
+              provider: views
+              context_mapping: {  }
+              views_label: ''
+              items_per_page: 0
+            weight: 1
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          191acd30-f8ca-40f2-8cf7-09cafd9c404c:
+            uuid: 191acd30-f8ca-40f2-8cf7-09cafd9c404c
+            region: content
+            configuration:
+              id: 'views_block:blog-home'
+              label: ''
+              label_display: '0'
+              provider: views
+              context_mapping: {  }
+              views_label: ''
+              items_per_page: 0
+            weight: 2
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          616b350e-e943-41c3-a358-9c6b1d10b530:
+            uuid: 616b350e-e943-41c3-a358-9c6b1d10b530
+            region: content
+            configuration:
+              id: 'views_block:ombu_home-latest'
+              label: ''
+              label_display: '0'
+              provider: views
+              context_mapping: {  }
+              views_label: ''
+              items_per_page: 0
+            weight: 3
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          47e08e09-8d5e-481e-a80a-9a0ae991ae29:
+            uuid: 47e08e09-8d5e-481e-a80a-9a0ae991ae29
+            region: content
+            configuration:
+              id: 'views_block:ombu_home-top'
+              label: ''
+              label_display: '0'
+              provider: views
+              context_mapping: {  }
+              views_label: ''
+              items_per_page: 0
+            weight: 4
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          d2a856eb-7011-4bec-8c8e-f79caee48449:
+            uuid: d2a856eb-7011-4bec-8c8e-f79caee48449
+            region: content
+            configuration:
+              id: ombu_home_part
+              label: ''
+              label_display: '0'
+              provider: ombu
+              context_mapping: {  }
+              part: sales
+            weight: 5
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+          77c3360f-03fd-4355-9e43-f415aa6596ee:
+            uuid: 77c3360f-03fd-4355-9e43-f415aa6596ee
+            region: content
+            configuration:
+              id: ombu_home_part
+              label: ''
+              label_display: '0'
+              provider: ombu
+              context_mapping: {  }
+              part: agents
+            weight: 6
+            additional:
+              component_attributes:
+                block:
+                  attributes: {  }
+                  id: ''
+        third_party_settings: {  }
+id: node.home.default
+targetEntityType: node
+bundle: home
+mode: default
+content: {  }
+hidden:
+  langcode: true
+  links: true
+  search_api_excerpt: true

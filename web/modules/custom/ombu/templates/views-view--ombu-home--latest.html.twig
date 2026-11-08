@@ -1,0 +1,17 @@
+{#
+/**
+ * @file
+ * The home's "latest" block (ombu_home, latest): the newest listings as
+ * cards. Nothing at all when there are none.
+ */
+#}
+{% if rows %}
+  <div{{ attributes.addClass(['ombu-home', dom_id ? 'js-view-dom-id-' ~ dom_id]) }}>
+    <section class="ombu-home-section ombu-home-latest">
+      {{ title_prefix }}
+      {{ title_suffix }}
+      {{ rows }}
+      {{ more }}
+    </section>
+  </div>
+{% endif %}

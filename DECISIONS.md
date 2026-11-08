@@ -226,7 +226,7 @@ Decidido por Leo (2026-11-06): "por ahora no aportamos, vamos a darle unos dias 
 
 ### The home is a view
 
-Leo (2026-11-06 14:04) asked for "una home con una view" with blocks (market hero with "Try our sellers", latest posts, latest sales, featured, newest and best rated listings), a template per display, and for agents too; on 2026-11-06 he corrected a controller: "porque un controlador? no ibas a hacer una view para la home?". So `ombu_home` is a view (front page `/home`); other views' displays come in through Views' "Global: View" area, the hero, the sales and the strip for agents through `HomePart`, and Best rated through the `ombu_rating` sort. Not done: a markdown version of the home, and tests of its own for the sort and the view.
+Leo (2026-11-06 14:04) asked for "una home con una view" with blocks (market hero with "Try our sellers", latest posts, latest sales, featured, newest and best rated listings), a template per display, and for agents too; on 2026-11-06 he corrected a controller: "porque un controlador? no ibas a hacer una view para la home?". So `ombu_home` was a view (superseded 2026-11-08, see the end of this file): its blocks are still views displays, and Best rated still sorts by `ombu_rating`. Not done: a markdown version of the home, and tests of its own for the sort and the view.
 
 ### No import from 8004scan; Meilisearch in production; publish without the pt-br review
 
@@ -247,3 +247,5 @@ Decidido por Leo (2026-11-08 17:20): "creo que no vamos a usar 8004scan para nad
 ### Metatag writes the tags; the home moves to Layout Builder
 
 Decidido por Leo (2026-11-08): "pasa la home a layout builder. creo que es buena idea instalar metatag y configurarlo para mandar extra info para agentes sobre cada pagina y como navegarla mas amigablemente". Metatag (with Open Graph and Twitter cards) replaces the hand-written tags of `SocialHooks`; the module keeps only the values that depend on the page, as tokens (`[current-page:ombu-url|type|description|image|markdown]`, `MetatagHooks`). For agents it writes three links on every page: the Markdown twin (market searches; a post and a listing already get theirs from x402_pay), `llms.txt` as `describedby`, and `/openapi.json` as `service-desc`, each with its media type. The share links of `Share` stay as plain links: the contrib sharing modules load third-party scripts.
+
+The home is a node of the `home` type (`scripts/seed-home.php`, address `/home`, front page) whose layout lives in config: Structure > Content types > Home page > Manage display > Manage layout. Blocks: the views blocks of `ombu_home` (featured, latest, top) and `blog:home`, and `HomePartBlock` for the hero, the sales and the strip for agents. Reorder, add or remove them there and export the display. Not done: the layout is one column; the home has no editable text of its own.

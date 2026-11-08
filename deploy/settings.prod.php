@@ -31,6 +31,13 @@ $settings['trusted_host_patterns'] = [
 // everyone). Only the tunnel's host can reach this port.
 $settings['reverse_proxy'] = TRUE;
 $settings['reverse_proxy_addresses'] = ['192.168.1.150', '192.168.1.66'];
+// Only X-Forwarded-*: Drupal also trusts the standard Forwarded header by
+// default, which a visitor can send themselves, and which Cloudflare does not
+// set, so the per-visitor limit of refused payments could be dodged with it.
+$settings['reverse_proxy_trusted_headers'] = \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_FOR
+  | \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_HOST
+  | \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_PORT
+  | \Symfony\Component\HttpFoundation\Request::HEADER_X_FORWARDED_PROTO;
 
 // The tunnel drops responses slower than 100 s (524): a sale that outlives
 // it is not charged, since the buyer never gets the body. Until async jobs.

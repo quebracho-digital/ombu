@@ -42,6 +42,9 @@ final class CallService extends CatalogueToolBase {
 
   private Sellers $sellers;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $tool->payments = $container->get('ombu.mcp_payments');
@@ -49,6 +52,9 @@ final class CallService extends CatalogueToolBase {
     return $tool;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $product = $this->payments->listing(['name' => McpPayments::TOOL, 'arguments' => $arguments])
       ?? throw new ToolCallException('No such service for sale.');

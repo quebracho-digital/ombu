@@ -31,6 +31,8 @@ class SellerProbe extends PageFetcher {
         'timeout' => 15,
         'allow_redirects' => FALSE,
         'http_errors' => FALSE,
+        // The body is read up to 64 KB below, not whole.
+        'stream' => TRUE,
         'headers' => ['Accept' => 'application/json'] + ($method === 'POST' ? ['Content-Type' => 'application/json'] : []),
         'body' => $method === 'POST' ? '{}' : NULL,
         'curl' => [CURLOPT_RESOLVE => [$parts['host'] . ':' . $port . ':' . $ip]],
@@ -45,7 +47,7 @@ class SellerProbe extends PageFetcher {
     // x402 v2 in its header, v1 (and most v2 servers too) in the body.
     $header = substr($response->getHeaderLine('PAYMENT-REQUIRED'), 0, 65536);
     $required = $header !== '' ? json_decode((string) base64_decode($header, TRUE), TRUE) : NULL;
-    $required ??= json_decode(substr((string) $response->getBody(), 0, 65536), TRUE);
+    $required ??= json_decode($response->getBody()->read(65536), TRUE);
     if (!is_array($required['accepts'] ?? NULL) || !$required['accepts']) {
       throw new \RuntimeException('The 402 lists no payment requirements (accepts).');
     }

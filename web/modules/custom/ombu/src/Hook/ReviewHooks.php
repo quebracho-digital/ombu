@@ -47,13 +47,22 @@ final class ReviewHooks {
    * rating or purchase, admins included. Abuse is handled by unpublishing
    * or deleting it, both logged (moderated()).
    */
-  // An alter, not entity_field_access: core keys those results by module,
-  // so SellerHooks' answer for ombu would replace this one.
+  // An alter, not entity_field_access: core keys those results by module,.
+
+  /**
+ * So SellerHooks' answer for ombu would replace this one.
+ */
   #[Hook('entity_field_access_alter')]
   public function fieldAccess(array &$grants, array $context): void {
     $review = $context['items']?->getEntity();
     if ($context['operation'] === 'edit' && $review instanceof CommentInterface && $review->bundle() === 'review' && !$review->isNew()
-      && in_array($context['field_definition']->getName(), ['comment_body', 'subject', 'field_rating', 'field_tx_hash', 'field_reviewer_kind'], TRUE)) {
+      && in_array($context['field_definition']->getName(), [
+        'comment_body',
+        'subject',
+        'field_rating',
+        'field_tx_hash',
+        'field_reviewer_kind',
+      ], TRUE)) {
       $grants['ombu_review_as_said'] = AccessResult::forbidden('A review stands as its buyer said it.');
     }
   }
@@ -64,14 +73,26 @@ final class ReviewHooks {
   #[Hook('comment_update')]
   public function moderated(CommentInterface $review): void {
     if ($review->bundle() === 'review' && $review->isPublished() !== (bool) $review->getOriginal()?->isPublished()) {
-      \Drupal::logger('ombu')->notice('Review @id @what by @user.', ['@id' => $review->id(), '@what' => $review->isPublished() ? 'republished' : 'unpublished', '@user' => \Drupal::currentUser()->getAccountName()]);
+      \Drupal::logger('ombu')->notice('Review @id @what by @user.', [
+        '@id' => $review->id(),
+        '@what' => $review->isPublished() ? 'republished' : 'unpublished',
+        '@user' => \Drupal::currentUser()->getAccountName(),
+      ]);
     }
   }
 
+  /**
+   * Takes a deleted comment out of the listing's rating.
+   */
   #[Hook('comment_delete')]
   public function deleted(CommentInterface $review): void {
     if ($review->bundle() === 'review') {
-      \Drupal::logger('ombu')->notice('Review @id deleted by @user: "@body" (tx @tx).', ['@id' => $review->id(), '@user' => \Drupal::currentUser()->getAccountName() ?: 'drush', '@body' => mb_substr((string) $review->get('comment_body')->value, 0, 200), '@tx' => $review->get('field_tx_hash')->value ?? 'none, a reply']);
+      \Drupal::logger('ombu')->notice('Review @id deleted by @user: "@body" (tx @tx).', [
+        '@id' => $review->id(),
+        '@user' => \Drupal::currentUser()->getAccountName() ?: 'drush',
+        '@body' => mb_substr((string) $review->get('comment_body')->value, 0, 200),
+        '@tx' => $review->get('field_tx_hash')->value ?? 'none, a reply',
+      ]);
     }
   }
 

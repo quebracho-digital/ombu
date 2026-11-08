@@ -76,18 +76,18 @@ class ResourceVerifier {
    * @param array $announced
    *   The accepts its catalogue lists; empty to skip the comparison (a URL
    *   someone typed has no catalogue).
-   * @param string[] $networks
-   *   When not empty, only the live `exact` requirements on these networks are
-   *   checked (and returned): a resource that also takes Solana or a
-   *   batch-settlement is judged by the part Ombú can verify. None left is a
-   *   failure.
+   * @param string[] $assets
+   *   When not empty, `network|asset` pairs (lower case): only the live
+   *   `exact` requirements paid in one of these are checked and returned. A
+   *   resource that also takes Solana, another token or a batch-settlement is
+   *   judged by the part Ombú can verify. None left is a failure.
    *
    * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array, activity: ?int}
-   *   `accepts` are the requirements that were checked; `activity` is the most
+   *   `accepts` are the requirements that were checked; `activity` is the fewest
    *   USDC transfers any of their payTo addresses has received (NULL: not
    *   asked, or the index did not answer).
    */
-  public function verify(string $url, string $method = 'GET', array $announced = [], array $networks = []): array {
+  public function verify(string $url, string $method = 'GET', array $announced = [], array $assets = []): array {
     $checks = [];
     try {
       // Ask with GET first: a POST to a seller that skips x402 could run the
@@ -107,16 +107,16 @@ class ResourceVerifier {
       return $this->report(['probe' => [self::FAIL, $e->getMessage()]], []);
     }
 
-    if ($networks) {
-      $networks = array_map('strtolower', $networks);
+    if ($assets) {
+      $assets = array_map('strtolower', $assets);
       $accepts = array_values(array_filter($accepts, fn($r) => is_array($r)
         && ($r['scheme'] ?? '') === 'exact'
-        && in_array(strtolower((string) ($r['network'] ?? '')), $networks, TRUE)));
+        && in_array(strtolower(($r['network'] ?? '') . '|' . ($r['asset'] ?? '')), $assets, TRUE)));
       if (!$accepts) {
-        return $this->report($checks + ['accepts' => [self::FAIL, 'no exact requirement on a network Ombú verifies']], []);
+        return $this->report($checks + ['accepts' => [self::FAIL, 'no exact requirement in a token Ombú verifies']], []);
       }
     }
-    $activity = NULL;
+    $counts = [];
     $fingerprints = array_map([self::class, 'fingerprint'], array_filter($announced, 'is_array'));
     foreach (array_values($accepts) as $i => $req) {
       $at = "accepts[$i]";
@@ -138,10 +138,11 @@ class ResourceVerifier {
       $checks["$at.ofac"] = $this->ofac((string) $req['network'], (string) $req['payTo']);
       $count = NULL;
       $checks["$at.transfers"] = $this->history($req, $count);
-      if ($count !== NULL) {
-        $activity = max($activity ?? 0, $count);
-      }
+      $counts[] = $count;
     }
+    // Every payTo kept must have history: the one a buyer ends up paying is
+    // the one listed, and a fresh address beside an old one proves nothing.
+    $activity = !$counts || in_array(NULL, $counts, TRUE) ? NULL : min($counts);
     return $this->report($checks, $accepts, $activity);
   }
 

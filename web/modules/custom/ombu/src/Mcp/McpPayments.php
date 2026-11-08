@@ -173,16 +173,31 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
       catch (FacilitatorException) {
         // It may have sent the transaction before going silent: the claim
         // stays (the library's rule), so the same payment cannot run twice.
-        return ['success' => FALSE, 'errorReason' => 'facilitator_unavailable', 'transaction' => '', 'network' => $req['network']];
+        return [
+          'success' => FALSE,
+          'errorReason' => 'facilitator_unavailable',
+          'transaction' => '',
+          'network' => $req['network'],
+        ];
       }
       // Only a real TRUE is a charge. A real FALSE is a refusal; anything
       // else ("false", 1, [0]) is an answer that does not add up: the claim
       // stays, as the library does.
       if (($receipt['success'] ?? NULL) !== TRUE) {
         $reason = ($receipt['success'] ?? NULL) === FALSE ? (string) ($receipt['errorReason'] ?? 'settle_failed') : 'invalid_settle_response';
-        return ['success' => FALSE, 'errorReason' => $reason, 'transaction' => (string) ($receipt['transaction'] ?? ''), 'network' => $req['network']];
+        return [
+          'success' => FALSE,
+          'errorReason' => $reason,
+          'transaction' => (string) ($receipt['transaction'] ?? ''),
+          'network' => $req['network'],
+        ];
       }
-      return ['success' => TRUE, 'transaction' => $receipt['transaction'], 'network' => $receipt['network'] ?? $req['network'], 'payer' => $receipt['payer'] ?? NULL];
+      return [
+        'success' => TRUE,
+        'transaction' => $receipt['transaction'],
+        'network' => $receipt['network'] ?? $req['network'],
+        'payer' => $receipt['payer'] ?? NULL,
+      ];
     };
     $id = (int) $product->id();
     $middleware = new X402McpMiddleware(

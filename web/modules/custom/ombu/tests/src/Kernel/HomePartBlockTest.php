@@ -26,12 +26,18 @@ final class HomePartBlockTest extends CommerceKernelTestBase {
     'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
   ];
 
+  /**
+   * Block.
+   */
   private function block(string $part): array {
     return $this->container->get('plugin.manager.block')
       ->createInstance('ombu_home_part', ['part' => $part])
       ->build();
   }
 
+  /**
+   * Tests that the agents strip links the machine entry points.
+   */
   public function testTheAgentsStripLinksTheMachineEntryPoints(): void {
     $build = $this->block('agents');
     $this->assertSame('ombu_home_agents', $build['#theme']);
@@ -39,13 +45,19 @@ final class HomePartBlockTest extends CommerceKernelTestBase {
     $this->assertContains('ombu/home', $build['#attached']['library']);
   }
 
+  /**
+   * Tests that the hero leads to the market and to our sellers.
+   */
   public function testTheHeroLeadsToTheMarketAndToOurSellers(): void {
     $this->container->get('router.builder')->rebuild();
     $build = $this->block('hero');
     $this->assertSame('ombu_home_hero', $build['#theme']);
   }
 
-  public function testItIsAPartOfTheLayoutOfTheHomePage(): void {
+  /**
+   * Tests that it is a part of the layout of the home page.
+   */
+  public function testItIsPartOfTheLayoutOfTheHomePage(): void {
     $file = dirname(__DIR__, 7) . '/config/sync/core.entity_view_display.node.home.default.yml';
     $this->assertFileExists($file);
     $sections = Yaml::parseFile($file)['third_party_settings']['layout_builder']['sections'];

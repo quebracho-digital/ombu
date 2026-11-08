@@ -18,10 +18,13 @@ foreach ($titles as $lang => $title) {
   $values = ['title' => $title, 'status' => 1, 'path' => ['alias' => '/home', 'pathauto' => 0]];
   if (!$node) {
     $node = $nodes->create(['type' => 'home', 'uid' => 1, 'langcode' => $lang] + $values);
-    $entity = $node;
+    $node->save();
+    continue;
   }
-  elseif (!($entity = $node->hasTranslation($lang) ? $node->getTranslation($lang) : NULL)) {
-    $entity = $node->addTranslation($lang, $values);
+  $entity = $node->hasTranslation($lang) ? $node->getTranslation($lang) : $node->addTranslation($lang, $values);
+  // Save only what differs: each save is a revision.
+  if ($entity->label() === $title && $entity->isPublished() && ($entity->get('path')->alias ?? NULL) === '/home' && !$entity->isNew() && !$node->isNew()) {
+    continue;
   }
   foreach ($values as $field => $value) {
     $entity->set($field, $value);

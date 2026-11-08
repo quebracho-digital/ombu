@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Controller;
 
+use Drupal\ombu\Rating;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\comment\Entity\Comment;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\DependencyInjection\AutowireTrait;
@@ -25,6 +27,9 @@ final class ReviewController implements ContainerInjectionInterface {
 
   public function __construct(private readonly AccountProxyInterface $currentUser) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function __invoke(ProductInterface $commerce_product, Request $request): JsonResponse {
     $input = json_decode($request->getContent(), TRUE);
     if (!is_array($input)) {
@@ -51,7 +56,7 @@ final class ReviewController implements ContainerInjectionInterface {
     try {
       $review->save();
     }
-    catch (\Drupal\Core\Entity\EntityStorageException) {
+    catch (EntityStorageException) {
       // A parallel request saved this tx first (unique key, update 10018).
       return new JsonResponse(['errors' => ['field_tx_hash: That purchase already backs a review.']], 422);
     }
@@ -59,7 +64,7 @@ final class ReviewController implements ContainerInjectionInterface {
       'id' => (int) $review->id(),
       'url' => $review->toUrl('canonical', ['absolute' => TRUE])->toString(),
       'wallet' => $review->get('field_wallet')->value,
-      'rating' => \Drupal\ombu\Rating::of($commerce_product),
+      'rating' => Rating::of($commerce_product),
     ], 201);
   }
 

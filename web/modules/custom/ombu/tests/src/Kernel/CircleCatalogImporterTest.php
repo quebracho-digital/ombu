@@ -62,13 +62,19 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->installConfig(['commerce_product', 'comment', 'ombu']);
   }
 
+  /**
+   * Tests that it is an importer of its own source.
+   */
   public function testItIsAnImporterOfItsOwnSource(): void {
     $importer = new CircleCatalogImporter(new Client(), $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'));
     $this->assertInstanceOf(CatalogImporterInterface::class, $importer);
     $this->assertSame('circle', $importer->source());
   }
 
-  public function testAFullRunLeavesAnotherSourcesListingsAlone(): void {
+  /**
+   * Tests that a full run leaves another sources listings alone.
+   */
+  public function testFullRunLeavesAnotherSourcesListingsAlone(): void {
     $other = $this->ownListing([
       'title' => 'From another catalogue',
       'field_endpoint' => 'https://other.example/x',
@@ -84,7 +90,10 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(['bazaar'], array_column($other->get('field_markets')->getValue(), 'value'));
   }
 
-  public function testAListingCarriesItsProviderPaymentAndOperation(): void {
+  /**
+   * Tests that a listing carries its provider payment and operation.
+   */
+  public function testListingCarriesItsProviderPaymentAndOperation(): void {
     $this->import([$this->item('/v1/weather')]);
     $listing = $this->listing('/v1/weather');
 
@@ -101,6 +110,9 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertFalse((bool) $listing->get('field_retired')->value);
   }
 
+  /**
+   * Tests that every chain it is paid on whatever the scheme.
+   */
   public function testEveryChainItIsPaidOnWhateverTheScheme(): void {
     $item = $this->item('/v1/weather');
     // cspell:disable
@@ -120,12 +132,18 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame('0.001', (string) (float) $listing->get('variations')->entity->getPrice()->getNumber());
   }
 
+  /**
+   * Tests that one spec fetch per provider per run.
+   */
   public function testOneSpecFetchPerProviderPerRun(): void {
     $this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]);
     $this->assertSame(1, $this->fetches);
   }
 
-  public function testAnEditWithoutANewLastUpdatedStillUpdates(): void {
+  /**
+   * Tests that an edit without a new last updated still updates.
+   */
+  public function testAnEditWithoutNewLastUpdatedStillUpdates(): void {
     $this->import([$this->item('/v1/weather')]);
     $this->assertSame(['unchanged' => 1], array_filter($this->import([$this->item('/v1/weather')])));
 
@@ -135,6 +153,9 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame('Weather, edited', $this->listing('/v1/weather')->getTitle());
   }
 
+  /**
+   * Tests that what circle drops is retired and comes back.
+   */
   public function testWhatCircleDropsIsRetiredAndComesBack(): void {
     $this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]);
     $this->assertSame(1, $this->import([$this->item('/v1/weather')])['retired']);
@@ -147,7 +168,10 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertFalse((bool) $this->listing('/v1/forecast')->get('field_retired')->value);
   }
 
-  public function testADeletedListingIsNotImportedAgain(): void {
+  /**
+   * Tests that a deleted listing is not imported again.
+   */
+  public function testDeletedListingIsNotImportedAgain(): void {
     $this->import([$this->item('/v1/weather'), $this->item('/v1/forecast')]);
     // A takedown: staff delete it.
     $this->listing('/v1/forecast')->delete();
@@ -157,6 +181,9 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertCount(1, Product::loadMultiple());
   }
 
+  /**
+   * Tests that an unreachable spec leaves the listing without it.
+   */
   public function testAnUnreachableSpecLeavesTheListingWithoutIt(): void {
     $this->import([$this->item('/v1/weather')], spec: NULL);
     $listing = $this->listing('/v1/weather');
@@ -164,8 +191,15 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame('Example', $listing->get('field_provider_term')->entity->label());
   }
 
-  public function testAListingAddedByHandIsMarkedNeverOverwritten(): void {
-    $mine = $this->ownListing(['field_source' => 'third_party', 'field_endpoint' => 'https://api.example.com/v1/weather', 'field_http_method' => 'GET']);
+  /**
+   * Tests that a listing added by hand is marked never overwritten.
+   */
+  public function testListingAddedByHandIsMarkedNeverOverwritten(): void {
+    $mine = $this->ownListing([
+      'field_source' => 'third_party',
+      'field_endpoint' => 'https://api.example.com/v1/weather',
+      'field_http_method' => 'GET',
+    ]);
 
     $this->assertSame(['ours' => 1], array_filter($this->import([$this->item('/v1/weather')])));
     $mine = Product::load($mine->id());
@@ -179,6 +213,9 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertTrue(Product::load($mine->id())->get('field_markets')->isEmpty());
   }
 
+  /**
+   * Tests that our listing on circle is recognized by its url and pay to.
+   */
   public function testOurListingOnCircleIsRecognizedByItsUrlAndPayTo(): void {
     $ours = $this->ownListing(['field_seller_address' => '0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57']);
     $item = $this->item('/v1/weather');
@@ -193,7 +230,10 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(['created' => 1], array_filter($this->import([$item])));
   }
 
-  public function testAProviderGetsItsSiteIconOnce(): void {
+  /**
+   * Tests that a provider gets its site icon once.
+   */
+  public function testProviderGetsItsSiteIconOnce(): void {
     // A 1×1 PNG.
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
     $icon = fn() => new Response(200, ['Content-Type' => 'image/png'], $png);
@@ -233,7 +273,8 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
         'amount' => '1000',
         'payTo' => '0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57',
         'asset' => '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-      ]],
+      ],
+      ],
       'metadata' => [
         'provider' => [
           'name' => 'Example',

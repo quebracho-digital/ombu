@@ -95,8 +95,19 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
     }
   }
 
+  /**
+   * Reads every page of the catalogue and lists what it holds.
+   */
   private function doImport(int $max): array {
-    $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'ours' => 0, 'blocked' => 0, 'retired' => 0];
+    $counts = [
+      'created' => 0,
+      'updated' => 0,
+      'unchanged' => 0,
+      'skipped' => 0,
+      'ours' => 0,
+      'blocked' => 0,
+      'retired' => 0,
+    ];
     $this->specs = [];
     $this->onCircle = [];
     $seen = [];
@@ -142,6 +153,9 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
     $state->set(self::BLOCKED, [$key => TRUE] + $state->get(self::BLOCKED, []));
   }
 
+  /**
+   * The key of a resource: its method and URL.
+   */
   private function key(array $item): string {
     return strtoupper($item['metadata']['method'] ?? 'GET') . ' ' . $item['resource'];
   }
@@ -202,7 +216,10 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
     }
 
     // Arc first (the hackathon chain), then the cheapest offer.
-    usort($exact, fn($a, $b) => [!str_starts_with($a['network'], 'eip155:5042'), (int) $a['amount']] <=> [!str_starts_with($b['network'], 'eip155:5042'), (int) $b['amount']]);
+    usort($exact, fn($a, $b) => [
+      !str_starts_with($a['network'], 'eip155:5042'),
+      (int) $a['amount'],
+    ] <=> [!str_starts_with($b['network'], 'eip155:5042'), (int) $b['amount']]);
     $best = $exact[0];
     // ponytail: assumes every asset is USDC (6 decimals), true for the whole
     // catalogue today; read the decimals per asset if non-USDC listings appear.

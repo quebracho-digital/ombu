@@ -24,6 +24,9 @@ use Symfony\Component\HttpFoundation\Request;
 #[Group('ombu')]
 final class SellersRemoteTest extends TestCase {
 
+  /**
+   * Tests that checks go to the api and errors pass through.
+   */
   public function testChecksGoToTheApiAndErrorsPassThrough(): void {
     new Settings(['ombu_factcheck_api' => ['url' => 'http://checker:8088/', 'auth' => ['ombu', 'secret']]]);
     $sent = [];

@@ -93,7 +93,10 @@ final class ShareBlock extends BlockBase implements ContainerFactoryPluginInterf
       $filters = Share::marketQuery($this->requestStack->getCurrentRequest()?->query->all() ?? []);
       $url = Url::fromRoute($route, [], ['query' => $filters, 'absolute' => TRUE])->toString();
       $search = $filters['search'] ?? '';
-      return [$url, (string) ($search !== '' ? $this->t('Ombú market: @search', ['@search' => $search]) : $this->t('Ombú market'))];
+      return [
+        $url,
+        (string) ($search !== '' ? $this->t('Ombú market: @search', ['@search' => $search]) : $this->t('Ombú market')),
+      ];
     }
     return NULL;
   }
@@ -103,7 +106,11 @@ final class ShareBlock extends BlockBase implements ContainerFactoryPluginInterf
    */
   public function getCacheContexts(): array {
     // The /market subset is in the query; a page's address, in its path.
-    return Cache::mergeContexts(parent::getCacheContexts(), ['url.path', 'url.query_args', 'languages:language_interface']);
+    return Cache::mergeContexts(parent::getCacheContexts(), [
+      'url.path',
+      'url.query_args',
+      'languages:language_interface',
+    ]);
   }
 
   /**

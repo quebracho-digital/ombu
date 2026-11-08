@@ -28,7 +28,15 @@ class NameCheck {
   /**
    * What WHOIS servers say for a name nobody holds (.ar .cl .mx .de .co .io).
    */
-  private const WHOIS_FREE = ['no entries found', 'not found', 'no match', 'status: free', 'object_not_found', 'no data found', 'no se encuentra registrado'];
+  private const WHOIS_FREE = [
+    'no entries found',
+    'not found',
+    'no match',
+    'status: free',
+    'object_not_found',
+    'no data found',
+    'no se encuentra registrado',
+  ];
 
   /**
    * TLDs whose RDAP cannot be trusted: rdap.nic.ar hangs on some names
@@ -132,13 +140,28 @@ class NameCheck {
     return $servers;
   }
 
+  /**
+   * Asks a URL and returns the answer, or NULL when it fails.
+   */
   private function get(string $url): PromiseInterface {
-    return $this->http->requestAsync('GET', $url, ['http_errors' => FALSE, 'timeout' => 8, 'headers' => ['Accept' => 'application/rdap+json']]);
+    return $this->http->requestAsync('GET', $url, [
+      'http_errors' => FALSE,
+      'timeout' => 8,
+      'headers' => ['Accept' => 'application/rdap+json'],
+    ]);
   }
 
+  /**
+   * The registration answer of an RDAP server for a domain.
+   */
   private static function rdapResult(string $domain, array $settled): array {
     if ($settled['state'] !== 'fulfilled') {
-      return ['domain' => $domain, 'status' => 'unknown', 'source' => 'rdap', 'error' => self::reason($settled['reason'])];
+      return [
+        'domain' => $domain,
+        'status' => 'unknown',
+        'source' => 'rdap',
+        'error' => self::reason($settled['reason']),
+      ];
     }
     $response = $settled['value'];
     return match ($response->getStatusCode()) {
@@ -153,7 +176,12 @@ class NameCheck {
         }
         return ['domain' => $domain, 'status' => 'registered', 'expires' => $expires, 'source' => 'rdap'];
       })(),
-      default => ['domain' => $domain, 'status' => 'unknown', 'source' => 'rdap', 'error' => 'HTTP ' . $response->getStatusCode()],
+      default => [
+        'domain' => $domain,
+        'status' => 'unknown',
+        'source' => 'rdap',
+        'error' => 'HTTP ' . $response->getStatusCode(),
+      ],
     };
   }
 
@@ -169,7 +197,12 @@ class NameCheck {
         return ['domain' => $domain, 'status' => 'unknown', 'source' => 'none', 'error' => "There is no .$tld TLD."];
       }
       if (!$server) {
-        return ['domain' => $domain, 'status' => 'unknown', 'source' => 'none', 'error' => ".$tld has neither RDAP nor WHOIS: ask its registry."];
+        return [
+          'domain' => $domain,
+          'status' => 'unknown',
+          'source' => 'none',
+          'error' => ".$tld has neither RDAP nor WHOIS: ask its registry.",
+        ];
       }
       $text = self::whoisQuery($server, $domain);
       $status = self::whoisStatus($text);
@@ -183,6 +216,9 @@ class NameCheck {
     }
   }
 
+  /**
+   * Asks a WHOIS server about a domain.
+   */
   private static function whoisQuery(string $server, string $query): string {
     $socket = @fsockopen($server, 43, $errno, $error, 8);
     if (!$socket) {
@@ -209,11 +245,21 @@ class NameCheck {
     return $data ? 'registered' : 'unknown';
   }
 
+  /**
+   * Asks INPI Argentina about a trademark.
+   */
   private function inpiRequest(string $text, int $class): PromiseInterface {
     return $this->http->requestAsync('POST', self::INPI, [
       'form_params' => [
-        'Tipo_Resolucion' => '', 'Clase' => (string) $class, 'TipoBusquedaDenominacion' => '1', 'Denominacion' => $text,
-        'Titular' => '', 'TipoBusquedaTitular' => '0', 'vigentes' => 'false', 'limit' => self::MAX, 'offset' => 0,
+        'Tipo_Resolucion' => '',
+        'Clase' => (string) $class,
+        'TipoBusquedaDenominacion' => '1',
+        'Denominacion' => $text,
+        'Titular' => '',
+        'TipoBusquedaTitular' => '0',
+        'vigentes' => 'false',
+        'limit' => self::MAX,
+        'offset' => 0,
       ],
       'timeout' => 30,
     ]);
@@ -312,21 +358,34 @@ class NameCheck {
     $marks = array_values(array_filter($found['marks'], fn($m) => !$classes || in_array($m['class'], $classes, TRUE)));
     $live = array_values(array_filter($marks, fn($m) => $m['live']));
     usort($live, fn($a, $b) => [$a['class'], $a['id']] <=> [$b['class'], $b['id']]);
-    $out = ['found' => count($marks), 'live_count' => count($live), 'live' => array_map(fn($m) => array_diff_key($m, ['live' => 0]), $live)];
+    $out = [
+      'found' => count($marks),
+      'live_count' => count($live),
+      'live' => array_map(fn($m) => array_diff_key($m, ['live' => 0]), $live),
+    ];
     if ($found['total'] > count($found['marks'])) {
       $out['truncated'] = sprintf('%d marks match, %d read: try a longer text or fewer classes.', $found['total'], count($found['marks']));
     }
     return $out;
   }
 
+  /**
+   * The top-level domain of a name.
+   */
   private static function tld(string $domain): string {
     return substr($domain, strrpos($domain, '.') + 1);
   }
 
+  /**
+   * A name reduced to the letters and digits it is compared by.
+   */
   private static function clean(string $s): string {
     return trim(preg_replace('/\s+/u', ' ', $s));
   }
 
+  /**
+   * Why a check could not give an answer.
+   */
   private static function reason(mixed $e): string {
     return $e instanceof \Throwable ? $e->getMessage() : (string) $e;
   }

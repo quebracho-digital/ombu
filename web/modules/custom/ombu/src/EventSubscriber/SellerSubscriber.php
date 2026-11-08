@@ -27,6 +27,9 @@ final class SellerSubscriber implements EventSubscriberInterface {
 
   public function __construct(private readonly Sellers $sellers) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getSubscribedEvents(): array {
     return [
       PriceEvent::class => 'onPrice',
@@ -55,6 +58,9 @@ final class SellerSubscriber implements EventSubscriberInterface {
     }
   }
 
+  /**
+   * Sets the price an x402 request is charged from the seller's listing.
+   */
   public function onPrice(PriceEvent $event): void {
     if ($event->entity->hasField('field_retired') && $event->entity->get('field_retired')->value) {
       // Retired: still shown and reviewed, never sold.
@@ -84,12 +90,18 @@ final class SellerSubscriber implements EventSubscriberInterface {
     }
   }
 
+  /**
+   * Runs the seller once the payment is verified.
+   */
   public function onDelivery(DeliveryEvent $event): void {
     if ($service = $this->service($event->entity)) {
       $event->setResponse($this->sellers->deliver($service, $event->entity, $event->request));
     }
   }
 
+  /**
+   * The service a request asks for.
+   */
   private function service($entity): ?string {
     return $entity instanceof ProductInterface && $entity->hasField('field_service') ? ($entity->get('field_service')->value ?: NULL) : NULL;
   }

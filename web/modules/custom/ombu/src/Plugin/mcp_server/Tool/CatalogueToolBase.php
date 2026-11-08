@@ -21,6 +21,9 @@ abstract class CatalogueToolBase extends ToolPluginBase {
 
   protected EntityTypeManagerInterface $entityTypeManager;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     $tool = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $tool->catalogue = $container->get('class_resolver')->getInstanceFromDefinition(CatalogueController::class);
@@ -28,6 +31,9 @@ abstract class CatalogueToolBase extends ToolPluginBase {
     return $tool;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defaultConfiguration(): array {
     return ['enabled' => TRUE];
   }

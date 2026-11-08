@@ -29,6 +29,9 @@ final class SellForm extends FormBase {
     private readonly Connection $database,
   ) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container): static {
     return new static(
       class_exists(PageFetcher::class) ? new SellerProbe($container->get('http_client')) : NULL,
@@ -37,22 +40,54 @@ final class SellForm extends FormBase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getFormId(): string {
     return 'ombu_sell';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['intro'] = ['#markup' => '<p>' . $this->t('List a service you already sell over x402. Ombú reads its 402 for the price and the wallet it pays; that wallet must be one you signed in with. Buyers pay your endpoint directly, and the listing goes live once we approve it.') . '</p>'];
-    $form['endpoint'] = ['#type' => 'url', '#title' => $this->t('Endpoint'), '#required' => TRUE, '#description' => $this->t('The URL that answers 402 Payment Required.')];
-    $form['method'] = ['#type' => 'radios', '#title' => $this->t('Method'), '#options' => ['POST' => 'POST', 'GET' => 'GET'], '#default_value' => 'POST'];
-    $form['name'] = ['#type' => 'textfield', '#title' => $this->t('What it does'), '#required' => TRUE, '#maxlength' => 200];
+    $form['endpoint'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Endpoint'),
+      '#required' => TRUE,
+      '#description' => $this->t('The URL that answers 402 Payment Required.'),
+    ];
+    $form['method'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Method'),
+      '#options' => ['POST' => 'POST', 'GET' => 'GET'],
+      '#default_value' => 'POST',
+    ];
+    $form['name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('What it does'),
+      '#required' => TRUE,
+      '#maxlength' => 200,
+    ];
     $form['description'] = ['#type' => 'textarea', '#title' => $this->t('Description'), '#rows' => 3];
-    $form['provider'] = ['#type' => 'textfield', '#title' => $this->t('Seller name'), '#required' => TRUE, '#maxlength' => 100];
+    $form['provider'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Seller name'),
+      '#required' => TRUE,
+      '#maxlength' => 100,
+    ];
     $form['website'] = ['#type' => 'url', '#title' => $this->t('Website')];
-    $form['actions'] = ['#type' => 'actions', 'submit' => ['#type' => 'submit', '#value' => $this->t('Submit for approval')]];
+    $form['actions'] = [
+      '#type' => 'actions',
+      'submit' => ['#type' => 'submit', '#value' => $this->t('Submit for approval')],
+    ];
     return $form;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
     if (!$this->probe) {
       $form_state->setErrorByName('endpoint', $this->t('Listing is not available right now.'));
@@ -77,6 +112,9 @@ final class SellForm extends FormBase {
     $form_state->set('probed', [$resource, $accepts]);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     [$resource, $accepts] = $form_state->get('probed');
     $values = $form_state->getValues();
@@ -86,7 +124,11 @@ final class SellForm extends FormBase {
       'metadata' => [
         'method' => $values['method'],
         'description' => $values['name'],
-        'provider' => ['name' => $values['provider'], 'description' => $values['description'], 'website' => $values['website'] ?: NULL],
+        'provider' => [
+          'name' => $values['provider'],
+          'description' => $values['description'],
+          'website' => $values['website'] ?: NULL,
+        ],
       ],
     ], 'third_party');
     if ($outcome === 'exists') {
@@ -98,7 +140,10 @@ final class SellForm extends FormBase {
       $this->messenger()->addError($this->t('Its 402 offers no exact payment Ombú can list.'));
       return;
     }
-    $this->logger('ombu')->notice('Listing submitted for approval: @endpoint by @user.', ['@endpoint' => $resource, '@user' => $this->currentUser()->getAccountName()]);
+    $this->logger('ombu')->notice('Listing submitted for approval: @endpoint by @user.', [
+      '@endpoint' => $resource,
+      '@user' => $this->currentUser()->getAccountName(),
+    ]);
     $this->messenger()->addStatus($this->t('Submitted: it goes live once approved. You will find it under My listings.'));
     $form_state->setRedirect('view.my_listings.page_1');
   }

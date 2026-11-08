@@ -16,7 +16,7 @@ class ShareTest extends UnitTestCase {
   /**
    * @covers ::marketQuery
    */
-  public function testOnlyTheMarketsFiltersSurviveInAStableOrder(): void {
+  public function testOnlyTheMarketsFiltersSurviveInStableOrder(): void {
     $query = Share::marketQuery([
       'utm_source' => 'newsletter',
       'page' => '3',
@@ -33,8 +33,12 @@ class ShareTest extends UnitTestCase {
   /**
    * @covers ::marketQuery
    */
-  public function testAFilterValueIsNeverAnArrayOfArraysNorTooLong(): void {
-    $query = Share::marketQuery(['search' => str_repeat('a', 500), 'tag' => [['nested']], 'provider' => ['ok', ['nested']]]);
+  public function testFilterValueIsNeverAnArrayOfArraysNorTooLong(): void {
+    $query = Share::marketQuery([
+      'search' => str_repeat('a', 500),
+      'tag' => [['nested']],
+      'provider' => ['ok', ['nested']],
+    ]);
     $this->assertSame(200, mb_strlen($query['search']));
     $this->assertArrayNotHasKey('tag', $query);
     $this->assertSame(['ok'], $query['provider']);
@@ -63,7 +67,7 @@ class ShareTest extends UnitTestCase {
   /**
    * @covers ::links
    */
-  public function testALinkOnlyReachesTheNetworksHost(): void {
+  public function testLinkOnlyReachesTheNetworksHost(): void {
     $links = Share::links('https://ombu.example/blog/x', 'Title');
     $hosts = array_map(fn($h) => parse_url($h, PHP_URL_HOST), array_diff_key($links, ['email' => 1]));
     $this->assertSame(['bsky.app', 'mastodon.social', 'x.com', 'www.linkedin.com', 'wa.me', 't.me'], array_values($hosts));
@@ -72,7 +76,7 @@ class ShareTest extends UnitTestCase {
   /**
    * @covers ::description
    */
-  public function testADescriptionIsTextOnOneLineCutAtAWord(): void {
+  public function testDescriptionIsTextOnOneLineCutAtWord(): void {
     $this->assertSame('Hello & welcome to Ombú', Share::description("<p>Hello &amp; <b>welcome</b>\n to   Ombú</p><script>x()</script>"));
     $long = str_repeat('word ', 100);
     $description = Share::description($long, 50);

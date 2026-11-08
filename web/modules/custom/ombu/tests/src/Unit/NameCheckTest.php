@@ -24,6 +24,9 @@ use Symfony\Component\HttpFoundation\Request;
 #[Group('ombu')]
 final class NameCheckTest extends TestCase {
 
+  /**
+   * Tests that whois is free only when the registry says so.
+   */
   public function testWhoisIsFreeOnlyWhenTheRegistrySaysSo(): void {
     $this->assertSame('free', NameCheck::whoisStatus("El dominio no se encuentra registrado en NIC Argentina\n"));
     $this->assertSame('free', NameCheck::whoisStatus("Domain: x.de\nStatus: free\n"));
@@ -32,14 +35,48 @@ final class NameCheckTest extends TestCase {
     $this->assertSame('unknown', NameCheck::whoisStatus("% rate limited\n\n"));
   }
 
+  /**
+   * Tests that inpi statuses and live marks.
+   */
   public function testInpiStatusesAndLiveMarks(): void {
     $future = (time() + 86400) * 1000;
-    $found = NameCheck::inpiMarks(new Response(200, [], json_encode(['total' => 4, 'rows' => [
-      ['Acta' => 1, 'Clase' => 35, 'Denominacion' => 'SHUK', 'Titulares' => 'A', 'Estado' => 'C', 'Fecha_Vencimiento' => "/Date($future)/"],
-      ['Acta' => 2, 'Clase' => 35, 'Denominacion' => 'EL  SHUK', 'Titulares' => 'B', 'Estado' => NULL, 'Fecha_Vencimiento' => '/Date(-62135586000000)/'],
-      ['Acta' => 3, 'Clase' => 36, 'Denominacion' => 'SHUKO', 'Titulares' => 'C', 'Estado' => 'C', 'Fecha_Vencimiento' => '/Date(1000)/'],
-      ['Acta' => 4, 'Clase' => 42, 'Denominacion' => 'SHUKA', 'Titulares' => 'D', 'Estado' => 'A', 'Fecha_Vencimiento' => '/Date(-62135586000000)/'],
-    ]])));
+    $found = NameCheck::inpiMarks(new Response(200, [], json_encode([
+      'total' => 4,
+      'rows' => [
+      [
+        'Acta' => 1,
+        'Clase' => 35,
+        'Denominacion' => 'SHUK',
+        'Titulares' => 'A',
+        'Estado' => 'C',
+        'Fecha_Vencimiento' => "/Date($future)/",
+      ],
+      [
+        'Acta' => 2,
+        'Clase' => 35,
+        'Denominacion' => 'EL  SHUK',
+        'Titulares' => 'B',
+        'Estado' => NULL,
+        'Fecha_Vencimiento' => '/Date(-62135586000000)/',
+      ],
+      [
+        'Acta' => 3,
+        'Clase' => 36,
+        'Denominacion' => 'SHUKO',
+        'Titulares' => 'C',
+        'Estado' => 'C',
+        'Fecha_Vencimiento' => '/Date(1000)/',
+      ],
+      [
+        'Acta' => 4,
+        'Clase' => 42,
+        'Denominacion' => 'SHUKA',
+        'Titulares' => 'D',
+        'Estado' => 'A',
+        'Fecha_Vencimiento' => '/Date(-62135586000000)/',
+      ],
+      ],
+    ])));
     $this->assertSame(['granted', 'pending', 'granted, expired', 'abandoned'], array_column($found['marks'], 'status'));
     $summary = NameCheck::summary($found, [35, 42]);
     $this->assertSame(3, $summary['found']);
@@ -47,21 +84,53 @@ final class NameCheckTest extends TestCase {
     $this->assertArrayNotHasKey('truncated', $summary);
   }
 
+  /**
+   * Tests that uspto one row per class and says when truncated.
+   */
   public function testUsptoOneRowPerClassAndSaysWhenTruncated(): void {
-    $found = NameCheck::usptoMarks(new Response(200, [], json_encode(['hits' => ['totalValue' => 900, 'hits' => [
-      ['id' => '1', 'source' => ['wordmark' => 'THE SHUK MARKETPLACE', 'alive' => TRUE, 'registrationDate' => '2024-01-01', 'internationalClass' => ['IC 035', 'IC 042'], 'ownerName' => ['X LLC']]],
-      ['id' => '2', 'source' => ['wordmark' => 'OURSHUK', 'alive' => TRUE, 'registrationDate' => NULL, 'internationalClass' => ['IC 035'], 'ownerName' => ['Y']]],
-    ]]])));
+    $found = NameCheck::usptoMarks(new Response(200, [], json_encode([
+      'hits' => [
+        'totalValue' => 900,
+        'hits' => [
+      [
+        'id' => '1',
+        'source' => [
+          'wordmark' => 'THE SHUK MARKETPLACE',
+          'alive' => TRUE,
+          'registrationDate' => '2024-01-01',
+          'internationalClass' => ['IC 035', 'IC 042'],
+          'ownerName' => ['X LLC'],
+        ],
+      ],
+      [
+        'id' => '2',
+        'source' => [
+          'wordmark' => 'OURSHUK',
+          'alive' => TRUE,
+          'registrationDate' => NULL,
+          'internationalClass' => ['IC 035'],
+          'ownerName' => ['Y'],
+        ],
+      ],
+        ],
+      ],
+    ])));
     $this->assertSame([35, 42, 35], array_column($found['marks'], 'class'));
     $this->assertSame(['registered', 'registered', 'pending'], array_column($found['marks'], 'status'));
     $this->assertStringContainsString('900 marks match, 3 read', NameCheck::summary($found, [])['truncated']);
   }
 
-  public function testAChangedShapeFailsInsteadOfSayingNone(): void {
+  /**
+   * Tests that a changed shape fails instead of saying none.
+   */
+  public function testChangedShapeFailsInsteadOfSayingNone(): void {
     $this->expectException(\RuntimeException::class);
     NameCheck::usptoMarks(new Response(200, [], '{"results": []}'));
   }
 
+  /**
+   * Tests that the seller refuses bad input without calling out.
+   */
   public function testTheSellerRefusesBadInputWithoutCallingOut(): void {
     $sent = [];
     $stack = HandlerStack::create(new MockHandler([]));

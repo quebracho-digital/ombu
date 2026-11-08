@@ -24,4 +24,3 @@ settings:
   max_filesize: '20 MB'
   description_field: true
 field_type: file
-

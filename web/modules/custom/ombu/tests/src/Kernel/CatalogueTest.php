@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ombu\Kernel;
 
+use Mcp\Exception\ToolCallException;
+use Mcp\Server\ClientGateway;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Session\AccountInterface;
@@ -64,6 +66,9 @@ final class CatalogueTest extends CommerceKernelTestBase {
     \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')->indexItems();
   }
 
+  /**
+   * Tests that filters by name like market and counts every facet.
+   */
   public function testFiltersByNameLikeMarketAndCountsEveryFacet(): void {
     $page = $this->get('/market.json?category=INFRASTRUCTURE&payment[]=vanilla');
     $this->assertSame(['Gas'], $this->titles($page));
@@ -73,9 +78,12 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertSame(['Infrastructure' => 1, 'Web search research' => 1], $this->counts($page, 'category'));
   }
 
+  /**
+   * Tests that mcp tools answer like the catalogue.
+   */
   public function testMcpToolsAnswerLikeTheCatalogue(): void {
     $manager = \Drupal::service('plugin.manager.mcp_server.tool');
-    $gateway = $this->createMock(\Mcp\Server\ClientGateway::class);
+    $gateway = $this->createMock(ClientGateway::class);
     $search = $manager->createInstance('ombu_search_services')
       ->execute(['search' => 'Captcha', 'category' => 'INFRASTRUCTURE'], $gateway);
     $this->assertSame(['Captcha'], array_column(array_column($search["items"], "metadata"), "description"));
@@ -83,11 +91,14 @@ final class CatalogueTest extends CommerceKernelTestBase {
 
     $one = $manager->createInstance('ombu_get_service')->execute(['id' => 2], $gateway);
     $this->assertSame('Captcha', $one['metadata']['description']);
-    $this->expectException(\Mcp\Exception\ToolCallException::class);
+    $this->expectException(ToolCallException::class);
     $manager->createInstance('ombu_get_service')->execute(['id' => 999], $gateway);
   }
 
-  public function testARoleThatCannotViewListingsDoesNotFindThem(): void {
+  /**
+   * Tests that a role that cannot view listings does not find them.
+   */
+  public function testRoleThatCannotViewListingsDoesNotFindThem(): void {
     $this->assertNotEmpty($this->titles($this->get('/market.json')));
     // The index keeps who may view each item (role_access): take the
     // permission away, index again, and the search finds nothing.
@@ -100,11 +111,17 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertSame([], $this->titles($this->get('/market.json')));
   }
 
+  /**
+   * Tests that several values match any of them.
+   */
   public function testSeveralValuesMatchAnyOfThem(): void {
     $this->assertSame(['Captcha', 'Gas', 'Weather'], $this->titles($this->get('/market.json?provider=Example,Sponge')));
     $this->assertSame(['Captcha', 'Gas', 'Weather'], $this->titles($this->get('/market.json?provider[]=Example&provider[]=Sponge')));
   }
 
+  /**
+   * Tests that each facet value links to the narrower search.
+   */
   public function testEachFacetValueLinksToTheNarrowerSearch(): void {
     $page = $this->get('/market.json?payment=vanilla');
     $arc = array_values(array_filter($page['facets']['network'], fn($v) => $v['value'] === 'eip155:5042'))[0];
@@ -113,6 +130,9 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertStringContainsString('/market?payment=vanilla', urldecode($page['links']['html']));
   }
 
+  /**
+   * Tests that the open api lists what the filters hold.
+   */
   public function testTheOpenApiListsWhatTheFiltersHold(): void {
     $spec = $this->get('/openapi.json');
     $parameters = array_column($spec['paths']['/market.json']['get']['parameters'], NULL, 'name');
@@ -121,9 +141,15 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertContains('eip155:5042', $parameters['network']['schema']['items']['enum']);
   }
 
+  /**
+   * Tests that well known x402 lists only our paid operations.
+   */
   public function testWellKnownX402ListsOnlyOurPaidOperations(): void {
     $ours = Product::create([
-      'type' => 'listing', 'title' => 'Mine', 'stores' => [$this->store], 'field_source' => 'ours',
+      'type' => 'listing',
+      'title' => 'Mine',
+      'stores' => [$this->store],
+      'field_source' => 'ours',
       'field_x402_price' => ['enabled' => 1, 'amount' => '0.01'],
     ]);
     $ours->save();
@@ -133,11 +159,17 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertStringEndsWith("/x402/commerce_product/{$ours->id()}/full", $page['resources'][0]);
   }
 
+  /**
+   * Tests that retired only when asked.
+   */
   public function testRetiredOnlyWhenAsked(): void {
     $this->assertNotContains('Gone', $this->titles($this->get('/market.json')));
     $this->assertContains('Gone', $this->titles($this->get('/market.json?retired=1')));
   }
 
+  /**
+   * Tests that the same search as markdown for agents that read pages.
+   */
   public function testTheSameSearchAsMarkdownForAgentsThatReadPages(): void {
     $this->listing('Evil](https://evil.example) <b>\\', 'Infrastructure', 'https://evil.example/x', ['vanilla'], 'eip155:8453');
     \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')->indexItems();
@@ -163,6 +195,9 @@ final class CatalogueTest extends CommerceKernelTestBase {
     }
   }
 
+  /**
+   * Tests that links go to markdown only where the reader may go.
+   */
   public function testLinksGoToMarkdownOnlyWhereTheReaderMayGo(): void {
     $this->container->get('current_user')->setAccount(new AnonymousUserSession());
     // As on the site: the front page is the market.
@@ -181,13 +216,19 @@ final class CatalogueTest extends CommerceKernelTestBase {
       . " [c](/product/$hidden) [d](/admin/config) [e](https://elsewhere.example/product/$seen)"
       . " [f](/market.md) [g](/product/$seen.md) [h](/market.md?search=a) [i](//elsewhere.example/x)", $response->getContent());
     // What was paid for, or a file, is left as it was.
-    foreach ([new Response($md, 200, ['Content-Type' => 'text/markdown', PaymentHeaders::RESPONSE => 'x']), new BinaryFileResponse(__FILE__, 200, ['Content-Type' => 'text/markdown'])] as $response) {
+    foreach ([
+      new Response($md, 200, ['Content-Type' => 'text/markdown', PaymentHeaders::RESPONSE => 'x']),
+      new BinaryFileResponse(__FILE__, 200, ['Content-Type' => 'text/markdown']),
+    ] as $response) {
       $event = new ResponseEvent($this->container->get('http_kernel'), Request::create('/terms.md'), HttpKernelInterface::MAIN_REQUEST, $response);
       $this->container->get('ombu.markdown_navigation_subscriber')->onResponse($event);
       $this->assertSame($response instanceof BinaryFileResponse ? FALSE : $md, $response->getContent());
     }
   }
 
+  /**
+   * Tests that links keep their language.
+   */
   public function testLinksKeepTheirLanguage(): void {
     $this->installConfig(['language']);
     ConfigurableLanguage::createFromLangcode('es')->save();
@@ -202,6 +243,9 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $this->assertStringEndsWith("[a](/es/product/$seen.md) [b](/es/market.md) [c](/es/market.md?search=a)", $response->getContent());
   }
 
+  /**
+   * Tests that the footer renders on pages without markdown.
+   */
   public function testTheFooterRendersOnPagesWithoutMarkdown(): void {
     $this->enableModules(['llms_txt']);
     \Drupal::service('router.builder')->rebuild();
@@ -234,7 +278,10 @@ final class CatalogueTest extends CommerceKernelTestBase {
    * A term by name, created once.
    */
   private function term(string $vid, string $name): int {
-    $found = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['vid' => $vid, 'name' => $name]);
+    $found = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties([
+      'vid' => $vid,
+      'name' => $name,
+    ]);
     $term = $found ? reset($found) : Term::create(['vid' => $vid, 'name' => $name]);
     $term->save();
     return (int) $term->id();

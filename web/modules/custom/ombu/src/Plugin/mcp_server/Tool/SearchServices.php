@@ -34,10 +34,19 @@ use Symfony\Component\HttpFoundation\Request;
 )]
 final class SearchServices extends CatalogueToolBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $arguments += ['limit' => 10];
     $arguments['limit'] = min(50, (int) $arguments['limit']);
-    $request = Request::create('/market.json', 'GET', array_filter(array_intersect_key($arguments, array_flip(['search', 'category', 'network', 'limit', 'offset'])), fn($v) => $v !== '' && $v !== NULL));
+    $request = Request::create('/market.json', 'GET', array_filter(array_intersect_key($arguments, array_flip([
+      'search',
+      'category',
+      'network',
+      'limit',
+      'offset',
+    ])), fn($v) => $v !== '' && $v !== NULL));
     $search = $this->catalogue->search($request);
     return [
       'items' => array_map(fn($p) => $this->catalogue->item($p, $request), $search['products']),

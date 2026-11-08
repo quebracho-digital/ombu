@@ -34,7 +34,7 @@ class Sellers {
   /**
    * Characters past which a terms analysis goes to the long-documents model.
    *
-   * ponytail: a fixed size, ~45 s on the local model; measure if it misses.
+   * Ponytail: a fixed size, ~45 s on the local model; measure if it misses.
    */
   public const LONG_TERMS = 20000;
 
@@ -104,6 +104,9 @@ class Sellers {
     return $this->address($listing) ?? $this->seller($listing)?->address();
   }
 
+  /**
+   * Runs a paid seller and returns what it answers.
+   */
   public function deliver(string $service, ProductInterface $listing, Request $request): Response {
     $input = json_decode($request->getContent(), TRUE);
     $input = is_array($input) ? $input : [];
@@ -134,7 +137,11 @@ class Sellers {
   private function ping(ProductInterface $listing): Response {
     $seller = $this->seller($listing) ?? throw new \RuntimeException('No seller key.');
     $time = gmdate('Y-m-d\TH:i:s\Z');
-    return new JsonResponse(['time' => $time, 'signer' => $seller->address(), 'signature' => $seller->sign(Eip712::keccak($time))]);
+    return new JsonResponse([
+      'time' => $time,
+      'signer' => $seller->address(),
+      'signature' => $seller->sign(Eip712::keccak($time)),
+    ]);
   }
 
   /**
@@ -167,7 +174,11 @@ class Sellers {
       'hard_break' => TRUE,
       'header_style' => 'atx',
     ]);
-    return ['title' => $title ?: NULL, 'markdown' => trim($converter->convert($html)), 'links' => self::navigationLinks($html, $base)];
+    return [
+      'title' => $title ?: NULL,
+      'markdown' => trim($converter->convert($html)),
+      'links' => self::navigationLinks($html, $base),
+    ];
   }
 
   /**

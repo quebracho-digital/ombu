@@ -14,6 +14,9 @@ use PHPUnit\Framework\Attributes\Group;
 #[Group('ombu')]
 final class PageToMarkdownTest extends UnitTestCase {
 
+  /**
+   * Tests that the title apart and only the content.
+   */
   public function testTheTitleApartAndOnlyTheContent(): void {
     $html = '<!doctype html><html><head><title>Example Domain</title><style>body{}</style></head><body>'
       . '<header><nav><a href="/">Home</a></nav></header><main><h1>Hello</h1><p>One <strong>bold</strong> line.</p></main>'
@@ -23,6 +26,9 @@ final class PageToMarkdownTest extends UnitTestCase {
     $this->assertSame("# Hello\n\nOne **bold** line.", $page['markdown']);
   }
 
+  /**
+   * Tests that the links around the content are kept apart.
+   */
   public function testTheLinksAroundTheContentAreKeptApart(): void {
     $html = '<header><a href="/">Home</a></header><main><a href="/in-content">Inside</a></main>'
       . '<footer><a href="/legal/terms">Terms of use</a> <a href="//cdn.example.com/privacy">Privacy</a>'
@@ -34,14 +40,23 @@ final class PageToMarkdownTest extends UnitTestCase {
     ], Sellers::pageToMarkdown($html, 'https://example.com/es/home')['links']);
   }
 
-  public function testAPageWithoutTitle(): void {
+  /**
+   * Tests that a page without title.
+   */
+  public function testPageWithoutTitle(): void {
     $this->assertSame(['title' => NULL, 'markdown' => 'Just text.', 'links' => []], Sellers::pageToMarkdown('<p>Just text.</p>'));
   }
 
-  public function testAFactCheckSaysWhenTheModelJudgedAlone(): void {
+  /**
+   * Tests that a fact check says when the model judged alone.
+   */
+  public function testFactCheckSaysWhenTheModelJudgedAlone(): void {
     $alone = ['score' => 1.0, 'claims' => [['claim' => 'x', 'verdict' => 'SUPPORTED', 'coverage' => []]]];
     $this->assertSame('model_only', Sellers::factcheckAnswer($alone)['evidence']);
-    $sourced = ['score' => 1.0, 'claims' => [['claim' => 'x', 'verdict' => 'SUPPORTED', 'coverage' => ['sources' => 3]]]];
+    $sourced = [
+      'score' => 1.0,
+      'claims' => [['claim' => 'x', 'verdict' => 'SUPPORTED', 'coverage' => ['sources' => 3]]],
+    ];
     $this->assertSame('web', Sellers::factcheckAnswer($sourced)['evidence']);
   }
 

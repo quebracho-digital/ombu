@@ -17,13 +17,14 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * The blog's list as markdown: published posts only, and only when asked.
- *
  */
 #[Group('ombu')]
 #[RunTestsInSeparateProcesses]
 final class BlogMarkdownTest extends CommerceKernelTestBase {
 
-  // The same set CatalogueTest needs to load ombu, plus the node type the blog uses.
+  /**
+   * The same set CatalogueTest needs to load ombu, plus the node type the blog uses.
+   */
   protected static $modules = [
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
@@ -32,6 +33,9 @@ final class BlogMarkdownTest extends CommerceKernelTestBase {
     'node', 'datetime', 'path', 'path_alias',
   ];
 
+  /**
+   * Set up.
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('node');
@@ -55,7 +59,11 @@ final class BlogMarkdownTest extends CommerceKernelTestBase {
       'title' => $title,
       'status' => $published ? 1 : 0,
       'created' => $created ?: \Drupal::time()->getRequestTime(),
-      'body' => ['value' => '<p>The first paragraph of ' . $title . '.</p>', 'summary' => $summary, 'format' => 'basic_html'],
+      'body' => [
+        'value' => '<p>The first paragraph of ' . $title . '.</p>',
+        'summary' => $summary,
+        'format' => 'basic_html',
+      ],
     ]);
     $node->save();
   }

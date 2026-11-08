@@ -46,6 +46,9 @@ final class SellerPageHooks {
       ->addCacheTags(['commerce_product_list']);
   }
 
+  /**
+   * Shows who answers for a listing on its page.
+   */
   #[Hook('user_view')]
   public function view(array &$build, UserInterface $account, EntityViewDisplayInterface $display, string $view_mode): void {
     if ($view_mode !== 'full' || !($ids = $this->verifier->listingsOf((int) $account->id()))) {
@@ -71,7 +74,12 @@ final class SellerPageHooks {
     $wallets = array_map(function (string $w) use ($evm, $solana) {
       $explorer = X402PriceItem::isSolanaAddress($w) ? $solana : $evm;
       return $explorer
-        ? ['#type' => 'link', '#title' => substr($w, 0, 6) . '…' . substr($w, -4), '#url' => Url::fromUri(sprintf($explorer, $w)), '#attributes' => ['title' => $w]]
+        ? [
+          '#type' => 'link',
+          '#title' => substr($w, 0, 6) . '…' . substr($w, -4),
+          '#url' => Url::fromUri(sprintf($explorer, $w)),
+          '#attributes' => ['title' => $w],
+        ]
         : ['#plain_text' => $w];
     }, $this->verifier->wallets((int) $account->id()));
     $build['ombu_wallets'] = [

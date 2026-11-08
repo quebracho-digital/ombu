@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Hook;
 
+use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -32,6 +33,7 @@ final class MetatagHooks {
   public function __construct(
     private readonly RouteMatchInterface $routeMatch,
     private readonly RequestStack $requestStack,
+    private readonly ExtensionPathResolver $paths,
   ) {}
 
   /**
@@ -145,7 +147,7 @@ final class MetatagHooks {
       // Already absolute: the networks fetch it from outside.
       return $file->createFileUrl(FALSE);
     }
-    $path = \Drupal::service('extension.path.resolver')->getPath('module', 'ombu') . '/' . self::DEFAULT_IMAGE;
+    $path = $this->paths->getPath('module', 'ombu') . '/' . self::DEFAULT_IMAGE;
     return Url::fromUri('base:' . $path, ['absolute' => TRUE])->toString();
   }
 

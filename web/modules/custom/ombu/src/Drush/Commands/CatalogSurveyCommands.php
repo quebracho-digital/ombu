@@ -107,7 +107,7 @@ final class CatalogSurveyCommands extends DrushCommands {
   private function check(array $item, string $url, ResourceVerifier $verifier): string {
     $method = strtoupper((string) ($item['extensions']['bazaar']['info']['input']['method']
       ?? $item['accepts'][0]['outputSchema']['input']['method'] ?? 'GET'));
-    $report = $verifier->verify($url, $method, $item['accepts'] ?? [], ResourceVerifierFactory::networks());
+    $report = $verifier->verify($url, $method, $item['accepts'] ?? [], ResourceVerifierFactory::assets());
     if ($report['verdict'] === ResourceVerifier::PASS) {
       // The importers' own rule: some USDC has come in to payTo.
       return ($report['activity'] ?? 0) >= 1 ? 'importable' : 'inactive: no incoming USDC';

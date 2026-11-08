@@ -32,6 +32,9 @@ use Symfony\Component\HttpFoundation\Request;
 )]
 final class GetService extends CatalogueToolBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public function execute(array $arguments, ClientGateway $gateway): mixed {
     $product = $this->entityTypeManager->getStorage('commerce_product')->load((int) ($arguments['id'] ?? 0));
     // Only what anonymous sees on /market: published listings.

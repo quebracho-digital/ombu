@@ -17,6 +17,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class ShareBlockTest extends UnitTestCase {
 
+  /**
+   * Block.
+   */
   private function block(string $route, ?string $param = NULL, ?string $bundle = NULL): ShareBlock {
     $routeMatch = $this->createMock(RouteMatchInterface::class);
     $routeMatch->method('getRouteName')->willReturn($route);
@@ -37,8 +40,11 @@ class ShareBlockTest extends UnitTestCase {
   /**
    * @covers ::build
    */
-  public function testABlogPostAndAListingAreShared(): void {
-    foreach ([['entity.node.canonical', 'node', 'blog'], ['entity.commerce_product.canonical', 'commerce_product', 'listing']] as [$route, $param, $bundle]) {
+  public function testBlogPostAndListingAreShared(): void {
+    foreach ([
+      ['entity.node.canonical', 'node', 'blog'],
+      ['entity.commerce_product.canonical', 'commerce_product', 'listing'],
+    ] as [$route, $param, $bundle]) {
       $build = $this->block($route, $param, $bundle)->build();
       $this->assertSame('ombu_share', $build['#theme'], $route);
       $this->assertSame('https://ombu.example/thing', $build['#url']);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ombu\Kernel;
 
+use Drupal\ombu\Rating;
 use Drupal\comment\Entity\Comment;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -64,10 +65,16 @@ final class ReviewsTest extends CommerceKernelTestBase {
    * An HTTP client that answers eth_getTransactionReceipt from self::$chain.
    */
   public static function chain(): Client {
-    return new Client(['handler' => function (RequestInterface $request) {
-      $tx = json_decode((string) $request->getBody(), TRUE)['params'][0];
-      return Create::promiseFor(new Response(200, [], json_encode(['jsonrpc' => '2.0', 'id' => 1, 'result' => self::$chain[$tx] ?? NULL])));
-    }]);
+    return new Client([
+      'handler' => function (RequestInterface $request) {
+        $tx = json_decode((string) $request->getBody(), TRUE)['params'][0];
+        return Create::promiseFor(new Response(200, [], json_encode([
+          'jsonrpc' => '2.0',
+          'id' => 1,
+          'result' => self::$chain[$tx] ?? NULL,
+        ])));
+      },
+    ]);
   }
 
   /**
@@ -88,44 +95,88 @@ final class ReviewsTest extends CommerceKernelTestBase {
       'title' => 'Markdown',
       'stores' => [$this->store],
       'field_source' => 'circle',
-      'field_accepts' => json_encode([['scheme' => 'exact', 'network' => 'eip155:5042002', 'asset' => self::ASSET, 'payTo' => self::SELLER, 'amount' => '1000']]),
+      'field_accepts' => json_encode([
+        [
+          'scheme' => 'exact',
+          'network' => 'eip155:5042002',
+          'asset' => self::ASSET,
+          'payTo' => self::SELLER,
+          'amount' => '1000',
+        ],
+      ]),
     ]);
     $this->listing->save();
     $this->buyer = $this->createUser(['post comments', 'skip comment approval', 'view commerce_product']);
     // Reviews are written signed in: the listing is checked as theirs to see.
     $this->setCurrentUser($this->buyer);
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => self::BUYER, 'uid' => $this->buyer->id(), 'created' => time()])->execute();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'eip155',
+      'address' => self::BUYER,
+      'uid' => $this->buyer->id(),
+      'created' => time(),
+    ])->execute();
   }
 
-  public function testAPurchaseFromTheReviewersWalletIsAcceptedAndCounted(): void {
+  /**
+   * Tests that a purchase from the reviewers wallet is accepted and counted.
+   */
+  public function testPurchaseFromTheReviewersWalletIsAcceptedAndCounted(): void {
     $tx = $this->paid(self::BUYER, self::SELLER);
     $review = $this->review($tx, 4);
     $this->assertCount(0, $review->validate());
     $review->save();
     $this->assertSame(self::BUYER, $review->get('field_wallet')->value);
-    $this->assertSame(['average' => 4.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
+    $this->assertSame(['average' => 4.0, 'count' => 1], Rating::of($this->listing));
     $this->assertSame("https://testnet.arcscan.app/tx/$tx", $this->container->get('ombu.review_verifier')->explorerUrl($this->listing, $tx));
   }
 
-  public function testASolanaPurchaseIsCheckedOnSolana(): void {
+  /**
+   * Tests that a solana purchase is checked on solana.
+   */
+  public function testSolanaPurchaseIsCheckedOnSolana(): void {
     // cspell:disable
-    [$devnet, $usdc, $seller, $buyer] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'E89CVpe2pUDYGDk1EzK4oYrubi419Vb5WAEfxuAuTqCL'];
+    [
+      $devnet,
+      $usdc,
+      $seller,
+      $buyer,
+    ] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'E89CVpe2pUDYGDk1EzK4oYrubi419Vb5WAEfxuAuTqCL'];
     $tx = '5VERv8NMvzbJMEkV8xnrLkEaWRtSz9CosKDYjCJjBRnbJLgp8uirBgmQpjKhoR4tjF3ZpRzrFmBV6UjKdiSZkQUW';
     // cspell:enable
-    $this->listing->set('field_accepts', json_encode([['scheme' => 'exact', 'network' => $devnet, 'asset' => $usdc, 'payTo' => $seller, 'amount' => '1000']]))->save();
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $buyer, 'uid' => $this->buyer->id(), 'created' => time()])->execute();
+    $this->listing->set('field_accepts', json_encode([
+      ['scheme' => 'exact', 'network' => $devnet, 'asset' => $usdc, 'payTo' => $seller, 'amount' => '1000'],
+    ]))->save();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'solana',
+      'address' => $buyer,
+      'uid' => $this->buyer->id(),
+      'created' => time(),
+    ])->execute();
     // getTransaction, jsonParsed: the buyer's TransferChecked into the
     // seller's USDC account.
-    self::$chain[$tx] = ['meta' => ['err' => NULL], 'transaction' => ['message' => ['instructions' => [
+    self::$chain[$tx] = [
+      'meta' => ['err' => NULL],
+      'transaction' => [
+        'message' => [
+          'instructions' => [
       ['program' => 'spl-memo', 'parsed' => 'a nonce'],
-      ['program' => 'spl-token', 'parsed' => ['type' => 'transferChecked', 'info' => [
-        'authority' => $buyer,
-        'destination' => Solana::ata($seller, $usdc),
-        'mint' => $usdc,
-        'source' => Solana::ata($buyer, $usdc),
-        'tokenAmount' => ['amount' => '1000', 'decimals' => 6],
-      ]]],
-    ]]]];
+      [
+        'program' => 'spl-token',
+        'parsed' => [
+          'type' => 'transferChecked',
+          'info' => [
+            'authority' => $buyer,
+            'destination' => Solana::ata($seller, $usdc),
+            'mint' => $usdc,
+            'source' => Solana::ata($buyer, $usdc),
+            'tokenAmount' => ['amount' => '1000', 'decimals' => 6],
+          ],
+        ],
+      ],
+          ],
+        ],
+      ],
+    ];
 
     $review = $this->review($tx, 5);
     $this->assertCount(0, $review->validate());
@@ -137,15 +188,24 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertRefused(strrev($tx), 'No such transaction on Solana devnet');
   }
 
-  public function testAPaymentToAnotherWalletIsRefused(): void {
+  /**
+   * Tests that a payment to another wallet is refused.
+   */
+  public function testPaymentToAnotherWalletIsRefused(): void {
     $this->assertRefused($this->paid(self::BUYER, self::OTHER), 'pays no USDC from your wallets to this listing');
   }
 
+  /**
+   * Tests that someone elses purchase is refused.
+   */
   public function testSomeoneElsesPurchaseIsRefused(): void {
     $this->assertRefused($this->paid(self::STRANGER, self::SELLER), 'pays no USDC from your wallets to this listing');
   }
 
-  public function testASavedReviewIsNotEditableEvenByAnAdmin(): void {
+  /**
+   * Tests that a saved review is not editable even by an admin.
+   */
+  public function testSavedReviewIsNotEditableEvenByAnAdmin(): void {
     $review = $this->review($this->paid(self::BUYER, self::SELLER), 4);
     $this->assertTrue($review->get('comment_body')->access('edit', $this->buyer));
     $review->save();
@@ -156,31 +216,46 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertTrue($review->get('status')->access('edit', $admin));
   }
 
+  /**
+   * Tests that less than the price is refused.
+   */
   public function testLessThanThePriceIsRefused(): void {
     $this->assertRefused($this->paid(self::BUYER, self::SELLER, amount: 1), 'less than its price');
   }
 
-  public function testAFailedOrUnknownTransactionIsRefused(): void {
+  /**
+   * Tests that a failed or unknown transaction is refused.
+   */
+  public function testFailedOrUnknownTransactionIsRefused(): void {
     $failed = $this->paid(self::BUYER, self::SELLER, status: '0x0');
     $this->assertRefused($failed, 'failed on chain');
     $this->assertRefused('0x' . str_repeat('ab', 32), 'No such transaction');
     $this->assertRefused('', 'needs a purchase');
   }
 
+  /**
+   * Tests that one purchase backs one review.
+   */
   public function testOnePurchaseBacksOneReview(): void {
     $tx = $this->paid(self::BUYER, self::SELLER);
     $this->review($tx, 5)->save();
     $this->assertRefused($tx, 'already backs a review');
   }
 
-  public function testAReviewSavedWithoutTheCheckIsNotCounted(): void {
+  /**
+   * Tests that a review saved without the check is not counted.
+   */
+  public function testReviewSavedWithoutTheCheckIsNotCounted(): void {
     $this->review($this->paid(self::BUYER, self::SELLER), 5)->save();
     // Programmatic saves skip validation: the wallet stays empty and the
     // review is kept, but the average ignores it.
     $this->review($this->paid(self::BUYER, self::OTHER), 1)->save();
-    $this->assertSame(['average' => 5.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
+    $this->assertSame(['average' => 5.0, 'count' => 1], Rating::of($this->listing));
   }
 
+  /**
+   * Tests that the seller edits only their fields of their listing.
+   */
   public function testTheSellerEditsOnlyTheirFieldsOfTheirListing(): void {
     $seller = $this->seller();
     $this->assertTrue($this->listing->access('update', $seller));
@@ -193,16 +268,30 @@ final class ReviewsTest extends CommerceKernelTestBase {
     }
   }
 
+  /**
+   * Tests that the seller finds their listing by the wallet of any chain.
+   */
   public function testTheSellerFindsTheirListingByTheWalletOfAnyChain(): void {
     // cspell:disable-next-line
     $solana = '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU';
     $accepts = json_decode($this->listing->get('field_accepts')->value, TRUE);
-    $accepts[] = ['scheme' => 'exact', 'network' => 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', 'asset' => 'x', 'payTo' => $solana, 'amount' => '1000'];
+    $accepts[] = [
+      'scheme' => 'exact',
+      'network' => 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1',
+      'asset' => 'x',
+      'payTo' => $solana,
+      'amount' => '1000',
+    ];
     $this->listing->set('field_accepts', json_encode($accepts))->save();
     $verifier = $this->container->get('ombu.review_verifier');
     foreach ([$solana => [(int) $this->listing->id()], strtolower($solana) => []] as $wallet => $expected) {
       $seller = $this->createUser();
-      \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $wallet, 'uid' => $seller->id(), 'created' => time()])->execute();
+      \Drupal::database()->insert('wallet_auth_wallet')->fields([
+        'namespace' => 'solana',
+        'address' => $wallet,
+        'uid' => $seller->id(),
+        'created' => time(),
+      ])->execute();
       // Base58 is exact: another case is someone else.
       $this->assertSame($expected, $verifier->listingsOf((int) $seller->id()), $wallet);
       // The table's key ignores case: one of the two at a time.
@@ -210,7 +299,10 @@ final class ReviewsTest extends CommerceKernelTestBase {
     }
   }
 
-  public function testInATranslationTheSellerAlsoWordsTitleAndDescription(): void {
+  /**
+   * Tests that in a translation the seller also words title and description.
+   */
+  public function testInTranslationTheSellerAlsoWordsTitleAndDescription(): void {
     $seller = $this->seller();
     $this->installConfig(['language']);
     ConfigurableLanguage::createFromLangcode('es')->save();
@@ -226,7 +318,10 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertFalse($this->listing->get('title')->access('edit', $seller));
   }
 
-  public function testOnlyTheSellerRepliesAndAReplyIsNotCounted(): void {
+  /**
+   * Tests that only the seller replies and a reply is not counted.
+   */
+  public function testOnlyTheSellerRepliesAndReplyIsNotCounted(): void {
     $review = $this->review($this->paid(self::BUYER, self::SELLER), 2);
     $review->save();
     $reply = fn($uid) => Comment::create([
@@ -247,7 +342,7 @@ final class ReviewsTest extends CommerceKernelTestBase {
     $this->assertCount(0, $answer->validate());
     $answer->save();
     $this->assertSame('seller', $answer->get('field_reviewer_kind')->value);
-    $this->assertSame(['average' => 2.0, 'count' => 1], \Drupal\ombu\Rating::of($this->listing));
+    $this->assertSame(['average' => 2.0, 'count' => 1], Rating::of($this->listing));
   }
 
   /**
@@ -255,7 +350,12 @@ final class ReviewsTest extends CommerceKernelTestBase {
    */
   private function seller(): User {
     $seller = $this->createUser(['post comments', 'skip comment approval', 'view commerce_product']);
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => self::SELLER, 'uid' => $seller->id(), 'created' => time()])->execute();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'eip155',
+      'address' => self::SELLER,
+      'uid' => $seller->id(),
+      'created' => time(),
+    ])->execute();
     return $seller;
   }
 
@@ -265,11 +365,15 @@ final class ReviewsTest extends CommerceKernelTestBase {
   private function paid(string $from, string $to, string $status = '0x1', int $amount = 1000): string {
     $tx = '0x' . bin2hex(random_bytes(32));
     $topic = fn(string $address) => '0x' . str_repeat('0', 24) . substr($address, 2);
-    self::$chain[$tx] = ['status' => $status, 'logs' => [[
-      'address' => self::ASSET,
-      'topics' => ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', $topic($from), $topic($to)],
-      'data' => '0x' . str_pad(dechex($amount), 64, '0', STR_PAD_LEFT),
-    ]]];
+    self::$chain[$tx] = [
+      'status' => $status,
+      'logs' => [[
+        'address' => self::ASSET,
+        'topics' => ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', $topic($from), $topic($to)],
+        'data' => '0x' . str_pad(dechex($amount), 64, '0', STR_PAD_LEFT),
+      ],
+      ],
+    ];
     return $tx;
   }
 
@@ -289,6 +393,9 @@ final class ReviewsTest extends CommerceKernelTestBase {
     ]);
   }
 
+  /**
+   * Assert refused.
+   */
   private function assertRefused(string $tx, string $why): void {
     $messages = array_map(fn($v) => $v->getPropertyPath() . ': ' . $v->getMessage(), iterator_to_array($this->review($tx, 1)->validate()));
     $this->assertNotEmpty(array_filter($messages, fn($m) => str_contains($m, $why)), implode(' | ', $messages));

@@ -5,6 +5,14 @@
  * Install hooks for Ombú.
  */
 
+use Drupal\search_api\Entity\Index;
+use Drupal\field\FieldConfigInterface;
+use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\block\Entity\Block;
+use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\ombu\CircleCatalogImporter;
+use Drupal\Core\Config\FileStorage;
+
 /**
  * Implements hook_install().
  */
@@ -40,7 +48,7 @@ function _ombu_llms_txt(): void {
  * Listings sell over x402: the price field, the seller key and the service.
  */
 function ombu_update_10001(): void {
-  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  $source = new FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
   foreach (['field_x402_price', 'field_seller_key', 'field_service'] as $field) {
     // Storage first: a field needs its storage.
     foreach (["field.storage.commerce_product.$field", "field.field.commerce_product.listing.$field"] as $name) {
@@ -56,7 +64,7 @@ function ombu_update_10001(): void {
  * Creates (or, with $overwrite, replaces) config shipped by the module.
  */
 function _ombu_config(string $dir, array $names, bool $overwrite = FALSE): void {
-  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . "/config/$dir");
+  $source = new FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . "/config/$dir");
   foreach ($names as $name) {
     $type = \Drupal::service('config.manager')->getEntityTypeIdByName($name);
     $storage = \Drupal::entityTypeManager()->getStorage($type);
@@ -128,7 +136,7 @@ function ombu_update_10002(): void {
 function ombu_update_10003(): void {
   $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
   foreach ($terms->loadByProperties(['vid' => 'listing_category']) as $term) {
-    $term->setName(\Drupal\ombu\CircleCatalogImporter::categoryLabel($term->label()))->save();
+    $term->setName(CircleCatalogImporter::categoryLabel($term->label()))->save();
   }
 
   // Ours: Quebracho, paid with plain x402 (no Circle Gateway).
@@ -191,7 +199,7 @@ function ombu_update_10008(): void {
   _ombu_config('install', ['field.storage.comment.field_reviewer_kind', 'field.field.comment.review.field_rating', 'field.field.commerce_product.listing.field_reviews'], TRUE);
   user_role_grant_permissions('authenticated', ['view commerce_store']);
   // The displays may have changed on the site: add the new fields only.
-  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  $source = new FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
   $repository = \Drupal::service('entity_display.repository');
   foreach (['form' => $repository->getFormDisplay('commerce_product', 'listing'), 'view' => $repository->getViewDisplay('commerce_product', 'listing')] as $kind => $display) {
     $record = $source->read("core.entity_{$kind}_display.commerce_product.listing.default");
@@ -239,8 +247,8 @@ function ombu_update_10012(): void {
  */
 function ombu_update_10013(): void {
   \Drupal::service('module_installer')->install(['language', 'locale', 'content_translation', 'config_translation']);
-  if (!\Drupal\language\Entity\ConfigurableLanguage::load('es')) {
-    \Drupal\language\Entity\ConfigurableLanguage::createFromLangcode('es')->save();
+  if (!ConfigurableLanguage::load('es')) {
+    ConfigurableLanguage::createFromLangcode('es')->save();
   }
   \Drupal::configFactory()->getEditable('language.negotiation')
     ->set('url.source', 'path_prefix')
@@ -248,8 +256,8 @@ function ombu_update_10013(): void {
     ->save();
   // ponytail: the top bar is Belgrade's region; another theme places it by hand.
   $theme = \Drupal::config('system.theme')->get('default');
-  if (!\Drupal\block\Entity\Block::load("{$theme}_language")) {
-    \Drupal\block\Entity\Block::create([
+  if (!Block::load("{$theme}_language")) {
+    Block::create([
       'id' => "{$theme}_language",
       'theme' => $theme,
       'region' => 'top_bar',
@@ -270,7 +278,7 @@ function _ombu_translations(): void {
   $languages = \Drupal::languageManager();
   foreach (array_keys($languages->getLanguages()) as $langcode) {
     if (is_dir("$dir/$langcode")) {
-      $source = new \Drupal\Core\Config\FileStorage("$dir/$langcode");
+      $source = new FileStorage("$dir/$langcode");
       foreach ($source->listAll() as $name) {
         $languages->getLanguageConfigOverride($langcode, $name)->setData($source->read($name))->save();
       }
@@ -284,7 +292,7 @@ function _ombu_translations(): void {
  */
 function ombu_update_10014(): void {
   _ombu_config('install', ['field.storage.commerce_product.field_markets', 'field.field.commerce_product.listing.field_markets']);
-  $source = new \Drupal\Core\Config\FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
+  $source = new FileStorage(\Drupal::service('extension.list.module')->getPath('ombu') . '/config/install');
   $repository = \Drupal::service('entity_display.repository');
   foreach (['default', 'teaser'] as $mode) {
     $record = $source->read("core.entity_view_display.commerce_product.listing.$mode");
@@ -302,11 +310,11 @@ function ombu_update_10014(): void {
  * listing once per language, translated or not.
  */
 function ombu_update_10015(): void {
-  $settings = \Drupal\language\Entity\ContentLanguageSettings::loadByEntityTypeBundle('commerce_product', 'listing');
+  $settings = ContentLanguageSettings::loadByEntityTypeBundle('commerce_product', 'listing');
   $settings->setLanguageAlterable(FALSE)->setThirdPartySetting('content_translation', 'untranslatable_fields_hide', TRUE)->save();
   \Drupal::service('content_translation.manager')->setEnabled('commerce_product', 'listing', TRUE);
   foreach (\Drupal::service('entity_field.manager')->getFieldDefinitions('commerce_product', 'listing') as $name => $definition) {
-    if ($definition instanceof \Drupal\field\FieldConfigInterface && !in_array($name, ['body', 'field_seller_note'], TRUE)) {
+    if ($definition instanceof FieldConfigInterface && !in_array($name, ['body', 'field_seller_note'], TRUE)) {
       $definition->setTranslatable(FALSE)->save();
     }
   }
@@ -409,13 +417,13 @@ function ombu_update_10025(): void {
  * (core and contrib from localize.drupal.org, ours from translations/pt-br.po).
  */
 function ombu_update_10026(): void {
-  if (!\Drupal\language\Entity\ConfigurableLanguage::load('pt-br')) {
-    \Drupal\language\Entity\ConfigurableLanguage::createFromLangcode('pt-br')->save();
+  if (!ConfigurableLanguage::load('pt-br')) {
+    ConfigurableLanguage::createFromLangcode('pt-br')->save();
   }
   \Drupal::configFactory()->getEditable('language.negotiation')->set('url.prefixes.pt-br', 'pt-br')->save();
   _ombu_translations();
   // Each listing is indexed once per language (with fallback): pt-br too.
-  \Drupal\search_api\Entity\Index::load('listings')?->reindex();
+  Index::load('listings')?->reindex();
 }
 
 /**

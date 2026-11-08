@@ -73,6 +73,9 @@ final class CatalogueController implements ContainerInjectionInterface {
     private readonly LanguageManagerInterface $languageManager,
   ) {}
 
+  /**
+   * {@inheritdoc}
+   */
   public function __invoke(Request $request): JsonResponse {
     $search = $this->search($request);
     $page = $request->query->all();
@@ -247,6 +250,9 @@ final class CatalogueController implements ContainerInjectionInterface {
     return $out;
   }
 
+  /**
+   * One listing as the catalogue shows it.
+   */
   public function item(ProductInterface $product, Request $request): array {
     [$resource, $accepts] = $this->sale($product, $request) ?? [
       $product->get('field_endpoint')->value,
@@ -309,7 +315,11 @@ final class CatalogueController implements ContainerInjectionInterface {
       // No usable seller key: listed, but not payable until it has one.
       $accepts = [];
     }
-    $url = Url::fromRoute('x402_pay.entity', ['entity_type' => 'commerce_product', 'entity' => $product->id(), 'view_mode' => 'full'], ['absolute' => TRUE]);
+    $url = Url::fromRoute('x402_pay.entity', [
+      'entity_type' => 'commerce_product',
+      'entity' => $product->id(),
+      'view_mode' => 'full',
+    ], ['absolute' => TRUE]);
     return [$url->toString(TRUE)->getGeneratedUrl(), $accepts];
   }
 

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\ombu\Drush\Commands;
 
+use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Queue\QueueFactory;
+use Drupal\ombu\Embeddings;
+use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use Drupal\ombu\SellerProbe;
 use Drush\Attributes as CLI;
@@ -37,11 +42,11 @@ final class MarketCommands extends DrushCommands {
 
   public function __construct(
     #[Autowire(service: 'ombu.circle_importer')]
-    private readonly \Drupal\ombu\CircleCatalogImporter $importer,
+    private readonly CircleCatalogImporter $importer,
     #[Autowire(service: 'ombu.embeddings')]
-    private readonly \Drupal\ombu\Embeddings $embeddings,
-    private readonly \Drupal\Core\Queue\QueueFactory $queueFactory,
-    private readonly \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager,
+    private readonly Embeddings $embeddings,
+    private readonly QueueFactory $queueFactory,
+    private readonly EntityTypeManagerInterface $entityTypeManager,
     #[Autowire(service: 'http_client')]
     private readonly ClientInterface $httpClient,
   ) {
@@ -70,13 +75,13 @@ final class MarketCommands extends DrushCommands {
     if (!$this->embeddings->available() || !$this->embeddings->model()) {
       throw new \RuntimeException('Needs the ombu_listing_vector table (MariaDB 11.7+, drush updb) and a default AI provider for embeddings.');
     }
-    $queue = $this->queueFactory->get(\Drupal\ombu\Embeddings::QUEUE);
+    $queue = $this->queueFactory->get(Embeddings::QUEUE);
     $queued = 0;
     $storage = $this->entityTypeManager->getStorage('commerce_product');
     $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', 'listing')->execute();
     foreach (array_chunk($ids, 200) as $chunk) {
       foreach ($storage->loadMultiple($chunk) as $listing) {
-        if ($listing instanceof \Drupal\commerce_product\Entity\ProductInterface && $this->embeddings->stale($listing)) {
+        if ($listing instanceof ProductInterface && $this->embeddings->stale($listing)) {
           $queue->createItem($listing->id());
           $queued++;
         }
@@ -225,7 +230,7 @@ final class MarketCommands extends DrushCommands {
   /**
    * The endpoint to ask: services.web first (the HTTP one), then agent_url.
    *
-   * services is an object keyed by protocol: {"web": {"endpoint": "..."}}.
+   * Services is an object keyed by protocol: {"web": {"endpoint": "..."}}.
    */
   private function findEndpoint(array $agent): ?string {
     $candidates = [$agent['services']['web']['endpoint'] ?? NULL, $agent['agent_url'] ?? NULL];
@@ -336,7 +341,7 @@ final class MarketCommands extends DrushCommands {
     $storage = $this->entityTypeManager->getStorage('commerce_product');
     $ids = $storage->getQuery()->accessCheck(FALSE)->condition('type', 'listing')->execute();
     foreach ($storage->loadMultiple($ids) as $listing) {
-      if (!$listing instanceof \Drupal\commerce_product\Entity\ProductInterface) {
+      if (!$listing instanceof ProductInterface) {
         continue;
       }
       // field_seller_address.

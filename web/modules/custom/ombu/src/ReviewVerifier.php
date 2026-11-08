@@ -126,7 +126,10 @@ final class ReviewVerifier {
       ? str_starts_with($network, 'solana:') && isset(Networks::ALL[$network])
       : isset(self::RPC[$network]), ARRAY_FILTER_USE_KEY);
     if (!$checkable) {
-      throw new ReviewRefusedException(sprintf('Payments on %s cannot be checked yet.', implode(', ', array_map([Chains::class, 'name'], array_keys($payees))) ?: 'no chain'));
+      throw new ReviewRefusedException(sprintf('Payments on %s cannot be checked yet.', implode(', ', array_map([
+        Chains::class,
+        'name',
+      ], array_keys($payees))) ?: 'no chain'));
     }
     foreach ($checkable as $network => $accepted) {
       if ($solana) {
@@ -166,7 +169,10 @@ final class ReviewVerifier {
    * @throws \Drupal\ombu\ReviewRefusedException
    */
   private function solanaPayer(ProductInterface $listing, string $network, string $tx, array $accepted, array $wallets): ?string {
-    $result = $this->rpc(Networks::ALL[$network]['rpc'], 'getTransaction', [$tx, ['encoding' => 'jsonParsed', 'maxSupportedTransactionVersion' => 0, 'commitment' => 'confirmed']]);
+    $result = $this->rpc(Networks::ALL[$network]['rpc'], 'getTransaction', [
+      $tx,
+      ['encoding' => 'jsonParsed', 'maxSupportedTransactionVersion' => 0, 'commitment' => 'confirmed'],
+    ]);
     if (!$result) {
       return NULL;
     }
@@ -238,7 +244,10 @@ final class ReviewVerifier {
     }
     // The columns compare case-insensitively: checksummed values match.
     $ids = [];
-    foreach (['commerce_product__field_pay_to' => 'field_pay_to_value', 'commerce_product__field_seller_address' => 'field_seller_address_value'] as $table => $column) {
+    foreach ([
+      'commerce_product__field_pay_to' => 'field_pay_to_value',
+      'commerce_product__field_seller_address' => 'field_seller_address_value',
+    ] as $table => $column) {
       $ids = [...$ids, ...$this->database->select($table, 't')->fields('t', ['entity_id'])
         ->condition($column, $wallets, 'IN')->execute()->fetchCol()];
     }
@@ -321,7 +330,10 @@ final class ReviewVerifier {
     }
     foreach (json_decode((string) $listing->get('field_accepts')->value, TRUE) ?: [] as $accept) {
       if (isset($accept['network'], $accept['asset'], $accept['payTo'])) {
-        $payees[$accept['network']][] = [$key($accept['network'], $accept['asset']), $key($accept['network'], $accept['payTo'])];
+        $payees[$accept['network']][] = [
+          $key($accept['network'], $accept['asset']),
+          $key($accept['network'], $accept['payTo']),
+        ];
       }
     }
     return $payees;

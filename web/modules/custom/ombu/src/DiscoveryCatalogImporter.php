@@ -23,7 +23,8 @@ use GuzzleHttp\ClientInterface;
  * the live 402 answers with the same network, asset, payTo and amount the
  * catalogue lists, payTo is not frozen by the token nor on OFAC's list, and
  * payTo has received USDC on chain. Whatever cannot be asked is not imported
- * and, if it was imported before, not retired either: only a "no" retires.
+ * and, if it was imported before, not retired either: only a "no" retires (a
+ * failed check, no activity on chain, or the catalogue no longer lists it).
  *
  * Verifying costs a request to the seller and to a node, so a run verifies at
  * most $budget resources that are new or changed; the rest wait for the next
@@ -90,7 +91,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    * {@inheritdoc}
    *
    * The counts: created, updated, unchanged, exists (another source has it),
-   * blocked, unsupported (no exact requirement on a chain Ombú verifies),
+   * blocked, unsupported (no exact requirement in a USDC Ombú verifies),
    * rejected, inactive, unverified (a node or the seller did not answer),
    * deferred (over the budget), retired. `reasons` tallies the rejections.
    */
@@ -133,7 +134,12 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
         'query' => ['limit' => 100, 'offset' => $offset],
         'timeout' => 30,
       ])->getBody(), TRUE);
-      $items = $page['items'] ?? [];
+      // An empty or broken answer is not an empty catalogue: it would retire
+      // every listing of the source.
+      if (!is_array($page) || !is_array($page['items'] ?? NULL)) {
+        throw new \RuntimeException("The {$this->source} catalogue did not answer with a list of items.");
+      }
+      $items = $page['items'];
       foreach ($items as $item) {
         $normal = self::normalize($item);
         if ($normal === NULL) {
@@ -158,7 +164,16 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
 
     // Only a complete run knows what disappeared.
     if ($complete && !$max) {
-      $counts['retired'] = $this->retireMissing($seen);
+      // A catalogue that suddenly lists far less than last time is more likely
+      // broken than emptied: keep what we have and say so.
+      $lastRead = (int) $this->state->get("ombu.{$this->source}_read", 0);
+      if ($read === 0 || ($lastRead && $read < $lastRead / 2)) {
+        $counts['retire_skipped'] = "read $read, the run before read $lastRead";
+      }
+      else {
+        $counts['retired'] = $this->retireMissing($seen);
+        $this->state->set("ombu.{$this->source}_read", $read);
+      }
       $this->state->set("ombu.{$this->source}_last", $this->time->getRequestTime());
     }
     arsort($reasons);
@@ -189,8 +204,10 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     if (isset($this->state->get(self::blockedKey($this->source), [])[$r['key']])) {
       return 'blocked';
     }
-    $networks = ResourceVerifierFactory::networks();
-    if (!array_filter($r['accepts'], fn($a) => $a['scheme'] === 'exact' && in_array(strtolower($a['network']), $networks, TRUE))) {
+    $assets = ResourceVerifierFactory::assets();
+    $pays = fn($a) => $a['scheme'] === 'exact'
+      && in_array(strtolower($a['network'] . '|' . ($a['asset'] ?? '')), $assets, TRUE);
+    if (!array_filter($r['accepts'], $pays)) {
       return 'unsupported';
     }
     $products = $this->entityTypeManager->getStorage('commerce_product');
@@ -220,7 +237,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     }
     $verified++;
     try {
-      $report = $this->verifier->verify($r['url'], $r['method'], $r['accepts'], $networks);
+      $report = $this->verifier->verify($r['url'], $r['method'], $r['accepts'], $assets);
     }
     catch (\Throwable $e) {
       $this->loggerFactory->get('ombu')->warning('Verifying @url: @m', ['@url' => $r['url'], '@m' => $e->getMessage()]);
@@ -358,7 +375,10 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       'description' => $description,
       'provider' => $provider,
       'website' => 'https://' . $host,
-      'tags' => array_slice(array_values(array_filter(array_map('strval', (array) ($item['tags'] ?? [])))), 0, 10),
+      'tags' => array_slice(array_values(array_filter(array_map(
+        fn($t) => mb_substr(trim((string) $t), 0, 40),
+        array_filter((array) ($item['tags'] ?? []), 'is_scalar'),
+      ))), 0, 10),
       'input' => ($info['input'] ?? $item['inputSchema'] ?? NULL) ?: NULL,
       'output' => ($info['output'] ?? $item['outputSchema'] ?? NULL) ?: NULL,
       'updated' => (string) ($item['lastUpdated'] ?? ''),

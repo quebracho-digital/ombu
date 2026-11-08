@@ -31,9 +31,8 @@ final class MetatagAgentsTest extends CommerceKernelTestBase {
 
   /**
    * Each link says what it points to, and is absolute.
-   *
    */
-  public function testALinkSaysItsMediaType(): void {
+  public function testLinkSaysItsMediaType(): void {
     $manager = $this->container->get('plugin.manager.metatag.tag');
     $expected = [
       'ombu_guide' => ['describedby', 'text/markdown'],
@@ -51,7 +50,10 @@ final class MetatagAgentsTest extends CommerceKernelTestBase {
     }
   }
 
-  public function testALinkWithoutAValueIsNotWritten(): void {
+  /**
+   * Tests that a link without a value is not written.
+   */
+  public function testLinkWithoutValueIsNotWritten(): void {
     $tag = $this->container->get('plugin.manager.metatag.tag')->createInstance('ombu_markdown');
     $tag->setValue('');
     $this->assertSame([], $tag->output());
@@ -63,7 +65,7 @@ final class MetatagAgentsTest extends CommerceKernelTestBase {
   public function testAnotherPageHasNoMarkdownTwinOfItsOwn(): void {
     $route = $this->createMock(RouteMatchInterface::class);
     $route->method('getRouteName')->willReturn('system.404');
-    $hooks = new MetatagHooks($route, $this->container->get('request_stack'));
+    $hooks = new MetatagHooks($route, $this->container->get('request_stack'), $this->container->get('extension.path.resolver'));
     $tokens = $hooks->tokens('current-page', [
       'ombu-markdown' => '[current-page:ombu-markdown]',
       'ombu-type' => '[current-page:ombu-type]',

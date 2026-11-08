@@ -107,9 +107,9 @@ final class ListingHooks {
       $third_party = $product->get('field_source')->value !== 'ours';
       $build['legal'] = [
         '#markup' => '<p class="listing-legal"><small>'
-          . ($third_party ? $this->t('Offered by a third party: Ombú is not its seller and does not answer for it. <a href=":terms">Terms</a>.', [':terms' => Url::fromUserInput('/terms')->toString()]) . ' ' : '')
-          . $this->t('<a href=":report">Report this listing</a>', [':report' => $report->toString()])
-          . '</small></p>',
+        . ($third_party ? $this->t('Offered by a third party: Ombú is not its seller and does not answer for it. <a href=":terms">Terms</a>.', [':terms' => Url::fromUserInput('/terms')->toString()]) . ' ' : '')
+        . $this->t('<a href=":report">Report this listing</a>', [':report' => $report->toString()])
+        . '</small></p>',
         // Above the reviews (12), not under their form.
         '#weight' => 11.8,
       ];
@@ -134,15 +134,31 @@ final class ListingHooks {
           '#tag' => 'form',
           '#attributes' => [
             'class' => ['ombu-buy'],
-            'data-ombu-buy' => Url::fromRoute('x402_pay.entity', ['entity_type' => 'commerce_product', 'entity' => $product->id(), 'view_mode' => 'full'])->toString(),
+            'data-ombu-buy' => Url::fromRoute('x402_pay.entity', [
+              'entity_type' => 'commerce_product',
+              'entity' => $product->id(),
+              'view_mode' => 'full',
+            ])->toString(),
             'data-ombu-solana' => Url::fromRoute('x402_pay.solana_transaction')->toString(),
           ],
           'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2><label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>'],
-          'input' => ['#type' => 'html_tag', '#tag' => 'textarea', '#value' => $examples[$service], '#attributes' => ['id' => 'ombu-buy-input', 'rows' => 2, 'class' => ['form-control']]],
-          'button' => ['#type' => 'html_tag', '#tag' => 'button', '#value' => $this->t('Pay @price USDC with your wallet', ['@price' => $price->get('amount')->getValue()]), '#attributes' => ['type' => 'submit', 'class' => ['btn', 'btn-primary']]],
-          'note' => ['#markup' => '<p><small>' . (str_starts_with(Sellers::network($product), 'solana:')
+          'input' => [
+            '#type' => 'html_tag',
+            '#tag' => 'textarea',
+            '#value' => $examples[$service],
+            '#attributes' => ['id' => 'ombu-buy-input', 'rows' => 2, 'class' => ['form-control']],
+          ],
+          'button' => [
+            '#type' => 'html_tag',
+            '#tag' => 'button',
+            '#value' => $this->t('Pay @price USDC with your wallet', ['@price' => $price->get('amount')->getValue()]),
+            '#attributes' => ['type' => 'submit', 'class' => ['btn', 'btn-primary']],
+          ],
+          'note' => [
+            '#markup' => '<p><small>' . (str_starts_with(Sellers::network($product), 'solana:')
             ? $this->t('One signature in your wallet (Phantom, Solflare, Backpack), no fees; USDC on Solana. Charged only if the seller answers.')
-            : $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.')) . '</small></p>'],
+            : $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.')) . '</small></p>',
+          ],
           'result' => ['#markup' => '<pre class="ombu-buy__result" aria-live="polite"></pre>'],
           '#attached' => ['library' => ['ombu/buy']],
           '#weight' => 11.4,
@@ -172,7 +188,10 @@ final class ListingHooks {
       $spec = $product->get('field_provider_term')->entity?->get('field_openapi_url')->value;
       $build['openapi'] = [
         '#type' => 'details',
-        '#title' => $this->t('API: @method @path', ['@method' => strtoupper((string) $product->get('field_http_method')->value), '@path' => $operation['path'] ?? '']),
+        '#title' => $this->t('API: @method @path', [
+          '@method' => strtoupper((string) $product->get('field_http_method')->value),
+          '@path' => $operation['path'] ?? '',
+        ]),
         '#weight' => 11,
         'summary' => ['#plain_text' => trim(($operation['summary'] ?? '') . "\n\n" . ($operation['description'] ?? ''))],
         'operation' => [
@@ -228,6 +247,9 @@ final class ListingHooks {
     ];
   }
 
+  /**
+   * Attaches the libraries of the market, the blog and the home.
+   */
   #[Hook('views_pre_render')]
   public function viewsPreRender(ViewExecutable $view): void {
     if ($view->id() === 'market') {
@@ -243,6 +265,9 @@ final class ListingHooks {
     }
   }
 
+  /**
+   * Attaches the brand library, and a listing's Markdown link.
+   */
   #[Hook('page_attachments')]
   public function pageAttachments(array &$attachments): void {
     $attachments['#attached']['library'][] = 'ombu/brand';

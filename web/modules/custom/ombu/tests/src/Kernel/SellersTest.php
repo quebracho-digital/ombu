@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ombu\Kernel;
 
+use Drupal\Core\Form\FormState;
+use Drupal\ombu\Form\SellForm;
+use Drupal\ombu\SellerProbe;
+use GuzzleHttp\Client;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\key\Entity\Key;
@@ -12,7 +16,6 @@ use Drupal\ombu\Sales;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\x402_pay\Facilitators;
-use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Quebracho\X402\Eip712;
@@ -56,6 +59,9 @@ final class SellersTest extends CommerceKernelTestBase {
     'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck', 'mcp_server',
   ];
 
+  /**
+   * Set up.
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('commerce_product');
@@ -69,11 +75,20 @@ final class SellersTest extends CommerceKernelTestBase {
       ->grantPermission('view commerce_product')
       ->save();
     foreach (['seller_ping' => self::PING_KEY, 'seller_markdown' => self::MARKDOWN_KEY] as $id => $value) {
-      Key::create(['id' => $id, 'label' => $id, 'key_type' => 'authentication', 'key_provider' => 'config', 'key_provider_settings' => ['key_value' => $value]])->save();
+      Key::create([
+        'id' => $id,
+        'label' => $id,
+        'key_type' => 'authentication',
+        'key_provider' => 'config',
+        'key_provider_settings' => ['key_value' => $value],
+      ])->save();
     }
   }
 
-  public function testAListingIsPaidToItsOwnSeller(): void {
+  /**
+   * Tests that a listing is paid to its own seller.
+   */
+  public function testListingIsPaidToItsOwnSeller(): void {
     $ping = $this->listing('ping', 'seller_ping', '0.0001');
     $markdown = $this->listing('markdown', 'seller_markdown', '0.001');
 
@@ -84,7 +99,10 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame((new Signer(self::MARKDOWN_KEY))->address(), $this->required($markdown)['accepts'][0]['payTo']);
   }
 
-  public function testAListingWithoutAUsableSellerKeyIsNotForSale(): void {
+  /**
+   * Tests that a listing without a usable seller key is not for sale.
+   */
+  public function testListingWithoutUsableSellerKeyIsNotForSale(): void {
     // Even with a key on the field: that wallet is not this seller's.
     $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('commerce_product.listing.field_x402_price');
     $field->setSetting('key_id', 'seller_markdown')->save();
@@ -93,28 +111,48 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame(403, $response->getStatusCode(), $response->getContent());
   }
 
-  public function testAListingCanBePaidToAnAddressAlone(): void {
+  /**
+   * Tests that a listing can be paid to an address alone.
+   */
+  public function testListingCanBePaidToAnAddressAlone(): void {
     $cold = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
     $listing = $this->listing('terms', '', '0.01');
     $listing->set('field_seller_address', $cold)->save();
     $this->assertSame($cold, $this->required($listing)['accepts'][0]['payTo']);
   }
 
-  public function testASolanaAddressSellsOnSolana(): void {
+  /**
+   * Tests that a solana address sells on solana.
+   */
+  public function testSolanaAddressSellsOnSolana(): void {
     // cspell:disable-next-line
-    [$devnet, $seller, $fee_payer] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5'];
+    [
+      $devnet,
+      $seller,
+      $fee_payer,
+    ] = ['solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1', '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU', 'CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5'];
     $this->setSetting('ombu_solana_network', $devnet);
     // Devnet's facilitator, its /supported already cached: no request out.
     $url = 'https://x402.org/facilitator';
     $this->config('x402_pay.settings')->set('facilitator.remote', [$devnet => ['url' => $url, 'key_id' => '']])->save();
-    \Drupal::cache()->set('x402_pay.supported:' . hash('sha256', $url), [['x402Version' => 2, 'scheme' => 'exact', 'network' => $devnet, 'extra' => ['feePayer' => $fee_payer]]]);
+    \Drupal::cache()->set('x402_pay.supported:' . hash('sha256', $url), [
+      ['x402Version' => 2, 'scheme' => 'exact', 'network' => $devnet, 'extra' => ['feePayer' => $fee_payer]],
+    ]);
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
     $listing->set('field_seller_address', $seller)->save();
     $accepts = $this->required($listing)['accepts'][0];
     // cspell:disable-next-line
-    $this->assertSame([$devnet, '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', $seller, $fee_payer], [$accepts['network'], $accepts['asset'], $accepts['payTo'], $accepts['extra']['feePayer']]);
+    $this->assertSame([
+      $devnet,
+      '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+      $seller,
+      $fee_payer,
+    ], [$accepts['network'], $accepts['asset'], $accepts['payTo'], $accepts['extra']['feePayer']]);
   }
 
+  /**
+   * Tests that the cold address wins over the key.
+   */
   public function testTheColdAddressWinsOverTheKey(): void {
     $cold = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
@@ -122,20 +160,29 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame($cold, $this->required($listing)['accepts'][0]['payTo']);
   }
 
-  public function testARetiredListingIsNotForSale(): void {
+  /**
+   * Tests that a retired listing is not for sale.
+   */
+  public function testRetiredListingIsNotForSale(): void {
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
     $listing->set('field_retired', TRUE)->save();
     $response = $this->container->get('http_kernel')->handle(Request::create("/x402/commerce_product/{$listing->id()}/full", 'POST', content: '{}'));
     $this->assertSame(403, $response->getStatusCode(), $response->getContent());
   }
 
+  /**
+   * Tests that model sellers give the buyer ten minutes.
+   */
   public function testModelSellersGiveTheBuyerTenMinutes(): void {
     $this->assertSame(60, $this->required($this->listing('ping', 'seller_ping', '0.0001'))['accepts'][0]['maxTimeoutSeconds']);
     $this->assertSame(600, $this->required($this->listing('terms', 'seller_ping', '0.01'))['accepts'][0]['maxTimeoutSeconds']);
     $this->assertSame(600, $this->required($this->listing('factcheck', 'seller_ping', '0.02'))['accepts'][0]['maxTimeoutSeconds']);
   }
 
-  public function testPingDeliversATimestampSignedBySeller(): void {
+  /**
+   * Tests that ping delivers a timestamp signed by seller.
+   */
+  public function testPingDeliversTimestampSignedBySeller(): void {
     $response = $this->buy($this->listing('ping', 'seller_ping', '0.0001'), []);
     $this->assertSame(200, $response->getStatusCode(), $response->getContent());
     $pong = json_decode($response->getContent(), TRUE);
@@ -146,7 +193,10 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame('settled', $this->logged());
   }
 
-  public function testASettledSaleShowsWithItsTransaction(): void {
+  /**
+   * Tests that a settled sale shows with its transaction.
+   */
+  public function testSettledSaleShowsWithItsTransaction(): void {
     $ping = $this->listing('ping', 'seller_ping', '0.0001');
     $this->buy($ping, []);
     $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), []);
@@ -164,40 +214,80 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertStringContainsString('/address/' . (new Signer(self::PING_KEY))->address(), $html);
   }
 
-  public function testMyListingsFindsAListingPaidToTheSellersKey(): void {
+  /**
+   * Tests that my listings finds a listing paid to the sellers key.
+   */
+  public function testMyListingsFindsListingPaidToTheSellersKey(): void {
     $this->installSchema('wallet_auth', ['wallet_auth_wallet']);
     $ping = $this->listing('ping', 'seller_ping', '0.0001');
     $this->listing('markdown', 'seller_markdown', '0.001');
     $seller = $this->createUser();
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => strtolower((new Signer(self::PING_KEY))->address()), 'uid' => $seller->id(), 'created' => time()])->execute();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'eip155',
+      'address' => strtolower((new Signer(self::PING_KEY))->address()),
+      'uid' => $seller->id(),
+      'created' => time(),
+    ])->execute();
     $this->setCurrentUser($seller);
     $argument = \Drupal::service('plugin.manager.views.argument_default')->createInstance('ombu_seller_listings');
     $this->assertSame((string) $ping->id(), $argument->getArgument());
   }
 
-  public function testASellerListsTheirOwnEndpointForApproval(): void {
+  /**
+   * Tests that a seller lists their own endpoint for approval.
+   */
+  public function testSellerListsTheirOwnEndpointForApproval(): void {
     $this->installSchema('wallet_auth', ['wallet_auth_wallet']);
     $this->installEntitySchema('taxonomy_term');
     $wallet = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8';
     $seller = $this->createUser();
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'eip155', 'address' => $wallet, 'uid' => $seller->id(), 'created' => time()])->execute();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'eip155',
+      'address' => $wallet,
+      'uid' => $seller->id(),
+      'created' => time(),
+    ])->execute();
     $this->setCurrentUser($seller);
     $submit = function (string $payTo, string $endpoint) {
-      $probe = new class(new \GuzzleHttp\Client(), $payTo) extends \Drupal\ombu\SellerProbe {
+      $probe = new class(new Client(), $payTo) extends SellerProbe {
 
         public function __construct($client, private string $payTo) {
           parent::__construct($client);
         }
 
+        /**
+         * Requirements.
+         */
         public function requirements(string $url, string $method): array {
           // cspell:disable-next-line
-          [$network, $asset] = str_starts_with($this->payTo, '0x') ? ['eip155:8453', '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'] : ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'];
-          return [$url, [['scheme' => 'exact', 'network' => $network, 'asset' => $asset, 'payTo' => $this->payTo, 'amount' => '20000']]];
+          [
+            $network,
+            $asset,
+          ] = str_starts_with($this->payTo, '0x') ? ['eip155:8453', '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'] : ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'];
+          return [
+            $url,
+            [
+              [
+                'scheme' => 'exact',
+                'network' => $network,
+                'asset' => $asset,
+                'payTo' => $this->payTo,
+                'amount' => '20000',
+              ],
+            ],
+          ];
         }
 
       };
-      $form = new \Drupal\ombu\Form\SellForm($probe, $this->container->get('ombu.circle_importer'), \Drupal::database());
-      $state = (new \Drupal\Core\Form\FormState())->setValues(['endpoint' => $endpoint, 'method' => 'POST', 'name' => 'Weather now', 'provider' => 'Acme', 'description' => '', 'website' => '']);
+      $form = new SellForm($probe, $this->container->get('ombu.circle_importer'), \Drupal::database());
+      $state = (new FormState())->setValues([
+        'endpoint' => $endpoint,
+        'method' => 'POST',
+        'name' => 'Weather now',
+        'provider' => 'Acme',
+        'description' => '',
+        'website' => '',
+      ]);
       \Drupal::formBuilder()->submitForm($form, $state);
       return $state->getErrors();
     };
@@ -221,30 +311,47 @@ final class SellersTest extends CommerceKernelTestBase {
     // Paid on Solana, to their Solana wallet; base58 matches only exactly.
     // cspell:disable-next-line
     $solana = '6PJNCqXycHy7qsPPsz1wj9REkZxnJQFutEgfKqyZpuGU';
-    \Drupal::database()->insert('wallet_auth_wallet')->fields(['namespace' => 'solana', 'address' => $solana, 'uid' => $seller->id(), 'created' => time()])->execute();
+    \Drupal::database()->insert('wallet_auth_wallet')->fields([
+      'namespace' => 'solana',
+      'address' => $solana,
+      'uid' => $seller->id(),
+      'created' => time(),
+    ])->execute();
     $this->assertNotEmpty($submit(strtolower($solana), 'https://acme.example/solana'));
     $this->assertSame([], $submit($solana, 'https://acme.example/solana'));
     $this->assertCount(2, \Drupal::entityQuery('commerce_product')->accessCheck(FALSE)->condition('field_source', 'third_party')->execute());
   }
 
-  public function testMarkdownWithoutAUrlIsNotCharged(): void {
+  /**
+   * Tests that markdown without a url is not charged.
+   */
+  public function testMarkdownWithoutUrlIsNotCharged(): void {
     $response = $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), ['nothing' => 'here']);
     $this->assertSame(400, $response->getStatusCode());
     $this->assertSame('not_settled', $this->logged());
   }
 
+  /**
+   * Tests that markdown refuses private addresses and is not charged.
+   */
   public function testMarkdownRefusesPrivateAddressesAndIsNotCharged(): void {
     $response = $this->buy($this->listing('markdown', 'seller_markdown', '0.001'), ['url' => 'http://127.0.0.1/admin']);
     $this->assertSame(422, $response->getStatusCode(), $response->getContent());
     $this->assertSame('not_settled', $this->logged());
   }
 
-  public function testASellerWithoutItsModelIsNotCharged(): void {
+  /**
+   * Tests that a seller without its model is not charged.
+   */
+  public function testSellerWithoutItsModelIsNotCharged(): void {
     $response = $this->buy($this->listing('terms', 'seller_ping', '0.01'), ['text' => 'You agree to binding arbitration.']);
     $this->assertSame(503, $response->getStatusCode(), $response->getContent());
     $this->assertSame('not_settled', $this->logged());
   }
 
+  /**
+   * Tests that the people page is free.
+   */
   public function testThePeoplePageIsFree(): void {
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
     $request = Request::create('/product/' . $listing->id());
@@ -252,6 +359,9 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertSame(200, $this->container->get('http_kernel')->handle($request)->getStatusCode());
   }
 
+  /**
+   * Tests that the page is free as markdown too and the service still sold.
+   */
   public function testThePageIsFreeAsMarkdownTooAndTheServiceStillSold(): void {
     $listing = $this->listing('ping', 'seller_ping', '0.0001');
     $request = Request::create('/product/' . $listing->id());
@@ -265,6 +375,9 @@ final class SellersTest extends CommerceKernelTestBase {
     $this->assertNotEmpty($this->required($listing)['accepts']);
   }
 
+  /**
+   * Tests that an mcp call is paid in band and never free.
+   */
   public function testAnMcpCallIsPaidInBandAndNeverFree(): void {
     $ping = $this->listing('ping', 'seller_ping', '0.0001');
     // Before the payments service is built: it keeps the facilitators it got.
@@ -304,11 +417,14 @@ final class SellersTest extends CommerceKernelTestBase {
    * Past the site's deadline, or on a settle answer that is not a real TRUE,
    * the buyer is not charged and gets nothing.
    */
-  public function testAnMcpCallIsNotChargedPastTheDeadlineNorOnASettleThatDoesNotAddUp(): void {
+  public function testAnMcpCallIsNotChargedPastTheDeadlineNorOnSettleThatDoesNotAddUp(): void {
     foreach ([
       'deadline' => [['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32)], 'deadline'],
       'string false' => [['success' => 'false', 'errorReason' => 'insufficient_funds'], 'invalid_settle_response'],
-      'refused' => [['success' => FALSE, 'errorReason' => 'insufficient_funds', 'transaction' => ''], 'insufficient_funds'],
+      'refused' => [
+        ['success' => FALSE, 'errorReason' => 'insufficient_funds', 'transaction' => ''],
+        'insufficient_funds',
+      ],
     ] as $case => [$settle, $reason]) {
       $this->setSetting('x402_pay_deadline', $case === 'deadline' ? 0.000001 : NULL);
       $this->container->get('kernel')->rebuildContainer();
@@ -325,6 +441,9 @@ final class SellersTest extends CommerceKernelTestBase {
     }
   }
 
+  /**
+   * Tests that malformed mcp params are not an error.
+   */
   public function testMalformedMcpParamsAreNotAnError(): void {
     $this->facilitatorSaysYes();
     $ran = 0;
@@ -344,27 +463,50 @@ final class SellersTest extends CommerceKernelTestBase {
 
       public function __construct(private $tool, private $gateway, private int &$ran) {}
 
+      /**
+       * Handle.
+       */
       public function handle(ServerRequestInterface $request): ResponseInterface {
         $message = json_decode((string) $request->getBody(), TRUE);
         $this->ran++;
         try {
-          $result = ['content' => [['type' => 'text', 'text' => json_encode($this->tool->execute($message['params']['arguments'] ?? [], $this->gateway))]]];
+          $result = [
+            'content' => [
+              [
+                'type' => 'text',
+                'text' => json_encode($this->tool->execute($message['params']['arguments'] ?? [], $this->gateway)),
+              ],
+            ],
+          ];
         }
         catch (\Throwable $e) {
           $result = ['isError' => TRUE, 'content' => [['type' => 'text', 'text' => $e->getMessage()]]];
         }
-        return new PsrResponse(200, ['Content-Type' => 'application/json'], json_encode(['jsonrpc' => '2.0', 'id' => $message['id'] ?? 1, 'result' => $result]));
+        return new PsrResponse(200, [
+          'Content-Type' => 'application/json',
+        ], json_encode(['jsonrpc' => '2.0', 'id' => $message['id'] ?? 1, 'result' => $result]));
       }
 
     };
   }
 
+  /**
+   * Mcp call.
+   */
   private function mcpCall(Product $listing, RequestHandlerInterface $handler, array $meta = []): array {
-    $body = json_encode(['jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call', 'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $listing->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : [])]);
+    $body = json_encode([
+      'jsonrpc' => '2.0',
+      'id' => 7,
+      'method' => 'tools/call',
+      'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $listing->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : []),
+    ]);
     $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $body), $handler);
     return json_decode((string) $response->getBody(), TRUE)['result'];
   }
 
+  /**
+   * Listing.
+   */
   private function listing(string $service, string $key, string $price): Product {
     $listing = Product::create([
       'type' => 'listing',
@@ -378,6 +520,9 @@ final class SellersTest extends CommerceKernelTestBase {
     return $listing;
   }
 
+  /**
+   * Required.
+   */
   private function required(Product $listing): array {
     $response = $this->container->get('http_kernel')->handle(Request::create("/x402/commerce_product/{$listing->id()}/full", 'POST', content: '{}'));
     $this->assertSame(402, $response->getStatusCode(), $response->getContent());
@@ -404,13 +549,24 @@ final class SellersTest extends CommerceKernelTestBase {
    */
   private function facilitatorSaysYes(array $settle = []): void {
     $facilitator = $this->createMock(Facilitator::class);
-    $facilitator->method('verify')->willReturn(['isValid' => TRUE, 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
-    $facilitator->method('settle')->willReturn($settle + ['success' => TRUE, 'transaction' => '0x' . str_repeat('ab', 32), 'network' => 'eip155:5042002', 'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66']);
+    $facilitator->method('verify')->willReturn([
+      'isValid' => TRUE,
+      'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66',
+    ]);
+    $facilitator->method('settle')->willReturn($settle + [
+      'success' => TRUE,
+      'transaction' => '0x' . str_repeat('ab', 32),
+      'network' => 'eip155:5042002',
+      'payer' => '0x857b06519E91e3A54538791bDbb0E22373e36b66',
+    ]);
     $facilitators = $this->createMock(Facilitators::class);
     $facilitators->method('for')->willReturn($facilitator);
     $this->container->set('x402_pay.facilitators', $facilitators);
   }
 
+  /**
+   * Logged.
+   */
   private function logged(): string {
     return (string) \Drupal::database()->select('x402_pay_log', 'l')->fields('l', ['status'])->orderBy('id', 'DESC')->range(0, 1)->execute()->fetchField();
   }

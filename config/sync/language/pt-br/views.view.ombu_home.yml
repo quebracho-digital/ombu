@@ -1,0 +1,14 @@
+label: 'Página inicial'
+display:
+  default:
+    display_options:
+      title: 'Novo no mercado'
+      use_more_text: 'Todo o mercado'
+  page_1:
+    display_title: 'Página inicial'
+  featured:
+    display_options:
+      title: Destaques
+  top:
+    display_options:
+      title: 'Mais bem avaliados'

@@ -218,6 +218,18 @@ final class ListingHooks {
         'extra' => [['left_field' => 'entity_type', 'value' => 'commerce_product']],
       ],
     ];
+    // The home's "Best rated" block sorts by it (ListingRating).
+    $data['commerce_product_field_data']['ombu_rating'] = [
+      'title' => $this->t('Rating'),
+      'help' => $this->t('The average of the reviews that carry the paying wallet, then their number.'),
+      'sort' => ['id' => 'ombu_rating'],
+    ];
+    // The home's hero, sales and strip for agents (HomePart).
+    $data['views']['ombu_home_part'] = [
+      'title' => $this->t('Ombú home part'),
+      'help' => $this->t('The hero, the latest sales or the strip for agents.'),
+      'area' => ['id' => 'ombu_home_part'],
+    ];
   }
 
   #[Hook('views_pre_render')]
@@ -227,6 +239,10 @@ final class ListingHooks {
       $view->attachment_before[] = Sales::build();
     }
     elseif ($view->id() === 'blog') {
+      $view->element['#attached']['library'][] = 'ombu/blog';
+    }
+    elseif ($view->id() === 'ombu_home') {
+      $view->element['#attached']['library'][] = 'ombu/home';
       $view->element['#attached']['library'][] = 'ombu/blog';
     }
   }

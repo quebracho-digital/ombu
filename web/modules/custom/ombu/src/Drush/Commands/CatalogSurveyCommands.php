@@ -135,8 +135,18 @@ final class CatalogSurveyCommands extends DrushCommands {
   private function check(array $item, string $url, SellerProbe $probe, TokenBlacklist $blacklist): string {
     $method = strtoupper((string) ($item['extensions']['bazaar']['info']['input']['method']
       ?? $item['accepts'][0]['outputSchema']['input']['method'] ?? 'GET'));
+    // Ask with GET first: a POST to a seller that skips x402 could run the
+    // call unpaid. Only a POST-only endpoint (404/405 to GET) gets the POST.
     try {
-      [, $accepts] = $probe->requirements($url, $method === 'POST' ? 'POST' : 'GET');
+      try {
+        [, $accepts] = $probe->requirements($url, 'GET');
+      }
+      catch (\RuntimeException $e) {
+        if ($method !== 'POST' || !preg_match('/answered 40[45],/', $e->getMessage())) {
+          throw $e;
+        }
+        [, $accepts] = $probe->requirements($url, 'POST');
+      }
     }
     catch (\RuntimeException $e) {
       // Group by the message's start: "answered 404", "could not be reached"...

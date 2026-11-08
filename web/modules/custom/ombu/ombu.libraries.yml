@@ -68,3 +68,8 @@ blog:
   css:
     theme:
       css/blog.css: {}
+# The home (ombu_home view): hero, sections, the strip for agents.
+home:
+  css:
+    theme:
+      css/home.css: {}

@@ -1,0 +1,16 @@
+{#
+/**
+ * @file
+ * The blog's latest posts on the home (blog, home): cards, with a link to
+ * the whole blog.
+ */
+#}
+{% if rows %}
+  <section{{ attributes.addClass(['ombu-home-section', 'ombu-home-posts', dom_id ? 'js-view-dom-id-' ~ dom_id]) }}>
+    {{ title_prefix }}
+    <h2 class="ombu-home-section__title">{{ 'From the blog'|t }}</h2>
+    {{ title_suffix }}
+    <div class="blog-cards ombu-home-posts__cards">{{ rows }}</div>
+    {{ more }}
+  </section>
+{% endif %}

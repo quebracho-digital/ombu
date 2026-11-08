@@ -1,0 +1,19 @@
+{#
+/**
+ * @file
+ * The home (ombu_home, page_1): the hero and the sections in its header,
+ * the newest listings as its rows, the strip for agents in its footer.
+ */
+#}
+<div{{ attributes.addClass(['ombu-home', dom_id ? 'js-view-dom-id-' ~ dom_id]) }}>
+  {{ title_prefix }}
+  {{ title_suffix }}
+  {{ header }}
+  {% if rows %}
+    <section class="ombu-home-section ombu-home-latest">
+      {{ rows }}
+      {{ more }}
+    </section>
+  {% endif %}
+  {{ footer }}
+</div>

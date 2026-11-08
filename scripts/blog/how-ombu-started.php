@@ -33,6 +33,14 @@ return [
 <h2>A hackathon, a deadline, Drupal</h2>
 <p>Ombú began as our entry for the Tameion Agents Hackathon (Arc × Canteen). We built it on Drupal and Drupal Commerce, with two modules we publish as open source, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> and <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Payments are USDC on Arc. On the networks we settle ourselves, nobody sits between buyer and seller: the money goes from the buyer's wallet to the seller's.</p>
 
+<h2>The scoreboard, so far</h2>
+<p>Ombú has been sent to two Arc programmes. Here is how each went.</p>
+<ul>
+<li><strong><a href="https://tameion.thecanteenapp.com/">Tameion Agents Hackathon</a></strong> (Canteen × Circle, closed 17 October). Judging is asynchronous and there are no results yet. We are waiting, the same as every other team.</li>
+<li><strong><a href="https://dorahacks.io/hackathon/arc-microgrants/winner">Arc Microgrants</a></strong> (DoraHacks, 20 grants of 500 USDC each). We did not get one. Congratulations to the twenty who did. We read every winning project, and it is hard to argue with the jury. Pigeonhole made deposit addresses with no private key and measured them on mainnet, then wrote down what it got wrong. MergePay checks GitHub's signed tokens inside a contract. Writ invites you to try to hijack its payments. Shwup refunds your RSVP deposit when your ticket is scanned at the door. We had a very tidy Drupal site. They were better projects, and we took notes, two of which are already live here: <a href="/.well-known/x402">/.well-known/x402</a> and the MCP server.</li>
+</ul>
+<p>Losing teaches more than winning, they say. In that case, we are learning a great deal.</p>
+
 <h2>Two shelves from day one</h2>
 <p>A market with nothing on its shelves is a car park. So it opened with two kinds of stock.</p>
 <p><strong>Ours.</strong> Quebracho runs a few small services of its own: <a href="{{ours-ping}}">a ping that costs almost nothing</a>, <a href="{{ours-markdown}}">web pages turned into clean markdown</a>, <a href="{{ours-terms}}">terms of service, read for you</a> and <a href="{{ours-factcheck}}">claims, fact-checked</a>.</p>
@@ -70,6 +78,14 @@ HTML, 'Picture an AI agent with five cents and one question. It can pay a cent a
 <h2>Un hackathon, una fecha, Drupal</h2>
 <p>Ombú nació como nuestra entrada al Tameion Agents Hackathon (Arc × Canteen). Lo hicimos sobre Drupal y Drupal Commerce, con dos módulos que publicamos como código abierto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> y <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Los pagos son en USDC sobre Arc. En las redes que liquidamos nosotros, nadie se interpone entre quien compra y quien vende: el dinero va de la billetera del comprador a la del vendedor.</p>
 
+<h2>El marcador, por ahora</h2>
+<p>Presentamos Ombú en dos programas de Arc. Así le fue en cada uno.</p>
+<ul>
+<li><strong><a href="https://tameion.thecanteenapp.com/">Tameion Agents Hackathon</a></strong> (Canteen × Circle, cerró el 17 de octubre). El jurado evalúa sin fecha fija y todavía no hay resultados. Esperamos, como todos.</li>
+<li><strong><a href="https://dorahacks.io/hackathon/arc-microgrants/winner">Arc Microgrants</a></strong> (DoraHacks, 20 grants de 500 USDC cada uno). No ganamos ninguno. Felicitaciones a los veinte que sí. Leímos cada proyecto ganador y es difícil discutirle al jurado. Pigeonhole hizo direcciones de depósito sin clave privada, las midió en mainnet y escribió en qué se equivocó. MergePay verifica dentro de un contrato los tokens firmados de GitHub. Writ te invita a intentar secuestrarle los pagos. Shwup te devuelve el depósito de la entrada cuando te escanean en la puerta. Nosotros teníamos un sitio Drupal muy prolijo. Eran mejores proyectos, y tomamos nota; dos de esas notas ya están andando acá: <a href="/.well-known/x402">/.well-known/x402</a> y el servidor MCP.</li>
+</ul>
+<p>Dicen que de las derrotas se aprende más que de las victorias. Si es así, estamos aprendiendo muchísimo.</p>
+
 <h2>Dos estantes desde el primer día</h2>
 <p>Un mercado con los estantes vacíos es un estacionamiento. Así que abrió con dos tipos de mercadería.</p>
 <p><strong>La nuestra.</strong> Quebracho corre unos pocos servicios chicos propios: <a href="{{ours-ping}}">un ping que casi no cuesta nada</a>, <a href="{{ours-markdown}}">páginas web convertidas en markdown limpio</a>, <a href="{{ours-terms}}">términos de servicio, leídos por ti</a> y <a href="{{ours-factcheck}}">afirmaciones verificadas</a>.</p>
@@ -106,6 +122,14 @@ HTML, 'Imagina un agente de IA con cinco centavos y una pregunta. Puede pagar de
 
 <h2>Um hackathon, um prazo, Drupal</h2>
 <p>O Ombú começou como nossa inscrição no Tameion Agents Hackathon (Arc × Canteen). Construímos sobre Drupal e Drupal Commerce, com dois módulos que publicamos como código aberto, <a href="https://www.drupal.org/project/x402_pay">x402 Pay</a> e <a href="https://www.drupal.org/project/wallet_auth">Wallet Auth</a>. Os pagamentos são em USDC na Arc. Nas redes que liquidamos nós mesmos, ninguém se coloca entre quem compra e quem vende: o dinheiro vai da carteira do comprador para a do vendedor.</p>
+
+<h2>O placar, por enquanto</h2>
+<p>Inscrevemos o Ombú em dois programas da Arc. Veja como foi em cada um.</p>
+<ul>
+<li><strong><a href="https://tameion.thecanteenapp.com/">Tameion Agents Hackathon</a></strong> (Canteen × Circle, encerrou em 17 de outubro). A avaliação não tem data marcada e ainda não há resultados. Estamos esperando, como todo mundo.</li>
+<li><strong><a href="https://dorahacks.io/hackathon/arc-microgrants/winner">Arc Microgrants</a></strong> (DoraHacks, 20 grants de 500 USDC cada). Não ganhamos nenhum. Parabéns aos vinte que ganharam. Lemos cada projeto vencedor e é difícil discordar do júri. O Pigeonhole criou endereços de depósito sem chave privada, mediu tudo na mainnet e escreveu onde errou. O MergePay verifica dentro de um contrato os tokens assinados do GitHub. O Writ convida você a tentar sequestrar os pagamentos dele. O Shwup devolve o depósito da reserva quando escaneiam seu ingresso na porta. Nós tínhamos um site Drupal muito caprichado. Eram projetos melhores, e anotamos tudo; duas dessas anotações já estão funcionando aqui: <a href="/.well-known/x402">/.well-known/x402</a> e o servidor MCP.</li>
+</ul>
+<p>Dizem que se aprende mais perdendo do que ganhando. Se for verdade, estamos aprendendo muito.</p>
 
 <h2>Duas prateleiras desde o primeiro dia</h2>
 <p>Um mercado com as prateleiras vazias é um estacionamento. Então ele abriu com dois tipos de mercadoria.</p>

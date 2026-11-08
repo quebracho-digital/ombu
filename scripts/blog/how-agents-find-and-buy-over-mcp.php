@@ -37,9 +37,21 @@ return [
 <p>So the agent never needs a second channel to pay: the price, the payment and the receipt travel in the same conversation with the server.</p>
 
 <h2>Similar services, and why each one is there</h2>
-<p>A listing can show other services that look like it. Ombú builds that list from two rankings. One ranks by the terms of the listing: its title, its text and its tags. The other ranks by the meaning of the text, using the vectors of each listing. The two rankings are fused with reciprocal rank fusion: a service that is high in both lists comes first, and a service that is high in only one still appears when it is the best match of that kind. The fusion keeps the reason for each suggestion, so the page can say which ranking put it there.</p>
+<p>Under each listing, Ombú shows other services that could stand in for it. The list comes from two rankings that are then fused, and this is what each one means.</p>
 
-<p>If the search server is down, the page does not break: a fallback answers from the database until the search server answers again.</p>
+<h3>How two services come to be similar</h3>
+<ul>
+<li><strong>By shared terms.</strong> Two listings that share a category, a tag or a kind are closer. A term counts for more the rarer it is: its weight is the logarithm of the number of listings divided by the number that carry it, so "x402", which almost every listing has, adds nothing. The kind (our own internal category) counts double once it is filled in.</li>
+<li><strong>By meaning.</strong> Ombú turns the text of each listing into a vector with an embedding model (Qwen3-Embedding-8B today) and compares two vectors by their cosine, from 0 to 1. Two services that say the same thing in different words end up close.</li>
+<li><strong>Fusing the two.</strong> We do not add the scores, because the two scales mean different things. We use reciprocal rank fusion: each ranking gives a service points by its place, and the points shrink slowly (a first place adds 1/61 of the ranking's weight, a tenth place 1/70). A service that is high in both rankings comes first, and no single ranking decides. The weight of each ranking and of each field can be changed from the admin.</li>
+<li><strong>Alternatives, not neighbours.</strong> One provider has more than half of the catalogue, and its services resemble each other. So a list shows at most two services of the same provider, never a retired or unpublished one, and up to twelve in all.</li>
+</ul>
+<p>Each suggestion keeps the reason it is there, so the page can say whether it came from shared terms, from close meaning or from both. We have not yet measured whether people find these lists useful; the last section says what we have and have not measured.</p>
+
+<h3>Why we forked a Drupal module</h3>
+<p>Meilisearch can answer "which documents are like this one" by itself. The Drupal module for Meilisearch, though, assumes that Meilisearch computes the vectors, and Ombú already computes its own: it needs them for the fusion and for the fallback. So we made three changes to the module: let Drupal hand its own vectors to Meilisearch, search with a vector the caller brings, and offer "More like this" through Meilisearch's similar documents.</p>
+<p>We proposed those changes to the original module on drupal.org, as three issues, and we are giving its maintainer time to answer. Meanwhile we run a fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, so nothing waits for anyone. It keeps the original history and the GPL licence, and its README says it is a fork. We may still contribute the work back.</p>
+<p>If the search server does not answer, the page does not break: the list comes from the database, as before.</p>
 
 <h2>What we have not measured yet</h2>
 <p>We do not publish a quality score for the similar list yet. The weights of the two rankings are settings, and we will show numbers when we have a labelled set of services that people judged as similar or not. Until then, the claim is only what the list does, not how well it does it.</p>
@@ -61,9 +73,21 @@ HTML, 'Agents can use Ombú through MCP: search and read services for free, buy 
 <p>Así el agente no necesita un segundo canal para pagar: el precio, el pago y el recibo viajan en la misma conversación con el servidor.</p>
 
 <h2>Servicios similares, y por qué está cada uno</h2>
-<p>Un listado puede mostrar otros servicios que se le parecen. Ombú arma esa lista con dos rankings. Uno ordena por los términos del listado: su título, su texto y sus etiquetas. El otro ordena por el significado del texto, con los vectores de cada listado. Los dos rankings se fusionan con fusión por rango recíproco: un servicio que está arriba en ambos viene primero, y uno que está arriba sólo en uno sigue apareciendo cuando es el mejor de ese tipo. La fusión guarda el motivo de cada sugerencia, así la página puede decir qué ranking la puso ahí.</p>
+<p>Debajo de cada listado, Ombú muestra otros servicios que podrían reemplazarlo. La lista sale de dos rankings que después se fusionan, y esto es lo que significa cada uno.</p>
 
-<p>Si el servidor de búsqueda está caído, la página no se rompe: un respaldo responde desde la base de datos hasta que el servidor de búsqueda vuelva.</p>
+<h3>Cómo dos servicios llegan a ser similares</h3>
+<ul>
+<li><strong>Por términos compartidos.</strong> Dos listados que comparten una categoría, una etiqueta o un tipo están más cerca. Un término cuenta más cuanto más raro es: su peso es el logaritmo de la cantidad de listados dividida por la cantidad que lo tienen, así que "x402", que casi todos tienen, no suma nada. El tipo (nuestra categoría interna) cuenta doble cuando está completo.</li>
+<li><strong>Por significado.</strong> Ombú convierte el texto de cada listado en un vector con un modelo de embeddings (hoy Qwen3-Embedding-8B) y compara dos vectores por su coseno, de 0 a 1. Dos servicios que dicen lo mismo con otras palabras quedan cerca.</li>
+<li><strong>Fusionar los dos.</strong> No sumamos los puntajes, porque las dos escalas significan cosas distintas. Usamos la fusión de rangos recíprocos: cada ranking le da puntos a un servicio según su lugar, y los puntos bajan despacio (el primer lugar suma 1/61 del peso del ranking, el décimo 1/70). Un servicio alto en los dos rankings va primero, y ningún ranking decide solo. El peso de cada ranking y de cada campo se cambia desde la administración.</li>
+<li><strong>Alternativas, no vecinos.</strong> Un proveedor tiene más de la mitad del catálogo, y sus servicios se parecen entre sí. Por eso una lista muestra como máximo dos servicios del mismo proveedor, nunca uno retirado o sin publicar, y hasta doce en total.</li>
+</ul>
+<p>Cada sugerencia guarda la razón por la que está, así que la página puede decir si vino de términos compartidos, de significado cercano o de ambos. Todavía no medimos si estas listas le sirven a la gente; la última sección cuenta qué medimos y qué no.</p>
+
+<h3>Por qué hicimos un fork de un módulo de Drupal</h3>
+<p>Meilisearch puede responder solo "qué documentos se parecen a este". Pero el módulo de Drupal para Meilisearch supone que Meilisearch calcula los vectores, y Ombú ya calcula los suyos: los necesita para la fusión y para el respaldo. Por eso le hicimos tres cambios al módulo: que Drupal le pase sus propios vectores a Meilisearch, buscar con un vector que trae quien llama, y ofrecer "More like this" con los documentos similares de Meilisearch.</p>
+<p>Propusimos esos cambios al módulo original en drupal.org, como tres issues, y le estamos dando tiempo a su mantenedor para que responda. Mientras tanto usamos un fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, para que nada dependa de nadie. Conserva el historial original y la licencia GPL, y su README dice que es un fork. Todavía podemos devolver el trabajo al proyecto original.</p>
+<p>Si el servidor de búsqueda no responde, la página no se rompe: la lista sale de la base de datos, como antes.</p>
 
 <h2>Lo que todavía no medimos</h2>
 <p>Todavía no publicamos un puntaje de calidad para la lista de similares. Los pesos de los dos rankings son configuración, y mostraremos números cuando tengamos un conjunto etiquetado de servicios que la gente juzgó parecidos o no. Hasta entonces, lo que afirmamos es lo que hace la lista, no qué tan bien lo hace.</p>
@@ -82,10 +106,22 @@ HTML, 'Los agentes usan Ombú por MCP: buscan y leen servicios gratis, compran u
 <h2>Comprar uma chamada, dentro do protocolo</h2>
 <p><code>ombu_call_service</code> chama um dos serviços que o próprio Ombú vende, como o ping, a página para Markdown, a análise de termos, a checagem de fatos e a checagem de nomes. Sem pagamento, a ferramenta responde com um erro que traz o <code>PaymentRequired</code> do x402. O agente paga o que o serviço cobra e chama de novo com o pagamento em <code>_meta["x402/payment"]</code>, que é o lugar onde o MCP permite enviar dados extras. Uma chamada que falha não é cobrada.</p>
 
-<h2>Serviços parecidos, e por que cada um está ali</h2>
-<p>Um anúncio pode mostrar outros serviços parecidos com ele. O Ombú monta essa lista com dois rankings. Um ordena pelos termos do anúncio: título, texto e etiquetas. O outro ordena pelo significado do texto, com os vetores de cada anúncio. Os dois rankings se fundem por fusão de rank recíproco: um serviço que está bem colocado nos dois vem primeiro, e um que está bem colocado só em um continua aparecendo quando é o melhor daquele tipo. A fusão guarda o motivo de cada sugestão, então a página diz qual ranking a colocou ali.</p>
+<h2>Serviços parecidos, e por que cada um está lá</h2>
+<p>Abaixo de cada anúncio, o Ombú mostra outros serviços que poderiam substituí-lo. A lista vem de dois rankings que depois são fundidos, e é isto o que cada um significa.</p>
 
-<p>Se o servidor de busca cair, a página não quebra: um reserva responde a partir do banco de dados até o servidor de busca voltar.</p>
+<h3>Como dois serviços passam a ser parecidos</h3>
+<ul>
+<li><strong>Por termos em comum.</strong> Dois anúncios que compartilham uma categoria, uma etiqueta ou um tipo ficam mais próximos. Um termo vale mais quanto mais raro é: seu peso é o logaritmo do número de anúncios dividido pelo número dos que o têm, então "x402", que quase todos têm, não soma nada. O tipo (nossa categoria interna) vale o dobro quando está preenchido.</li>
+<li><strong>Por significado.</strong> O Ombú transforma o texto de cada anúncio em um vetor com um modelo de embeddings (hoje o Qwen3-Embedding-8B) e compara dois vetores pelo cosseno, de 0 a 1. Dois serviços que dizem a mesma coisa com outras palavras ficam próximos.</li>
+<li><strong>Fundir os dois.</strong> Não somamos as pontuações, porque as duas escalas significam coisas diferentes. Usamos a fusão de ranks recíprocos: cada ranking dá pontos a um serviço pela sua posição, e os pontos diminuem devagar (o primeiro lugar soma 1/61 do peso do ranking, o décimo 1/70). Um serviço alto nos dois rankings vem primeiro, e nenhum ranking decide sozinho. O peso de cada ranking e de cada campo pode ser mudado na administração.</li>
+<li><strong>Alternativas, não vizinhos.</strong> Um provedor tem mais da metade do catálogo, e seus serviços se parecem entre si. Por isso uma lista mostra no máximo dois serviços do mesmo provedor, nunca um aposentado ou não publicado, e até doze no total.</li>
+</ul>
+<p>Cada sugestão guarda o motivo pelo qual está ali, então a página pode dizer se veio de termos em comum, de significado próximo ou dos dois. Ainda não medimos se essas listas são úteis para as pessoas; a última seção conta o que medimos e o que não.</p>
+
+<h3>Por que fizemos um fork de um módulo do Drupal</h3>
+<p>O Meilisearch consegue responder sozinho "quais documentos se parecem com este". Mas o módulo do Drupal para o Meilisearch supõe que o Meilisearch calcula os vetores, e o Ombú já calcula os seus: ele precisa deles para a fusão e para o plano B. Por isso fizemos três mudanças no módulo: deixar o Drupal passar seus próprios vetores ao Meilisearch, buscar com um vetor que quem chama traz, e oferecer "More like this" pelos documentos parecidos do Meilisearch.</p>
+<p>Propusemos essas mudanças ao módulo original no drupal.org, como três issues, e estamos dando tempo ao seu mantenedor para responder. Enquanto isso usamos um fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, para que nada dependa de ninguém. Ele mantém o histórico original e a licença GPL, e seu README diz que é um fork. Ainda podemos devolver o trabalho ao projeto original.</p>
+<p>Se o servidor de busca não responder, a página não quebra: a lista vem do banco de dados, como antes.</p>
 
 <h2>O que ainda não medimos</h2>
 <p>Ainda não publicamos uma nota de qualidade para a lista de parecidos. Os pesos dos dois rankings são configuração, e vamos mostrar números quando tivermos um conjunto de serviços rotulados como parecidos ou não pelas pessoas. Até lá, afirmamos o que a lista faz, não o quão bem ela faz.</p>

@@ -1,0 +1,10 @@
+uuid: e2e7e21f-a111-4fc7-a47f-cd781c81cc06
+langcode: en
+status: true
+dependencies: {  }
+id: node__blog
+label: 'Blog post'
+tags:
+  title: '[current-page:title] | [site:name]'
+  canonical_url: '[current-page:ombu-url]'
+  description: '[current-page:ombu-description]'

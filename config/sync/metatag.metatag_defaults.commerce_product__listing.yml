@@ -1,0 +1,10 @@
+uuid: 7748546e-79ae-4719-9890-e30c398a33ec
+langcode: en
+status: true
+dependencies: {  }
+id: commerce_product__listing
+label: Listing
+tags:
+  title: '[current-page:title] | [site:name]'
+  canonical_url: '[current-page:ombu-url]'
+  description: '[current-page:ombu-description]'

@@ -1,0 +1,25 @@
+uuid: d95c2ba2-6492-4c18-8388-cd92dc1d5fea
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: sL588ui1E_8-2c_UupwyYxcqX2OVyMFp3HTLbbFqvPc
+id: global
+label: Global
+tags:
+  title: '[current-page:title] | [site:name]'
+  canonical_url: '[current-page:ombu-url]'
+  description: '[current-page:ombu-description]'
+  og_site_name: '[site:name]'
+  og_type: '[current-page:ombu-type]'
+  og_title: '[current-page:title]'
+  og_url: '[current-page:ombu-url]'
+  og_description: '[current-page:ombu-description]'
+  twitter_cards_type: summary_large_image
+  twitter_cards_title: '[current-page:title]'
+  twitter_cards_description: '[current-page:ombu-description]'
+  twitter_cards_image: '[current-page:ombu-image]'
+  ombu_markdown: '[current-page:ombu-markdown]'
+  ombu_guide: /llms.txt
+  ombu_api: /openapi.json
+  og_image: '[current-page:ombu-image]'

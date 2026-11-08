@@ -1,0 +1,11 @@
+uuid: ac75541d-4034-4113-8282-02d4251f76e8
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 4nSkHydKpiJerqf_crDChEGAq39ncKB34q5xk9Ycmgo
+id: '404'
+label: '404 page not found'
+tags:
+  canonical_url: '<none>'
+  shortlink: '<none>'

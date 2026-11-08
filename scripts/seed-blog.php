@@ -15,7 +15,9 @@
 $nodes = \Drupal::entityTypeManager()->getStorage('node');
 $state = \Drupal::state();
 $seeded = $state->get('ombu.seed_blog', []);
-$force = (bool) getenv('OMBU_SEED_FORCE');
+// OMBU_SEED_FORCE=1 overwrites every post edited on the site; a list of
+// slugs (OMBU_SEED_FORCE=whats-new-2026-11-08) only those.
+$forceEnv = (string) getenv('OMBU_SEED_FORCE');
 // A body names a listing as {{sku}}: ids differ between databases, SKUs do not.
 // The card's photo: a copy of the module's file as a managed file, once.
 $photo = function (string $name) {
@@ -60,6 +62,7 @@ $hash = fn($e) => sha1($e->label() . "\n" . $e->get('body')->value . "\n" . $e->
 foreach (glob(__DIR__ . '/blog/*.php') as $file) {
   $slug = basename($file, '.php');
   $alias = "/blog/$slug";
+  $force = $forceEnv === '1' || in_array($slug, explode(',', $forceEnv), TRUE);
   $post = require $file;
   $node = NULL;
   foreach (['en', 'es', 'pt-br'] as $lang) {
@@ -73,7 +76,7 @@ foreach (glob(__DIR__ . '/blog/*.php') as $file) {
     $node ??= $path ? $nodes->load((int) basename($path['path'])) : NULL;
     $entity = $node && $node->hasTranslation($lang) ? $node->getTranslation($lang) : NULL;
     if ($entity && !$force && ($seeded[$key] ?? NULL) !== $hash($entity)) {
-      echo "$key: edited on the site, left as it is (OMBU_SEED_FORCE=1 to overwrite)\n";
+      echo "$key: edited on the site, left as it is (OMBU_SEED_FORCE=1 or =$slug to overwrite)\n";
       continue;
     }
     $values = ['title' => $title, 'field_image' => ['target_id' => $photo($post['image']), 'alt' => $post['alt'][$lang] ?? $title], 'body' => ['value' => $body, 'summary' => $summary, 'format' => 'full_html'], 'field_blog_category' => array_map(fn($k) => ['target_id' => $tids[$k] ?? throw new \RuntimeException("No blog category $k.")], $post['categories'] ?? []), 'status' => empty($post['draft']) ? 1 : 0, 'path' => ['alias' => $alias, 'pathauto' => 0]];

@@ -2,20 +2,18 @@
 
 /**
  * @file
- * Fourth post, the first "What's new": what the 2026-11-08 deploy brings.
- * Every item is a commit between origin/main and the deployed tip; nothing
- * that is not deployed is promised (the catalogue importer, the paid
- * verifier and OFAC in quebracho/x402 are not in it).
+ * The "What's new" of 8 November, both deploys in one post: the blog as the
+ * home and featured services (morning), then the home as a Layout Builder
+ * page, Metatag and the links for agents, why the share block stays plain
+ * links, and the Bazaar and PayAI importers, which are in the code and have
+ * not run in production (evening). Every claim is in the commits of the day.
  *
- * DRAFT: saved unpublished. Before it goes live: Leo's review, a native
- * review of pt-br, and a check that every item is in what was deployed
- * (Meilisearch's paragraph depends on whether SER5 gets its server).
+ * Seed it only after the deploy is verified. The pt-br needs a native review.
  */
 
 $img = '/modules/custom/ombu/images/blog';
 
 return [
-  'draft' => TRUE,
   'categories' => ['whats-new'],
   'image' => 'market-hall.jpg',
   'alt' => [
@@ -23,110 +21,143 @@ return [
     'es' => 'El interior del mercado municipal de La Quiaca, Argentina',
     'pt-br' => 'O interior do mercado municipal de La Quiaca, Argentina',
   ],
-  'date' => '2026-11-08 12:00:00 America/Argentina/Buenos_Aires',
-  'en' => ["What's new in Ombú: a blog for a home, featured services, and our own search module", <<<HTML
+  'date' => '2026-11-08 20:00:00 America/Argentina/Buenos_Aires',
+  'en' => ["What's new in Ombú on 8 November: a home you can rearrange, featured services, tags for agents and two catalogues we check", <<<HTML
 <p class="text-body-secondary small">8 November 2026 · Quebracho</p>
+<figure class="figure w-100 mb-4"><img src="$img/market-hall.jpg" class="figure-img img-fluid rounded w-100" width="1400" height="1050" alt="Inside the municipal market of La Quiaca, Argentina."></figure>
 
-<p class="lead">Every time we deploy, we will write down what changed, here, under <em>What's new</em>. This is the first one.</p>
+<p class="lead">On 8 November we deployed twice, in the morning and in the evening. This is what changed, what we chose not to do, and what is still missing.</p>
 
-<h2>The home page is now the blog</h2>
-<p>Ombú opens on its blog: cards with a photo, a date and a short summary, in English, Spanish and Portuguese, each language showing only its own posts. The market is one click away, in the main menu. Agents get the same list as markdown at <code>/blog.md</code>.</p>
-<p>Posts now have categories. <em>What's new</em> marks the post of each deploy, like this one.</p>
+<h2>The home is a page you can rearrange</h2>
+<p>The home was a view whose blocks sat in fixed places. It is now a page built with Layout Builder, Drupal's own block layout tool. Whoever runs the site can reorder, hide or add blocks under <em>Structure, Content types, Home page, Manage display, Manage layout</em>, without touching code, and the layout is saved in the site's configuration like everything else.</p>
+<p>The seven blocks keep their order: the hero, the featured services, the latest posts, the newest listings, the best rated, the latest sales and the strip for agents. The layout is one column for now.</p>
 
 <h2>Featured services</h2>
 <p>A listing can be marked as featured, and the featured ones get their own block on the home page.</p>
 
-<h2>Similar services, from our own search module</h2>
-<p>Under each listing, Ombú shows other services that could stand in for it. The list comes from two rankings that are then fused, and this is what each one means.</p>
+<h2>Tags that tell networks and agents what a page is</h2>
+<p>We replaced our hand-written tags with Metatag, a module the Drupal community maintains. A page now says its title, its description, its canonical address and a photo for the preview, in the Open Graph and Twitter tags. A post uses its own photo; a page without one uses ours. A market search keeps only its filters in the address, so a page number or a tracking parameter does not become a different page.</p>
+<p>For agents, every page now carries three links in its head, each with the type of what it points to: the Markdown version of a market search, <code>llms.txt</code>, which explains the site, and <code>/openapi.json</code>, which describes the services we sell. A post and a listing already had their Markdown twin: add <code>.md</code> to the address. An agent that only reads the HTML finds the same pointers as one that reads the headers.</p>
 
-<h3>How two services come to be similar</h3>
+<h2>Similar services</h2>
+<p>Under each listing, Ombú shows other services that could stand in for it, ranked by shared terms and by the meaning of their text. <a href="/blog/how-agents-find-and-buy-over-mcp">The post about MCP</a> explains how the list is built and why we run a fork of the Meilisearch module for it.</p>
+
+<h2>Why the share block is plain links</h2>
+<p>Under a post, a listing or a filtered market there is a block to share it on Bluesky, Mastodon, X, LinkedIn, WhatsApp, Telegram or email, and to copy the address. We looked at the modules for this and chose not to use one.</p>
 <ul>
-<li><strong>By shared terms.</strong> Two listings that share a category, a tag or a kind are closer. A term counts for more the rarer it is: its weight is the logarithm of the number of listings divided by the number that carry it, so "x402", which almost every listing has, adds nothing. The kind (our own internal category) counts double once it is filled in.</li>
-<li><strong>By meaning.</strong> Ombú turns the text of each listing into a vector with an embedding model (Qwen3-Embedding-8B today) and compares two vectors by their cosine, from 0 to 1. Two services that say the same thing in different words end up close.</li>
-<li><strong>Fusing the two.</strong> We do not add the scores, because the two scales mean different things. We use reciprocal rank fusion: each ranking gives a service points by its place, and the points shrink slowly (a first place adds 1/61 of the ranking's weight, a tenth place 1/70). A service that is high in both rankings comes first, and no single ranking decides. The weight of each ranking and of each field can be changed from the admin.</li>
-<li><strong>Alternatives, not neighbours.</strong> One provider has more than half of the catalogue, and its services resemble each other. So a list shows at most two services of the same provider, never a retired or unpublished one, and up to twelve in all.</li>
+<li>The module of a widely used sharing service loads a script from that service on every page, so a third party sees the visit before anyone clicks. We want none.</li>
+<li>The modules that only write links do what our seven links already do.</li>
+<li>What makes a good preview is not the button but the tags on the page, and that is what Metatag now does.</li>
 </ul>
-<p>Each suggestion keeps the reason it is there, so the page can say whether it came from shared terms, from close meaning or from both. We have not yet measured whether people find these lists useful; the post about MCP says what we have and have not measured.</p>
+<p>We have not yet seen how each network shows the preview, since they could not reach a site on our own computer. We will check with their inspectors and say what we find. LinkedIn and Facebook keep a preview for a while after the first time they read a page.</p>
 
-<h3>Why we forked a Drupal module</h3>
-<p>Meilisearch can answer "which documents are like this one" by itself. The Drupal module for Meilisearch, though, assumes that Meilisearch computes the vectors, and Ombú already computes its own: it needs them for the fusion and for the fallback. So we made three changes to the module: let Drupal hand its own vectors to Meilisearch, search with a vector the caller brings, and offer "More like this" through Meilisearch's similar documents.</p>
-<p>We proposed those changes to the original module on drupal.org, as three issues, and we are giving its maintainer time to answer. Meanwhile we run a fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, so nothing waits for anyone. It keeps the original history and the GPL licence, and its README says it is a fork. We may still contribute the work back.</p>
-<p>If the search server does not answer, the page does not break: the list comes from the database, as before.</p>
+<h2>Bazaar and PayAI: the importers exist, and they have not run in production</h2>
+<p>The code to bring in the services of Coinbase's Bazaar and of PayAI is in the repository. It is run by hand, not on a schedule, and it has not imported anything into the market yet. A resource becomes a listing only if we check it ourselves:</p>
+<ul>
+<li>the live payment request must say the same network, asset, address and amount as the catalogue;</li>
+<li>the address must not be frozen by the token nor on the OFAC sanctions list;</li>
+<li>the address must have received USDC on chain at least once.</li>
+</ul>
+<p>Only payments in USDC on the six Ethereum-compatible networks we can check are considered; Solana and Arc are left out for now. When we cannot ask (a node or the seller does not answer), nothing is listed and nothing already listed is taken down. In a trial on our development site, 36 of the first 40 resources of Bazaar passed. Of the first 40 of PayAI, 18 passed, 12 were skipped for being Solana only and 10 were rejected, mostly because what they answer differs from what their catalogue says.</p>
+<p>We dropped 8004scan: we measured it and found nothing verified worth importing.</p>
 
-<h2>Credits in the footer</h2>
+<h2>Smaller things</h2>
+<p>The Symfony components Drupal runs on moved from 7.4.22 to 7.4.23, which closes eight security advisories that were open on them.</p>
 <p>The footer now says what Ombú runs on: Drupal and Drupal Commerce, and who builds it.</p>
 
-<h2>Measuring before importing</h2>
-<p>We are looking at more catalogues of x402 services than Circle's. Before a single listing comes in, we measure: how many answer with a valid payment request, how many charge what their catalogue says, and how many wallets are frozen by their token. Nothing from those catalogues is listed yet; when it is, it will be in a post like this one.</p>
-HTML, "The first What's new: the blog is the home page, services can be featured, similar services can come from our own open-source Meilisearch module, and the footer credits Drupal and Drupal Commerce."],
-  'es' => ['Novedades en Ombú: el blog como portada, servicios destacados y nuestro propio módulo de búsqueda', <<<HTML
+<h2>What is still missing</h2>
+<p>Circle's listings do not yet pass the same checks as the new importers; making that a rule for every importer is next. The Portuguese of this post and of the others has not had a native review.</p>
+HTML, 'Two deploys on 8 November: the home can be rearranged with Layout Builder, services can be featured, Metatag writes the tags and the links for agents, the share block stays plain links, and the Bazaar and PayAI importers are in the code but have not run in production.'],
+  'es' => ['Novedades de Ombú del 8 de noviembre: una portada que se reordena, servicios destacados, etiquetas para agentes y dos catálogos que verificamos', <<<HTML
 <p class="text-body-secondary small">8 de noviembre de 2026 · Quebracho</p>
+<figure class="figure w-100 mb-4"><img src="$img/market-hall.jpg" class="figure-img img-fluid rounded w-100" width="1400" height="1050" alt="El interior del mercado municipal de La Quiaca, Argentina."></figure>
 
-<p class="lead">Cada vez que despleguemos, vamos a contar acá lo que cambió, bajo <em>Novedades</em>. Esta es la primera.</p>
+<p class="lead">El 8 de noviembre hicimos dos deploys, uno a la mañana y otro a la noche. Esto es lo que cambió, lo que decidimos no hacer y lo que todavía falta.</p>
 
-<h2>La portada ahora es el blog</h2>
-<p>Ombú abre en su blog: tarjetas con foto, fecha y un resumen corto, en inglés, español y portugués, y cada idioma muestra solo sus propios posteos. El mercado queda a un clic, en el menú principal. Los agentes reciben la misma lista en markdown en <code>/blog.md</code>.</p>
-<p>Los posteos ahora tienen categorías. <em>Novedades</em> marca el posteo de cada despliegue, como este.</p>
+<h2>La portada es una página que se reordena</h2>
+<p>La portada era una vista con sus bloques en lugares fijos. Ahora es una página armada con Layout Builder, la herramienta de Drupal para componer bloques. Quien administra el sitio puede reordenar, ocultar o agregar bloques en <em>Estructura, Tipos de contenido, Home page, Gestionar visualización, Gestionar layout</em>, sin tocar código, y el diseño se guarda en la configuración del sitio como todo lo demás.</p>
+<p>Los siete bloques mantienen su orden: el hero, los servicios destacados, los últimos posts, los listados nuevos, los mejor valorados, las últimas ventas y la franja para agentes. Por ahora el diseño es de una sola columna.</p>
 
 <h2>Servicios destacados</h2>
 <p>Un listado se puede marcar como destacado, y los destacados tienen su propio bloque en la portada.</p>
 
-<h2>Servicios similares, desde nuestro propio módulo de búsqueda</h2>
-<p>Debajo de cada listado, Ombú muestra otros servicios que podrían reemplazarlo. La lista sale de dos rankings que después se fusionan, y esto es lo que significa cada uno.</p>
+<h2>Etiquetas que dicen a las redes y a los agentes qué es una página</h2>
+<p>Reemplazamos nuestras etiquetas escritas a mano por Metatag, un módulo que mantiene la comunidad de Drupal. Una página ahora dice su título, su descripción, su dirección canónica y una foto para la vista previa, en las etiquetas Open Graph y de Twitter. Un post usa su propia foto; una página sin foto usa la nuestra. Una búsqueda del mercado conserva solo sus filtros en la dirección, así que un número de página o un parámetro de seguimiento no se convierte en otra página.</p>
+<p>Para los agentes, cada página lleva ahora tres enlaces en su cabecera, cada uno con el tipo de lo que señala: la versión en Markdown de una búsqueda del mercado, <code>llms.txt</code>, que explica el sitio, y <code>/openapi.json</code>, que describe los servicios que vendemos. Un post y un listado ya tenían su gemelo en Markdown: se agrega <code>.md</code> a la dirección. Un agente que solo lee el HTML encuentra las mismas indicaciones que uno que lee las cabeceras.</p>
 
-<h3>Cómo dos servicios llegan a ser similares</h3>
+<h2>Servicios similares</h2>
+<p>Debajo de cada listado, Ombú muestra otros servicios que podrían reemplazarlo, ordenados por términos en común y por el significado de su texto. <a href="/es/blog/how-agents-find-and-buy-over-mcp">El post sobre MCP</a> explica cómo se arma la lista y por qué usamos un fork del módulo de Meilisearch para eso.</p>
+
+<h2>Por qué el bloque de compartir son enlaces simples</h2>
+<p>Debajo de un post, un listado o un mercado filtrado hay un bloque para compartirlo en Bluesky, Mastodon, X, LinkedIn, WhatsApp, Telegram o por correo, y para copiar la dirección. Miramos los módulos que existen para esto y elegimos no usar ninguno.</p>
 <ul>
-<li><strong>Por términos compartidos.</strong> Dos listados que comparten una categoría, una etiqueta o un tipo están más cerca. Un término cuenta más cuanto más raro es: su peso es el logaritmo de la cantidad de listados dividida por la cantidad que lo tienen, así que "x402", que casi todos tienen, no suma nada. El tipo (nuestra categoría interna) cuenta doble cuando está completo.</li>
-<li><strong>Por significado.</strong> Ombú convierte el texto de cada listado en un vector con un modelo de embeddings (hoy Qwen3-Embedding-8B) y compara dos vectores por su coseno, de 0 a 1. Dos servicios que dicen lo mismo con otras palabras quedan cerca.</li>
-<li><strong>Fusionar los dos.</strong> No sumamos los puntajes, porque las dos escalas significan cosas distintas. Usamos la fusión de rangos recíprocos: cada ranking le da puntos a un servicio según su lugar, y los puntos bajan despacio (el primer lugar suma 1/61 del peso del ranking, el décimo 1/70). Un servicio alto en los dos rankings va primero, y ningún ranking decide solo. El peso de cada ranking y de cada campo se cambia desde la administración.</li>
-<li><strong>Alternativas, no vecinos.</strong> Un proveedor tiene más de la mitad del catálogo, y sus servicios se parecen entre sí. Por eso una lista muestra como máximo dos servicios del mismo proveedor, nunca uno retirado o sin publicar, y hasta doce en total.</li>
+<li>El módulo de un servicio de compartir muy usado carga un script de ese servicio en cada página, así que un tercero ve la visita antes de que alguien haga clic. No queremos ninguno.</li>
+<li>Los módulos que solo escriben enlaces hacen lo que ya hacen nuestros siete enlaces.</li>
+<li>Lo que hace buena una vista previa no es el botón sino las etiquetas de la página, y eso ahora lo hace Metatag.</li>
 </ul>
-<p>Cada sugerencia guarda la razón por la que está, así que la página puede decir si vino de términos compartidos, de significado cercano o de ambos. Todavía no medimos si estas listas le sirven a la gente; el posteo sobre MCP cuenta qué medimos y qué no.</p>
+<p>Todavía no vimos cómo muestra cada red la vista previa, porque no podían llegar a un sitio en nuestra propia computadora. Lo vamos a verificar con sus inspectores y vamos a contar qué encontramos. LinkedIn y Facebook guardan la vista previa un tiempo después de leer una página por primera vez.</p>
 
-<h3>Por qué hicimos un fork de un módulo de Drupal</h3>
-<p>Meilisearch puede responder solo "qué documentos se parecen a este". Pero el módulo de Drupal para Meilisearch supone que Meilisearch calcula los vectores, y Ombú ya calcula los suyos: los necesita para la fusión y para el respaldo. Por eso le hicimos tres cambios al módulo: que Drupal le pase sus propios vectores a Meilisearch, buscar con un vector que trae quien llama, y ofrecer "More like this" con los documentos similares de Meilisearch.</p>
-<p>Propusimos esos cambios al módulo original en drupal.org, como tres issues, y le estamos dando tiempo a su mantenedor para que responda. Mientras tanto usamos un fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, para que nada dependa de nadie. Conserva el historial original y la licencia GPL, y su README dice que es un fork. Todavía podemos devolver el trabajo al proyecto original.</p>
-<p>Si el servidor de búsqueda no responde, la página no se rompe: la lista sale de la base de datos, como antes.</p>
+<h2>Bazaar y PayAI: los importadores existen y no corrieron en producción</h2>
+<p>El código para traer los servicios del Bazaar de Coinbase y de PayAI está en el repositorio. Se corre a mano, no en un horario, y todavía no importó nada al mercado. Un recurso se vuelve listado solo si lo verificamos nosotros:</p>
+<ul>
+<li>el pedido de pago en vivo debe decir la misma red, activo, dirección y monto que el catálogo;</li>
+<li>la dirección no debe estar congelada por el token ni en la lista de sanciones de OFAC;</li>
+<li>la dirección debe haber recibido USDC en la cadena al menos una vez.</li>
+</ul>
+<p>Solo se consideran pagos en USDC en las seis redes compatibles con Ethereum que podemos verificar; Solana y Arc quedan afuera por ahora. Cuando no podemos preguntar (un nodo o el vendedor no responde), no se publica nada y nada de lo ya publicado se da de baja. En una prueba en nuestro sitio de desarrollo, 36 de los primeros 40 recursos de Bazaar pasaron. De los primeros 40 de PayAI, 18 pasaron, 12 se saltearon por ser solo de Solana y 10 se rechazaron, casi todos porque lo que responden difiere de lo que dice su catálogo.</p>
+<p>Descartamos 8004scan: lo medimos y no encontramos nada verificado que valiera la pena importar.</p>
 
-<h2>Créditos en el pie</h2>
+<h2>Cosas menores</h2>
+<p>Los componentes de Symfony sobre los que corre Drupal pasaron de 7.4.22 a 7.4.23, lo que cierra ocho avisos de seguridad que tenían abiertos.</p>
 <p>El pie de página ahora dice sobre qué funciona Ombú, Drupal y Drupal Commerce, y quién lo hace.</p>
 
-<h2>Medir antes de importar</h2>
-<p>Estamos mirando más catálogos de servicios x402 además del de Circle. Antes de que entre un solo listado, medimos: cuántos responden con un pedido de pago válido, cuántos cobran lo que dice su catálogo y cuántas wallets están congeladas por su token. Todavía no hay listados de esos catálogos; cuando los haya, lo vamos a contar en un posteo como este.</p>
-HTML, 'Las primeras Novedades: el blog es la portada, los servicios se pueden destacar, los similares pueden venir de nuestro propio módulo de Meilisearch, de código abierto, y el pie da crédito a Drupal y Drupal Commerce.'],
-  'pt-br' => ['Novidades no Ombú: o blog como página inicial, serviços em destaque e nosso próprio módulo de busca', <<<HTML
+<h2>Lo que todavía falta</h2>
+<p>Los listados de Circle todavía no pasan por los mismos controles que los importadores nuevos; convertirlo en regla para todos los importadores es lo próximo. El portugués de este post y de los otros no tuvo revisión nativa.</p>
+HTML, 'Dos deploys el 8 de noviembre: la portada se reordena con Layout Builder, los servicios se pueden destacar, Metatag escribe las etiquetas y los enlaces para agentes, el bloque de compartir sigue siendo enlaces simples, y los importadores de Bazaar y PayAI están en el código pero no corrieron en producción.'],
+  'pt-br' => ['Novidades do Ombú de 8 de novembro: uma página inicial que se reorganiza, serviços em destaque, etiquetas para agentes e dois catálogos que verificamos', <<<HTML
 <p class="text-body-secondary small">8 de novembro de 2026 · Quebracho</p>
+<figure class="figure w-100 mb-4"><img src="$img/market-hall.jpg" class="figure-img img-fluid rounded w-100" width="1400" height="1050" alt="O interior do mercado municipal de La Quiaca, Argentina."></figure>
 
-<p class="lead">A cada implantação, vamos contar aqui o que mudou, em <em>Novidades</em>. Esta é a primeira.</p>
+<p class="lead">Em 8 de novembro fizemos dois deploys, um de manhã e outro à noite. Isto é o que mudou, o que decidimos não fazer e o que ainda falta.</p>
 
-<h2>A página inicial agora é o blog</h2>
-<p>O Ombú abre no seu blog: cartões com foto, data e um resumo curto, em inglês, espanhol e português, e cada idioma mostra só as suas próprias publicações. O mercado fica a um clique, no menu principal. Os agentes recebem a mesma lista em markdown em <code>/blog.md</code>.</p>
-<p>As publicações agora têm categorias. <em>Novidades</em> marca a publicação de cada implantação, como esta.</p>
+<h2>A página inicial é uma página que se reorganiza</h2>
+<p>A página inicial era uma view com seus blocos em lugares fixos. Agora é uma página montada com o Layout Builder, a ferramenta do Drupal para compor blocos. Quem administra o site pode reordenar, ocultar ou adicionar blocos em <em>Estrutura, Tipos de conteúdo, Home page, Gerenciar exibição, Gerenciar layout</em>, sem mexer em código, e o desenho fica salvo na configuração do site como todo o resto.</p>
+<p>Os sete blocos mantêm a ordem: o hero, os serviços em destaque, os últimos posts, os anúncios novos, os mais bem avaliados, as últimas vendas e a faixa para agentes. Por enquanto o layout tem uma coluna só.</p>
 
 <h2>Serviços em destaque</h2>
 <p>Um anúncio pode ser marcado como destaque, e os destaques ganham um bloco próprio na página inicial.</p>
 
-<h2>Serviços parecidos, do nosso próprio módulo de busca</h2>
-<p>Abaixo de cada anúncio, o Ombú mostra outros serviços que poderiam substituí-lo. A lista vem de dois rankings que depois são fundidos, e é isto o que cada um significa.</p>
+<h2>Etiquetas que dizem às redes e aos agentes o que é uma página</h2>
+<p>Trocamos nossas etiquetas escritas à mão pelo Metatag, um módulo mantido pela comunidade do Drupal. Uma página agora diz seu título, sua descrição, seu endereço canônico e uma foto para a prévia, nas etiquetas Open Graph e do Twitter. Um post usa a própria foto; uma página sem foto usa a nossa. Uma busca do mercado guarda no endereço só os seus filtros, então um número de página ou um parâmetro de rastreamento não vira outra página.</p>
+<p>Para os agentes, cada página agora leva três links no cabeçalho, cada um com o tipo do que aponta: a versão em Markdown de uma busca do mercado, o <code>llms.txt</code>, que explica o site, e o <code>/openapi.json</code>, que descreve os serviços que vendemos. Um post e um anúncio já tinham seu gêmeo em Markdown: basta acrescentar <code>.md</code> ao endereço. Um agente que lê só o HTML encontra as mesmas indicações de quem lê os cabeçalhos.</p>
 
-<h3>Como dois serviços passam a ser parecidos</h3>
+<h2>Serviços parecidos</h2>
+<p>Embaixo de cada anúncio, o Ombú mostra outros serviços que poderiam substituí-lo, ordenados por termos em comum e pelo significado do texto. <a href="/pt-br/blog/how-agents-find-and-buy-over-mcp">A publicação sobre MCP</a> explica como a lista é montada e por que usamos um fork do módulo do Meilisearch para isso.</p>
+
+<h2>Por que o bloco de compartilhar são links simples</h2>
+<p>Embaixo de um post, de um anúncio ou de um mercado filtrado há um bloco para compartilhar no Bluesky, Mastodon, X, LinkedIn, WhatsApp, Telegram ou por e-mail, e para copiar o endereço. Olhamos os módulos que existem para isso e escolhemos não usar nenhum.</p>
 <ul>
-<li><strong>Por termos em comum.</strong> Dois anúncios que compartilham uma categoria, uma etiqueta ou um tipo ficam mais próximos. Um termo vale mais quanto mais raro é: seu peso é o logaritmo do número de anúncios dividido pelo número dos que o têm, então "x402", que quase todos têm, não soma nada. O tipo (nossa categoria interna) vale o dobro quando está preenchido.</li>
-<li><strong>Por significado.</strong> O Ombú transforma o texto de cada anúncio em um vetor com um modelo de embeddings (hoje o Qwen3-Embedding-8B) e compara dois vetores pelo cosseno, de 0 a 1. Dois serviços que dizem a mesma coisa com outras palavras ficam próximos.</li>
-<li><strong>Fundir os dois.</strong> Não somamos as pontuações, porque as duas escalas significam coisas diferentes. Usamos a fusão de ranks recíprocos: cada ranking dá pontos a um serviço pela sua posição, e os pontos diminuem devagar (o primeiro lugar soma 1/61 do peso do ranking, o décimo 1/70). Um serviço alto nos dois rankings vem primeiro, e nenhum ranking decide sozinho. O peso de cada ranking e de cada campo pode ser mudado na administração.</li>
-<li><strong>Alternativas, não vizinhos.</strong> Um provedor tem mais da metade do catálogo, e seus serviços se parecem entre si. Por isso uma lista mostra no máximo dois serviços do mesmo provedor, nunca um aposentado ou não publicado, e até doze no total.</li>
+<li>O módulo de um serviço de compartilhamento muito usado carrega um script desse serviço em cada página, então um terceiro vê a visita antes de alguém clicar. Não queremos nenhum.</li>
+<li>Os módulos que só escrevem links fazem o que os nossos sete links já fazem.</li>
+<li>O que faz uma boa prévia não é o botão, e sim as etiquetas da página, e isso agora é o Metatag que faz.</li>
 </ul>
-<p>Cada sugestão guarda o motivo pelo qual está ali, então a página pode dizer se veio de termos em comum, de significado próximo ou dos dois. Ainda não medimos se essas listas são úteis para as pessoas; a publicação sobre MCP conta o que medimos e o que não.</p>
+<p>Ainda não vimos como cada rede mostra a prévia, porque elas não conseguiam chegar a um site no nosso computador. Vamos conferir com os inspetores delas e contar o que encontrarmos. O LinkedIn e o Facebook guardam a prévia por um tempo depois de ler uma página pela primeira vez.</p>
 
-<h3>Por que fizemos um fork de um módulo do Drupal</h3>
-<p>O Meilisearch consegue responder sozinho "quais documentos se parecem com este". Mas o módulo do Drupal para o Meilisearch supõe que o Meilisearch calcula os vetores, e o Ombú já calcula os seus: ele precisa deles para a fusão e para o plano B. Por isso fizemos três mudanças no módulo: deixar o Drupal passar seus próprios vetores ao Meilisearch, buscar com um vetor que quem chama traz, e oferecer "More like this" pelos documentos parecidos do Meilisearch.</p>
-<p>Propusemos essas mudanças ao módulo original no drupal.org, como três issues, e estamos dando tempo ao seu mantenedor para responder. Enquanto isso usamos um fork, <a href="https://github.com/quebracho-digital/quebracho_meilisearch">quebracho_meilisearch</a>, para que nada dependa de ninguém. Ele mantém o histórico original e a licença GPL, e seu README diz que é um fork. Ainda podemos devolver o trabalho ao projeto original.</p>
-<p>Se o servidor de busca não responder, a página não quebra: a lista vem do banco de dados, como antes.</p>
+<h2>Bazaar e PayAI: os importadores existem e não rodaram em produção</h2>
+<p>O código para trazer os serviços do Bazaar da Coinbase e da PayAI está no repositório. Ele é rodado à mão, não em horário fixo, e ainda não importou nada para o mercado. Um recurso só vira anúncio se nós mesmos o verificamos:</p>
+<ul>
+<li>o pedido de pagamento ao vivo deve dizer a mesma rede, ativo, endereço e valor do catálogo;</li>
+<li>o endereço não pode estar congelado pelo token nem na lista de sanções da OFAC;</li>
+<li>o endereço deve ter recebido USDC na cadeia pelo menos uma vez.</li>
+</ul>
+<p>Só são considerados pagamentos em USDC nas seis redes compatíveis com Ethereum que conseguimos verificar; Solana e Arc ficam de fora por enquanto. Quando não podemos perguntar (um nó ou o vendedor não responde), nada é publicado e nada do que já está publicado é retirado. Em um teste no nosso site de desenvolvimento, 36 dos primeiros 40 recursos do Bazaar passaram. Dos primeiros 40 da PayAI, 18 passaram, 12 foram pulados por serem só de Solana e 10 foram rejeitados, quase todos porque o que respondem difere do que diz o catálogo deles.</p>
+<p>Descartamos o 8004scan: medimos e não encontramos nada verificado que valesse a pena importar.</p>
 
-<h2>Créditos no rodapé</h2>
+<h2>Coisas menores</h2>
+<p>Os componentes do Symfony sobre os quais o Drupal roda passaram da 7.4.22 para a 7.4.23, o que fecha oito avisos de segurança que estavam abertos neles.</p>
 <p>O rodapé agora diz sobre o que o Ombú funciona, Drupal e Drupal Commerce, e quem o faz.</p>
 
-<h2>Medir antes de importar</h2>
-<p>Estamos olhando mais catálogos de serviços x402 além do da Circle. Antes de entrar um único anúncio, medimos: quantos respondem com um pedido de pagamento válido, quantos cobram o que diz o seu catálogo e quantas carteiras estão congeladas pelo seu token. Ainda não há anúncios desses catálogos; quando houver, vamos contar numa publicação como esta.</p>
-HTML, 'As primeiras Novidades: o blog é a página inicial, serviços podem ficar em destaque, os parecidos podem vir do nosso próprio módulo de Meilisearch, de código aberto, e o rodapé dá crédito ao Drupal e ao Drupal Commerce.'],
+<h2>O que ainda falta</h2>
+<p>Os anúncios do Circle ainda não passam pelos mesmos controles dos importadores novos; tornar isso uma regra para todos os importadores é o próximo passo. O português deste post e dos outros não teve revisão nativa.</p>
+HTML, 'Dois deploys em 8 de novembro: a página inicial se reorganiza com o Layout Builder, os serviços podem ser destacados, o Metatag escreve as etiquetas e os links para agentes, o bloco de compartilhar continua sendo links simples, e os importadores do Bazaar e da PayAI estão no código mas não rodaram em produção.'],
 ];

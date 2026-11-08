@@ -17,6 +17,10 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
+## Where we left off — 2026-11-08
+
+Done since 2026-11-06 (see DECISIONS.md for each): Meilisearch and the blog in production; the importers of Bazaar and PayAI, which list only what Ombú verifies on chain (by hand, not in production yet); Metatag with links for agents; the home as a Layout Builder page; the share block; Symfony 7.4.23. Next: the importers' contract (the checks in `CatalogImporterInterface`, Circle included), re-verifying a listing after a maximum age, flood limits, injection quarantine, the allowlist of payTo; then a module for the home, for humans and for agents (Canvas to evaluate), and a better product edit form.
+
 ## Where we left off — 2026-10-21
 
 **Solana paused** (decided 2026-10-22): its pending items (E, F below)

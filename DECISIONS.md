@@ -251,3 +251,13 @@ Decidido por Leo (2026-11-08): "pasa la home a layout builder. creo que es buena
 The home is a node of the `home` type (`scripts/seed-home.php`, address `/home`, front page) whose layout lives in config: Structure > Content types > Home page > Manage display > Manage layout. Blocks: the views blocks of `ombu_home` (featured, latest, top) and `blog:home`, and `HomePartBlock` for the hero, the sales and the strip for agents. Reorder, add or remove them there and export the display. Not done: the layout is one column; the home has no editable text of its own.
 
 Not done in the importers, found by the review of 2026-11-08 and left for the contract work: a listing is not asked again while its catalogue entry does not change (it needs a maximum age); a POST resource is verified by the 402 its GET answers; a "no" on an existing listing retires it only at the end of a complete run; and one transfer of any amount is enough activity.
+
+### The home stays as it is; the next step is a module for humans and agents
+
+Decidido por Leo (2026-11-08 19:39): "Por ahora dejemos asi la home, ya la vamos a sofisticar, quizas podamos hacer un modulo de home que permita personalizar la home para humanos y para agentes?". So the home stays a Layout Builder page of the `home` type, its layout in config (the order Leo set on the production site is the one in the repo, `724caba`..`09c26fd`). A module that lets one customise the home for people and for agents is an idea for later; Canvas is the candidate to look at (not checked against Drupal 11.4). Leo asked whether to recycle the `page` type with a layout per content item instead: left open, with its cost noted (the layout would live in the database, not in config, and every existing page would change).
+
+Decidido por Leo (2026-11-08 19:39): "habria que mejorar un poco la pagina de edicion de productos, pero por ahora zafa". The product edit form stays as is for now; the idea is to group its fields with field_group and hide the technical ones from sellers.
+
+Decidido por Leo (2026-11-08 19:39): "quedo muy bien, deploya, este es un deploy menor, creo que no amerita entrada de blog". The deploy of the home's spacing and the unified "What's new" went to SER5 (`09c26fd`) with no new post. Earlier the same day: "si, haz esa revision, luego deploya y luego crea un nuevo post" (the deploy of `ecdfcab`, fixed by `90d23f0`), and "quizas se puedan unificar" (one "What's new" for 8 November under /blog/whats-new-2026-11-08; the evening-only post is unpublished).
+
+Featured services: the home's block exists but only shows listings with "Featured on the home page" ticked on their edit form. Leo added some from the admin on 2026-11-08.

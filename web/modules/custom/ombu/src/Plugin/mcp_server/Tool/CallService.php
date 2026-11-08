@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 #[Tool(
   id: McpPayments::TOOL,
   label: new TranslatableMarkup('Call a service'),
-  description: new TranslatableMarkup('Calls one of the services Ombú sells itself (ping, page to markdown, terms analysis, fact-check, name check; find them with ombu_search_services, seller "ours", and use the id in their market URL). It costs what the service charges: without payment the result is an error with the x402 PaymentRequired; pay it and call again with the payment in _meta["x402/payment"]. A failing call is not charged.'),
+  description: new TranslatableMarkup('Calls one of the services Ombú sells itself (ping, page to markdown, terms analysis, fact-check, name check; find them with ombu_search_services, seller "ours", and use the `id` in `metadata.market` of the result). It costs what the service charges: without payment the result is an error with the x402 PaymentRequired; pay it and call again with the payment in _meta["x402/payment"]. A failing call is not charged.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [

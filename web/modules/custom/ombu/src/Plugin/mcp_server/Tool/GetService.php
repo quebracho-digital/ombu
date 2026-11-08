@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 #[Tool(
   id: 'ombu_get_service',
   label: new TranslatableMarkup('Get a service'),
-  description: new TranslatableMarkup('Returns one service of the Ombú market by its id (the number in its market URL, /market/listing/{id}): how to call it, what it charges, input and output schemas, provider and rating. Free.'),
+  description: new TranslatableMarkup('Returns one service of the Ombú market by its id (the `id` in `metadata.market` of each search result): how to call it, what it charges, input and output schemas, provider and rating. Free.'),
   inputSchema: [
     'type' => 'object',
     'properties' => [

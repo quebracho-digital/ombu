@@ -287,6 +287,8 @@ final class CatalogueController implements ContainerInjectionInterface {
         'supportsCircleGateway' => in_array('gateway', $rails, TRUE),
         // Ours beyond Circle's shape: who vouches for it, and what buyers say.
         'market' => [
+          // What ombu_get_service and ombu_call_service ask for.
+          'id' => (int) $product->id(),
           'url' => $product->toUrl('canonical', ['absolute' => TRUE])->toString(),
           'source' => $product->get('field_source')->value,
           'verified' => (bool) $product->get('field_verified')->value,

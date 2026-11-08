@@ -8,7 +8,11 @@ use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Url;
 use Drupal\ombu\Controller\CatalogueController;
 use Drupal\x402_pay\PathProcessor\MarkdownPathProcessor;
+use Drupal\ombu\Mcp\McpGuide;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -47,10 +51,41 @@ final class AgentLinkSubscriber implements EventSubscriberInterface {
    */
   public function onRequest(RequestEvent $event): void {
     $request = $event->getRequest();
+    // A plain GET of /mcp is a guide, not an error. Only a client asking for
+    // the event stream gets the protocol's own 405.
+    if ($event->isMainRequest() && $request->isMethod('GET') && $request->attributes->get('_route') === 'mcp_server.handle'
+      && !str_contains((string) $request->headers->get('Accept'), 'text/event-stream')) {
+      $event->setResponse($this->mcpGuide($request));
+      return;
+    }
     if ($event->isMainRequest() && $request->isMethodCacheable() && $request->attributes->get('_route') === self::MARKET
       && (MarkdownPathProcessor::asked($request) || str_contains((string) $request->headers->get('Accept'), 'text/markdown'))) {
       $event->setResponse($this->classResolver->getInstanceFromDefinition(CatalogueController::class)->markdown($request));
     }
+  }
+
+  /**
+   * The guide to /mcp, as JSON, HTML or Markdown by what the client accepts.
+   */
+  private function mcpGuide(Request $request): Response {
+    $base = $request->getSchemeAndHttpHost();
+    $accept = (string) $request->headers->get('Accept');
+    if (str_contains($accept, 'application/json') && !str_contains($accept, 'text/html')) {
+      $response = new JsonResponse(McpGuide::data($base), 200, [], FALSE);
+      $response->setEncodingOptions(JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+    elseif (str_contains($accept, 'text/html')) {
+      $response = new Response('<!doctype html><meta charset="utf-8"><title>Ombú MCP server</title><pre style="white-space:pre-wrap;font:16px/1.5 system-ui;max-width:48rem;margin:2rem auto;padding:0 1rem">' . htmlspecialchars(McpGuide::markdown($base)) . '</pre>');
+      $response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    }
+    else {
+      $response = new Response(McpGuide::markdown($base));
+      $response->headers->set('Content-Type', 'text/markdown; charset=utf-8');
+    }
+    $response->headers->set('Vary', 'Accept');
+    $response->setPublic();
+    $response->setMaxAge(300);
+    return $response;
   }
 
   /**

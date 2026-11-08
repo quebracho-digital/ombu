@@ -17,6 +17,7 @@ use Drupal\x402_pay\PaymentHeaders;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Drupal\ombu\Mcp\McpGuide;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
@@ -285,6 +286,98 @@ final class CatalogueTest extends CommerceKernelTestBase {
     $term = $found ? reset($found) : Term::create(['vid' => $vid, 'name' => $name]);
     $term->save();
     return (int) $term->id();
+  }
+
+  /**
+   * Tests that a plain GET of /mcp is a guide and the event stream a 405.
+   */
+  public function testAPlainGetOfMcpIsAGuideAndTheEventStreamStaysA405(): void {
+    // As in production, where anonymous may reach /mcp.
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->grantPermission('access mcp server')->save();
+    foreach (['*/*' => 'text/markdown', 'text/html' => 'text/html', 'application/json' => 'application/json'] as $accept => $type) {
+      $request = Request::create('/mcp');
+      $request->headers->set('Accept', $accept);
+      $response = $this->container->get('http_kernel')->handle($request);
+      $this->assertSame(200, $response->getStatusCode(), $accept);
+      $this->assertStringStartsWith($type, $response->headers->get('Content-Type'), $accept);
+      $this->assertStringContainsString('/mcp', $response->getContent());
+      $this->assertStringContainsString('ombu_search_services', $response->getContent());
+    }
+    $request = Request::create('/mcp');
+    $request->headers->set('Accept', 'text/event-stream');
+    $this->assertSame(405, $this->container->get('http_kernel')->handle($request)->getStatusCode());
+  }
+
+  /**
+   * Tests that an MCP client over HTTP finds the id in a search and reads it.
+   *
+   * What a client does, through the kernel: initialize, search, take the id
+   * the result gives, ask for that service. A tool called as a class with an
+   * id written in the test would not notice a result without an id.
+   */
+  public function testAnMcpClientFindsTheIdInASearchAndReadsTheService(): void {
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->grantPermission('access mcp server')->save();
+    $init = $this->rpc([
+      'jsonrpc' => '2.0',
+      'id' => 1,
+      'method' => 'initialize',
+      'params' => [
+        'protocolVersion' => '2025-03-26',
+        'capabilities' => new \stdClass(),
+        'clientInfo' => ['name' => 'test', 'version' => '1'],
+      ],
+    ]);
+    $this->assertSame(200, $init->getStatusCode(), $init->getContent());
+    $session = $init->headers->get('mcp-session-id');
+    $this->assertNotEmpty($session);
+
+    $search = $this->tool($session, 'ombu_search_services', ['search' => 'Captcha']);
+    $item = $search['items'][0];
+    $this->assertSame('Captcha', $item['metadata']['description']);
+    $id = $item['metadata']['market']['id'] ?? NULL;
+    $this->assertIsInt($id, 'a search result says the id that the other tools ask for');
+
+    $one = $this->tool($session, 'ombu_get_service', ['id' => $id]);
+    $this->assertSame('Captcha', $one['metadata']['description']);
+    $this->assertSame($id, $one['metadata']['market']['id']);
+  }
+
+  /**
+   * Tests that the addresses the guide gives answer.
+   *
+   * The guide is documentation: an address in it that gives a 404 is a bug
+   * that no other test would find (llms.txt needs its own module, so it is
+   * left to the check on the real site).
+   */
+  public function testTheAddressesOfTheGuideAnswer(): void {
+    $guide = McpGuide::data('http://localhost');
+    foreach (['search_json', 'search_markdown', 'one_service', 'openapi'] as $name) {
+      $url = str_replace(['{words}', '{id}'], ['Captcha', '2'], $guide['without_mcp'][$name]);
+      $response = $this->container->get('http_kernel')->handle(Request::create($url));
+      $this->assertSame(200, $response->getStatusCode(), "$name: $url");
+    }
+  }
+
+  /**
+   * A JSON-RPC POST to /mcp.
+   */
+  private function rpc(array $message, ?string $session = NULL): Response {
+    $server = ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
+    if ($session) {
+      $server['HTTP_MCP_SESSION_ID'] = $session;
+    }
+    return $this->container->get('http_kernel')->handle(Request::create('/mcp', 'POST', [], [], [], $server, json_encode($message)));
+  }
+
+  /**
+   * The decoded result of a tool call over /mcp.
+   */
+  private function tool(string $session, string $name, array $arguments): array {
+    $response = $this->rpc(['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => ['name' => $name, 'arguments' => $arguments]], $session);
+    $body = json_decode($response->getContent(), TRUE);
+    $this->assertArrayHasKey('result', $body, $response->getContent());
+    $this->assertEmpty($body['result']['isError'] ?? FALSE, $response->getContent());
+    return json_decode($body['result']['content'][0]['text'], TRUE);
   }
 
   /**

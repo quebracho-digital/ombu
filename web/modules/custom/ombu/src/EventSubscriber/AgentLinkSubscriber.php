@@ -53,7 +53,7 @@ final class AgentLinkSubscriber implements EventSubscriberInterface {
     $request = $event->getRequest();
     // A plain GET of /mcp is a guide, not an error. Only a client asking for
     // the event stream gets the protocol's own 405.
-    if ($event->isMainRequest() && $request->isMethod('GET') && $request->attributes->get('_route') === 'mcp_server.handle'
+    if ($event->isMainRequest() && $request->isMethod('GET') && in_array($request->attributes->get('_route'), ['mcp_server.handle', 'ombu.mcp_message'], TRUE)
       && !str_contains((string) $request->headers->get('Accept'), 'text/event-stream')) {
       $event->setResponse($this->mcpGuide($request));
       return;

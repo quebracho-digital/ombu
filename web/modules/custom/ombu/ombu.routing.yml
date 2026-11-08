@@ -70,3 +70,18 @@ ombu.well_known_x402:
   methods: [GET]
   requirements:
     _access: 'TRUE'
+
+# The older HTTP+SSE transport (2024-11-05) posted to /message; clients and
+# agents that follow its documents try this address. It is the same server.
+ombu.mcp_message:
+  path: '/mcp/message'
+  defaults:
+    _controller: '\Drupal\mcp_server\Controller\McpServerController::handle'
+    _title: 'MCP Server'
+  requirements:
+    _permission: 'access mcp server'
+    _format: 'json'
+  methods: [GET, POST, DELETE, OPTIONS]
+  options:
+    _auth: ['cookie']
+    no_cache: TRUE

@@ -343,6 +343,26 @@ final class CatalogueTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that the older transport's address reaches the same server.
+   */
+  public function testTheOlderTransportAddressReachesTheSameServer(): void {
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->grantPermission('access mcp server')->save();
+    $init = $this->rpc([
+      'jsonrpc' => '2.0',
+      'id' => 1,
+      'method' => 'initialize',
+      'params' => [
+        'protocolVersion' => '2024-11-05',
+        'capabilities' => new \stdClass(),
+        'clientInfo' => ['name' => 'test', 'version' => '1'],
+      ],
+    ], NULL, '/mcp/message');
+    $this->assertSame(200, $init->getStatusCode(), $init->getContent());
+    $this->assertNotEmpty($init->headers->get('mcp-session-id'));
+    $this->assertSame('2024-11-05', json_decode($init->getContent(), TRUE)['result']['protocolVersion']);
+  }
+
+  /**
    * Tests that the addresses the guide gives answer.
    *
    * The guide is documentation: an address in it that gives a 404 is a bug
@@ -361,12 +381,12 @@ final class CatalogueTest extends CommerceKernelTestBase {
   /**
    * A JSON-RPC POST to /mcp.
    */
-  private function rpc(array $message, ?string $session = NULL): Response {
+  private function rpc(array $message, ?string $session = NULL, string $path = '/mcp'): Response {
     $server = ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json, text/event-stream'];
     if ($session) {
       $server['HTTP_MCP_SESSION_ID'] = $session;
     }
-    return $this->container->get('http_kernel')->handle(Request::create('/mcp', 'POST', [], [], [], $server, json_encode($message)));
+    return $this->container->get('http_kernel')->handle(Request::create($path, 'POST', [], [], [], $server, json_encode($message)));
   }
 
   /**

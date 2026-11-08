@@ -227,3 +227,11 @@ Decidido por Leo (2026-11-06): "por ahora no aportamos, vamos a darle unos dias 
 ### The home is a view
 
 Leo (2026-11-06 14:04) asked for "una home con una view" with blocks (market hero with "Try our sellers", latest posts, latest sales, featured, newest and best rated listings), a template per display, and for agents too; on 2026-11-06 he corrected a controller: "porque un controlador? no ibas a hacer una view para la home?". So `ombu_home` is a view (front page `/home`); other views' displays come in through Views' "Global: View" area, the hero, the sales and the strip for agents through `HomePart`, and Best rated through the `ombu_rating` sort. Not done: a markdown version of the home, and tests of its own for the sort and the view.
+
+### No import from 8004scan; Meilisearch in production; publish without the pt-br review
+
+Decidido por Leo (2026-11-08): "pense que no ibamos a importar de 8004scan, no habia nada serio como importar, por eso vamos a importar desde otros catalogos". So 8004scan stays a survey command; the next importer reads the x402 catalogues.
+
+Decidido por Leo (2026-11-08): "instala meilisearch en prod antes de deployar". So `deploy/compose.yaml` runs Meilisearch v1.55.0 beside web and db, its master key `MEILI_MASTER_KEY` in `deploy/.env`, handed to the search_api server by `settings.prod.php`.
+
+Decidido por Leo (2026-11-08): "Publica y traduce a todos los idiomas, es la primera vez que me pides revision del pt". The posts ship in en, es and pt-br without a native pt-br review. The first post keeps a record of Tameion and Arc Microgrants (the twenty winners by name, Ombú live on mainnet with no mention or feedback).

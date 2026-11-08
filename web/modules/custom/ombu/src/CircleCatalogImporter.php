@@ -28,7 +28,7 @@ use GuzzleHttp\ClientInterface;
  * deleted. A listing staff delete (an abuse report, a legal order) stays
  * deleted: its key is kept and the import skips it.
  */
-final class CircleCatalogImporter {
+final class CircleCatalogImporter implements CatalogImporterInterface {
 
   public const API = 'https://api.circle.com/v2/x402/discovery/resources';
 
@@ -65,6 +65,13 @@ final class CircleCatalogImporter {
     // Recognizes our own listings when Circle lists them too.
     private readonly ?Sellers $sellers = NULL,
   ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function source(): string {
+    return 'circle';
+  }
 
   /**
    * Imports every page; returns counts per outcome.
@@ -405,11 +412,11 @@ final class CircleCatalogImporter {
     $products = $this->entityTypeManager->getStorage('commerce_product');
     $ids = $products->getQuery()->accessCheck(FALSE)
       ->condition('type', 'listing')
-      ->condition('field_markets', 'circle')
+      ->condition('field_markets', $this->source())
       ->execute();
     foreach ($products->loadMultiple(array_diff($ids, array_keys($this->onCircle))) as $product) {
       $markets = array_column($product->get('field_markets')->getValue(), 'value');
-      $product->set('field_markets', array_values(array_diff($markets, ['circle'])))->save();
+      $product->set('field_markets', array_values(array_diff($markets, [$this->source()])))->save();
     }
   }
 
@@ -420,7 +427,7 @@ final class CircleCatalogImporter {
     $products = $this->entityTypeManager->getStorage('commerce_product');
     $query = $products->getQuery()->accessCheck(FALSE)
       ->condition('type', 'listing')
-      ->condition('field_source', 'circle');
+      ->condition('field_source', $this->source());
     $ids = $query->condition($query->orConditionGroup()
       ->notExists('field_retired')
       ->condition('field_retired', FALSE))

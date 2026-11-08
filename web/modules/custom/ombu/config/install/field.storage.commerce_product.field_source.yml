@@ -19,6 +19,12 @@ settings:
     -
       value: circle
       label: 'Circle Agent Marketplace'
+    -
+      value: bazaar
+      label: 'Coinbase Bazaar'
+    -
+      value: payai
+      label: 'PayAI'
   allowed_values_function: ''
 module: options
 locked: false

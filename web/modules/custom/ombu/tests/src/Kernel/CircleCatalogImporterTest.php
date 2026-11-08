@@ -8,6 +8,7 @@ use Drupal\ai_provider_universal_factcheck\Exception\PageFetchException;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\ombu\CatalogImporterInterface;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use GuzzleHttp\Client;
@@ -59,6 +60,28 @@ final class CircleCatalogImporterTest extends CommerceKernelTestBase {
     $this->installEntitySchema('file');
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['commerce_product', 'comment', 'ombu']);
+  }
+
+  public function testItIsAnImporterOfItsOwnSource(): void {
+    $importer = new CircleCatalogImporter(new Client(), $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'));
+    $this->assertInstanceOf(CatalogImporterInterface::class, $importer);
+    $this->assertSame('circle', $importer->source());
+  }
+
+  public function testAFullRunLeavesAnotherSourcesListingsAlone(): void {
+    $other = $this->ownListing([
+      'title' => 'From another catalogue',
+      'field_endpoint' => 'https://other.example/x',
+      'field_http_method' => 'GET',
+      'field_source' => 'bazaar',
+      'field_markets' => ['bazaar'],
+      'field_retired' => FALSE,
+    ]);
+    $counts = $this->import([$this->item('/v1/weather')]);
+    $this->assertSame(0, $counts['retired']);
+    $other = Product::load($other->id());
+    $this->assertFalse((bool) $other->get('field_retired')->value);
+    $this->assertSame(['bazaar'], array_column($other->get('field_markets')->getValue(), 'value'));
   }
 
   public function testAListingCarriesItsProviderPaymentAndOperation(): void {

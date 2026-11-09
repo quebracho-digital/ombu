@@ -51,19 +51,22 @@ services:
     volumes:
       - meili:/meili_data
 
-  # Once a day: gzips the access logs a day old or more, and deletes the
-  # compressed ones older than LOG_DAYS (120 by default). GoAccess reads .gz.
+  # Once a day: gzips the access logs a day old or more, deletes the
+  # compressed ones older than LOG_DAYS (180 by default), and adds a line to
+  # /logs/size.csv (date, files, kilobytes) to see how the logs grow. GoAccess
+  # reads .gz.
   logs-prune:
     image: alpine:3.22
     restart: unless-stopped
     environment:
-      LOG_DAYS: ${LOG_DAYS:-120}
+      LOG_DAYS: ${LOG_DAYS:-180}
     volumes:
       - logs:/logs
     command: >
       sh -c 'while true; do
       find /logs -name "access-*.log" -mtime +0 -exec gzip -f {} +;
       find /logs -name "access-*.log.gz" -mtime +$$LOG_DAYS -delete;
+      echo "$$(date +%F),$$(ls /logs | grep -c access-),$$(du -sk /logs | cut -f1)" >> /logs/size.csv;
       sleep 86400; done'
 
 volumes:

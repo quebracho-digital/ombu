@@ -17,5 +17,12 @@ RUN install-php-extensions gd pdo_mysql opcache zip gmp intl bcmath apcu \
  && printf '<Directory /var/www/html/web>\n  AllowOverride All\n  Require all granted\n</Directory>\n# The model sellers answer in minutes: Apache must wait for them.\nTimeout 900\n' > /etc/apache2/conf-enabled/ombu.conf \
  && printf 'session.upload_progress.enabled=0\nmemory_limit=512M\nmax_execution_time=900\nupload_max_filesize=32M\npost_max_size=32M\nopcache.memory_consumption=192\nopcache.max_accelerated_files=20000\n' > /usr/local/etc/php/conf.d/ombu.ini
 
+# Access logs in a volume (compose.yaml mounts /var/log/ombu): see
+# apache-logs.conf and apache-logs-vhost.conf.
+COPY apache-logs.conf /etc/apache2/conf-enabled/ombu-logs.conf
+COPY apache-logs-vhost.conf /etc/apache2/ombu-vhost-logs.inc
+RUN a2enmod setenvif && mkdir -p /var/log/ombu \
+ && sed -ri 's#^(\s*)CustomLog \$\{APACHE_LOG_DIR\}/access.log combined#&\n\1Include /etc/apache2/ombu-vhost-logs.inc#' /etc/apache2/sites-available/000-default.conf
+
 ENV PATH=/var/www/html/vendor/bin:$PATH
 WORKDIR /var/www/html

@@ -20,6 +20,10 @@ services:
       - "192.168.1.66:${OMBU_PORT:-8097}:80"
     volumes:
       - ..:/var/www/html
+      # Apache's access log, a file a day (apache-logs.conf): it outlives a
+      # rebuild, unlike the container's own log. Read it with logs-prune's
+      # shell or from GoAccess: `docker compose exec logs-prune ls /logs`.
+      - logs:/var/log/ombu
     depends_on:
       - db
       - meilisearch
@@ -47,6 +51,20 @@ services:
     volumes:
       - meili:/meili_data
 
+  # Deletes the access logs older than LOG_DAYS (default 90) once a day.
+  logs-prune:
+    image: alpine:3.22
+    restart: unless-stopped
+    environment:
+      LOG_DAYS: ${LOG_DAYS:-90}
+    volumes:
+      - logs:/logs
+    command: >
+      sh -c 'while true; do
+      find /logs -name "access-*.log" -mtime +$$LOG_DAYS -delete;
+      sleep 86400; done'
+
 volumes:
   db:
   meili:
+  logs:

@@ -125,8 +125,11 @@ the `listings_meilisearch` index and the view are in `config/sync`. The
 block pings the server first, so a site without Meilisearch falls back to
 the database view. In DDEV the server is `.ddev/docker-compose.meilisearch.yaml`
 (master key `ddev`, set for Drupal in `settings.php` only under DDEV); index
-with `drush sapi-i listings_meilisearch`. Production needs its own server
-and key before the Meilisearch list is served there.
+with `drush sapi-i listings_meilisearch`. Production runs its own
+Meilisearch (v1.55.0 in `deploy/compose.yaml`, key `MEILI_MASTER_KEY` in
+`deploy/.env`, handed to the server by `settings.prod.php`) since
+2026-11-08; checked 2026-11-09, `listings_meilisearch` is 2,813 of 2,813
+indexed there, the same server config and module commit as DDEV.
 
 **What was shown, and what people did:** `ombu_similar_log` records each
 list shown (engine, order, reasons), the clicks (`js/similar.js` →

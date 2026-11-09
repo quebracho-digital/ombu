@@ -25,11 +25,12 @@ Done since 2026-11-06 (see DECISIONS.md for each): Meilisearch and the blog in p
 
 **Solana paused** (decided 2026-10-22): its pending items (E, F below)
 wait until the dev.to hackathon ends (Hacktoberfest Week 3, closes
-Sun 2026-10-25 23:59 PDT; Leo is on it until then), so from 2026-10-26. **Now: Meilisearch**
-(plan B under "B. Meilisearch"): related listings from `/similar` with our
-own vectors, contributed to `drupal/meilisearch`; until the MR is merged,
-composer takes the issue fork's branch (a `vcs` repository, the lock pins
-the commit), not a patch nor a custom copy.
+Sun 2026-10-25 23:59 PDT; Leo is on it until then), so from 2026-10-26. **Meilisearch**
+(plan B under "B. Meilisearch") was the work then, and it is **done and in
+production since 2026-11-08**: related listings from `/similar` with our own
+vectors, through our own module `quebracho_meilisearch` (decided 2026-11-06;
+not the contrib `drupal/meilisearch`, not contributed for now). What is left
+of B is `/market`, still on the database.
 
 - **Settlement hardening** (from the SR1–SR8 review, 2026-10-16; moved from
   Leo's todo 2026-11-01). Done when each holds in x402_pay with a test:
@@ -84,7 +85,7 @@ the commit), not a patch nor a custom copy.
      unpublished, logged.
   3. Not for Circle's listings: Circle screens them, and what it drops is
      retired by our import.
-- **Meilisearch** (2026-10-22/23, DDEV only; plan under "B. Meilisearch").
+- **Meilisearch** (2026-10-22/23, DDEV only then; in production since 2026-11-08; plan under "B. Meilisearch").
   `drupal/meilisearch` branch `more-like-this-user-vectors` in
   `~/Proyects/meilisearch` (not pushed), one commit per future MR: vectors
   provided by Drupal (`userProvided` embedder,
@@ -1079,6 +1080,11 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
   Rust binary (MIT) on SER5. The `ombu_similar` view needs no change: it
   works on any backend with "More like this". **Done when** `/market`
   runs on Meilisearch and similar services come from its `/similar`.
+  **Status 2026-11-09:** similar services come from Meilisearch's
+  `/similar`, in DDEV and in production (`ombu_similar_meilisearch`, 2,813
+  listings indexed in production); `/market` still runs on `market_db`, so
+  this item stays open until it moves. The module is our own
+  `quebracho_meilisearch`, not the contrib one (DECISIONS, 2026-11-06).
   - [x] **The module's part** (2026-10-22): see "Where we left off".
   - [x] **In DDEV** (2026-10-22): Meilisearch from the
     `kevinquillen/ddev-meilisearch` add-on (`http://meilisearch:7700`, key

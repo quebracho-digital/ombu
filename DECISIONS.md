@@ -72,6 +72,12 @@ since other sites use those modules.
 
 ### Meilisearch upstream: three issues, three stacked merge requests
 
+> **Status 2026-11-09:** superseded for Ombú. Leo decided on 2026-11-06 to use
+> our own `quebracho_meilisearch` ("no vamos a usar el modulo de drupal") and
+> "por ahora no aportamos". The drupal.org issues #3633115, #3633117 and
+> #3633118 and the fork's MR !2 were left open; whether to close them is
+> Leo's call and is not decided. What follows is the reasoning of the time.
+
 The three features (vectors provided by Drupal, a vector query, "More like
 this") go to drupal.org as one issue each. Each issue gets its own merge
 request, one commit each, stacked on a single branch.

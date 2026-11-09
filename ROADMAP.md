@@ -1070,7 +1070,7 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
 - [ ] **Bought together**: agents that bought this also bought, from
   `x402_pay_log`, by wallet; a fourth weight in `Similar` once there are
   sales (Amazon's item-to-item; ours verified on chain).
-- [ ] **B. Meilisearch** for `/market`: hybrid search (keywords and
+- [x] **B. Meilisearch** for `/market`: hybrid search (keywords and
   vectors), typo tolerance, facets. Use the official module,
   `drupal/meilisearch` (1.0.0-alpha2, by Meilisearch's CEO; facets and
   hybrid search already, no "More like this"), not
@@ -1083,8 +1083,21 @@ Seen on Amazon, Mercado Libre and Shopify, sorted by what it buys us:
   **Status 2026-11-09:** similar services come from Meilisearch's
   `/similar`, in DDEV and in production (`ombu_similar_meilisearch`, 2,813
   listings indexed in production); `/market` still runs on `market_db`, so
-  this item stays open until it moves. The module is our own
+  this item is done since 2026-11-09 (next paragraph). The module is our own
   `quebracho_meilisearch`, not the contrib one (DECISIONS, 2026-11-06).
+  **`/market` runs on Meilisearch (2026-11-09):** the `market` view now
+  has `listings_meilisearch` as its base table, and that index got
+  `role_access` so it filters by role like `listings`. Compared in DDEV
+  with both views on the same input: same totals for the full list, the
+  single-word searches, the category, network and seller filters and the
+  price sort, and identical facet counts. Differences, accepted: typos are
+  tolerated (`wether` finds 65, the database 0), and several words are not
+  an AND (`price feed`: 8 in the database, 857 in Meilisearch, best first)
+  because the server keeps `matching_strategy: last` (Leo chose it). The
+  `listings` index and `market_db` stay (the catalogue JSON and the MCP
+  tools still read them). The deploy needs `reset-tracker` and a reindex of
+  `listings_meilisearch` after the config import (until then the items have
+  no roles and the market is empty).
   - [x] **The module's part** (2026-10-22): see "Where we left off".
   - [x] **In DDEV** (2026-10-22): Meilisearch from the
     `kevinquillen/ddev-meilisearch` add-on (`http://meilisearch:7700`, key

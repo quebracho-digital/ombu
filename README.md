@@ -123,7 +123,8 @@ database server), else the scores as cards.
 the contrib backend; `drupal/meilisearch` is not a dependency). Its server,
 the `listings_meilisearch` index and the view are in `config/sync`. The
 block pings the server first, so a site without Meilisearch falls back to
-the database view. In DDEV the server is `.ddev/docker-compose.meilisearch.yaml`
+the database view. `/market` itself searches `listings_meilisearch`
+(typo tolerant, ranked by relevance, facets and sorts as before). In DDEV the server is `.ddev/docker-compose.meilisearch.yaml`
 (master key `ddev`, set for Drupal in `settings.php` only under DDEV); index
 with `drush sapi-i listings_meilisearch`. Production runs its own
 Meilisearch (v1.55.0 in `deploy/compose.yaml`, key `MEILI_MASTER_KEY` in

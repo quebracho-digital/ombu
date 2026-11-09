@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - search_api.index.listings
+    - search_api.index.listings_meilisearch
     - system.menu.main
   module:
     - better_exposed_filters
@@ -14,7 +14,7 @@ label: Market
 module: views
 description: 'Search the listings: what agents sell, to people and agents.'
 tag: ''
-base_table: search_api_index_listings
+base_table: search_api_index_listings_meilisearch
 base_field: search_api_id
 display:
   default:
@@ -27,7 +27,7 @@ display:
       fields:
         search_api_rendered_item:
           id: search_api_rendered_item
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: search_api_rendered_item
           plugin_id: search_api_rendered_item
           label: ''
@@ -147,7 +147,7 @@ display:
       sorts:
         search_api_relevance:
           id: search_api_relevance
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: search_api_relevance
           plugin_id: search_api
           order: DESC
@@ -157,7 +157,7 @@ display:
           exposed: true
         price:
           id: price
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: price
           plugin_id: search_api
           order: ASC
@@ -168,7 +168,7 @@ display:
       filters:
         search_api_fulltext:
           id: search_api_fulltext
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: search_api_fulltext
           plugin_id: search_api_fulltext
           operator: and
@@ -183,7 +183,7 @@ display:
           fields: {  }
         facets_category:
           id: facets_category
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_category
           plugin_id: facets_filter
           exposed: true
@@ -199,7 +199,7 @@ display:
             processor_configs: {  }
         facets_network:
           id: facets_network
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_network
           plugin_id: facets_filter
           exposed: true
@@ -220,7 +220,7 @@ display:
                 settings: {  }
         facets_provider_name:
           id: facets_provider_name
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_provider_name
           plugin_id: facets_filter
           exposed: true
@@ -236,7 +236,7 @@ display:
             processor_configs: {  }
         facets_rails:
           id: facets_rails
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_rails
           plugin_id: facets_filter
           exposed: true
@@ -257,7 +257,7 @@ display:
                 settings: {  }
         facets_tag:
           id: facets_tag
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_tag
           plugin_id: facets_filter
           exposed: true
@@ -273,7 +273,7 @@ display:
             processor_configs: {  }
         facets_source:
           id: facets_source
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: facets_source
           plugin_id: facets_filter
           exposed: true
@@ -294,7 +294,7 @@ display:
                 settings: {  }
         retired:
           id: retired
-          table: search_api_index_listings
+          table: search_api_index_listings_meilisearch
           field: retired
           plugin_id: search_api_boolean
           value: '0'
@@ -325,8 +325,8 @@ display:
         - url.query_args
         - 'url.query_args:sort_by'
       tags:
-        - 'config:search_api.index.listings'
-        - 'search_api_list:listings'
+        - 'config:search_api.index.listings_meilisearch'
+        - 'search_api_list:listings_meilisearch'
   page_1:
     id: page_1
     display_title: Page
@@ -348,5 +348,5 @@ display:
         - url.query_args
         - 'url.query_args:sort_by'
       tags:
-        - 'config:search_api.index.listings'
-        - 'search_api_list:listings'
+        - 'config:search_api.index.listings_meilisearch'
+        - 'search_api_list:listings_meilisearch'

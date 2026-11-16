@@ -113,6 +113,35 @@ final class CatalogueTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that the market is filtered by the wallet a listing pays.
+   */
+  public function testTheMarketIsFilteredByTheWalletListingPays(): void {
+    $wallet = '0x00000000000000000000000000000000000000AA';
+    $accepts = fn(string $payTo) => json_encode([
+      ['scheme' => 'exact', 'network' => 'eip155:8453', 'asset' => '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', 'payTo' => $payTo, 'amount' => '1000'],
+    ]);
+    foreach (['Quote' => $wallet, 'Rates' => $wallet, 'Other' => '0x00000000000000000000000000000000000000bb'] as $title => $payTo) {
+      Product::create([
+        'type' => 'listing',
+        'title' => $title,
+        'stores' => [$this->store],
+        'field_network' => ['eip155:8453'],
+        'field_source' => 'bazaar',
+        'field_accepts' => $accepts($payTo),
+      ])->save();
+    }
+    \Drupal::entityTypeManager()->getStorage('search_api_index')->load('listings')->indexItems();
+
+    // However the address is written.
+    foreach ([$wallet, strtolower($wallet)] as $asked) {
+      $page = $this->get("/market.json?wallet=$asked");
+      $this->assertSame(['Quote', 'Rates'], $this->titles($page));
+    }
+    $this->assertSame(2, $this->counts($this->get('/market.json'), 'wallet')[strtolower($wallet)], 'A facet: each wallet with its listings.');
+    $this->assertSame([], $this->titles($this->get('/market.json?wallet=0x' . str_repeat('c', 40))));
+  }
+
+  /**
    * Tests that several values match any of them.
    */
   public function testSeveralValuesMatchAnyOfThem(): void {

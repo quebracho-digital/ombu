@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ombu\Rating;
 use Drupal\ombu\ReviewRefusedException;
@@ -20,6 +21,8 @@ use Drupal\ombu\ReviewVerifier;
  * Reviews are verified purchases: checked on save, counted only if they are.
  */
 final class ReviewHooks {
+
+  use StringTranslationTrait;
 
   public function __construct(private readonly ReviewVerifier $verifier) {}
 
@@ -31,6 +34,37 @@ final class ReviewHooks {
     $before = $product->isNew() ? NULL : $product->getOriginal();
     if ($product instanceof ProductInterface && $before instanceof ProductInterface && $product->bundle() === 'listing') {
       $this->verifier->remember($product, $before);
+    }
+  }
+
+  /**
+   * Under a listing: what else is paid to the same wallet, one search away.
+   */
+  #[Hook('commerce_product_view')]
+  public function sameWallet(array &$build, EntityInterface $product, EntityViewDisplayInterface $display, string $view_mode): void {
+    if (!$product instanceof ProductInterface || $product->bundle() !== 'listing' || $view_mode !== 'full') {
+      return;
+    }
+    $wallets = [];
+    foreach ($this->verifier->payees($product) as $pairs) {
+      foreach ($pairs as [, $wallet]) {
+        $wallets[$wallet] = [
+          '#type' => 'link',
+          '#title' => $wallet,
+          '#url' => Url::fromRoute('view.market.page_1', [], ['query' => ['wallet' => [$wallet]]]),
+          '#attributes' => ['rel' => 'nofollow'],
+        ];
+      }
+    }
+    if ($wallets) {
+      $build['same_wallet'] = [
+        '#theme' => 'item_list',
+        '#title' => $this->t('Other services paid to the same wallet'),
+        '#items' => array_values($wallets),
+        '#attributes' => ['class' => ['listing-wallets']],
+        // After its sales (11.5), above the legal line (11.8).
+        '#weight' => 11.6,
+      ];
     }
   }
 

@@ -300,6 +300,22 @@ display:
                 weights:
                   build: 50
                 settings: {  }
+        facets_wallet:
+          id: facets_wallet
+          table: search_api_index_listings
+          field: facets_wallet
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Wallet
+            identifier: wallet
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 10
+            min_count: 1
+            show_numbers: true
+            processor_configs: {  }
         retired:
           id: retired
           table: search_api_index_listings

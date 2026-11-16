@@ -18,6 +18,7 @@ dependencies:
     - search_api.server.market_db
   module:
     - commerce_product
+    - ombu
     - taxonomy
 id: listings
 name: Listings
@@ -175,6 +176,10 @@ field_settings:
     dependencies:
       config:
         - field.storage.commerce_product.field_verified
+  wallet:
+    label: 'Wallets it pays'
+    property_path: ombu_wallets
+    type: string
 datasource_settings:
   'entity:commerce_product':
     bundles:
@@ -199,6 +204,7 @@ processor_settings:
       - tag_names
       - title
   language_with_fallback: {  }
+  ombu_wallets: {  }
   rendered_item: {  }
   role_access: {  }
 tracker_settings:

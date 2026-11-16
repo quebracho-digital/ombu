@@ -23,6 +23,10 @@ name: Listings
 description: null
 read_only: false
 field_settings:
+  wallet:
+    label: 'Wallets it pays'
+    property_path: ombu_wallets
+    type: string
   body:
     label: body
     datasource_id: 'entity:commerce_product'
@@ -184,6 +188,7 @@ datasource_settings:
       default: true
       selected: {  }
 processor_settings:
+  ombu_wallets: {  }
   add_url: {  }
   aggregated_field: {  }
   custom_value: {  }

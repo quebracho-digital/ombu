@@ -109,6 +109,7 @@ final class OpenApiController implements ContainerInjectionInterface {
           'gateway',
         ]),
         $list('tag', 'Tag.'),
+        $list('wallet', 'A wallet listings pay (the payTo of an offer): every listing paid to it. The facet gives the 30 wallets with most listings.'),
         $list('seller', 'ours: sold by Ombú itself, settled only on delivery; circle: listed on the Circle Agent Marketplace.', [
           'ours',
           'circle',

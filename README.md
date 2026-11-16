@@ -26,7 +26,7 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher; and `/mcp`, an [MCP server](#mcp-for-agents) (where it is on: see below), linked from the footer.
 - **Blog:** the home page (`/blog`, and `/blog.md` for agents), posts in three languages seeded from `scripts/blog/`.
 - **Stop switch:** `drush ombu:stop on "reason"` pauses payments, then makes the whole site read-only with no wallet shown and 503 instead of 402, and publishes a blog post in three languages; `off` brings it back. See [The stop switch](#the-stop-switch).
-- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only.
+- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only. A listing keeps the wallet it came in with: one that later answers with another is retired until staff accept it (`drush ombu:wallet-changes`), and every check is repeated after a week.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces

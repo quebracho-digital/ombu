@@ -260,7 +260,7 @@ Decidido por Leo (2026-11-08): "pasa la home a layout builder. creo que es buena
 
 The home is a node of the `home` type (`scripts/seed-home.php`, address `/home`, front page) whose layout lives in config: Structure > Content types > Home page > Manage display > Manage layout. Blocks: the views blocks of `ombu_home` (featured, latest, top) and `blog:home`, and `HomePartBlock` for the hero, the sales and the strip for agents. Reorder, add or remove them there and export the display. Not done: the layout is one column; the home has no editable text of its own.
 
-Not done in the importers, found by the review of 2026-11-08 and left for the contract work: a listing is not asked again while its catalogue entry does not change (it needs a maximum age); a POST resource is verified by the 402 its GET answers; a "no" on an existing listing retires it only at the end of a complete run; and one transfer of any amount is enough activity.
+Not done in the importers, found by the review of 2026-11-08 and left for the contract work (the maximum age of a check was added on 2026-11-16, see the stop switch section): a POST resource is verified by the 402 its GET answers; a "no" on an existing listing retires it only at the end of a complete run; and one transfer of any amount is enough activity.
 
 ### The home stays as it is; the next step is a module for humans and agents
 
@@ -293,7 +293,7 @@ Decidido por Leo (2026-11-16 00:24): "agrega una funcionalidad para publicar una
 Decidido por Leo (2026-11-16 00:24): "implementa todas las candidatas de la libreria, primero los test y si el código no los pasa, avisame y propón solución". Done, tests first:
 
 - `Field`: `ResourceVerifier` judged a payTo with a pattern ending in `$`, which lets a final line break through (the defect of the library's audit, in our own code). The new test failed on the old code; it now uses `Field::is(Field::ADDRESS, …)`.
-- `PayeeAllowlist` (the task of 2026-11-05): a listing that already exists is verified against the wallets it came in with (`field_pay_to` and the payTo of its `field_accepts`); a catalogue entry or a live 402 that names another one fails `payto_not_allowed` and the listing is retired. To list it with a new wallet, staff delete the listing and import again. Sellers cannot edit payTo, so editing needed nothing.
+- `PayeeAllowlist` (the task of 2026-11-05): a listing that already exists is verified against the wallets it came in with (`field_pay_to` and the payTo of its `field_accepts`); a catalogue entry or a live 402 that names another one fails `payto_not_allowed` and the listing is retired, until staff accept the new wallet (below). Sellers cannot edit payTo, so editing needed nothing.
 - `ChainalysisOracle` replaces the hand-written call to the sanctions oracle in `ResourceVerifier`.
 - `Screening`: our own allow and deny lists of wallets, asked in every sale (HTTP and MCP) through `AddressCheck`; `drush ombu:screen`. `ChainalysisApi` is asked too when `CHAINALYSIS_API_KEY` is set, and a sale goes on if it does not answer (OFAC's list is asked locally first).
 - `PayingHttpClient`: `scripts/lib/buyer.php` no longer uses x402_pay's deprecated `Buyer`, `Signer`, `Eip712` and `Networks`; it buys inside a `Budget` (`BUYER_MAX_USDC` per network and run, 1 by default), which the old one did not have.
@@ -301,3 +301,8 @@ Decidido por Leo (2026-11-16 00:24): "implementa todas las candidatas de la libr
 Not taken: the library's `Reconciler` and ledgers (x402_pay's own `Reconciler` already runs on them), `PayingMcpClient` (no script of ours buys over MCP), `CasperExact` and `NearExact` (no new chains now).
 
 Decidido por Leo (2026-11-16 00:24): "solo espera mi aprobación para el deploy". Nothing of this is in production. Not tried: a real purchase (DDEV prices on Arc mainnet, real money) and the malformed payment of the audit against a live paid URL (`scripts/check-newline-payment.php`: in DDEV a paid URL answers 502 without `X402_GAS_KEY`, which the dev environment never had); run it against production after the deploy.
+
+Decidido por Leo (2026-11-16 05:07): "puedes resolver el cambio de billetera del catalogo? tienes forma de identificar univocamente cada listado sin usar la billetera?". Yes to both. A listing of a catalogue is named by its source, its URL and its HTTP method (`field_source`, `field_endpoint`, `field_http_method`; the SKU is a hash of them): the wallet was never part of it, so a seller that changes wallet keeps the listing, its id and its reviews. Two things were missing and are done:
+
+- A check has a maximum age (`DiscoveryCatalogImporter::MAX_AGE`, a week): an entry the catalogue did not change is asked again once its last check is older, within the run's budget. Before, a seller whose own answer named a new wallet while the catalogue said the same was never asked again.
+- A listing refused for its wallet alone is kept in a list for staff: `drush ombu:wallet-changes bazaar` shows it (old and new wallet), and `--accept=<id>` runs every other check again on the new wallet (freeze list, sanctions, activity) and, on a pass, takes it. The listing comes back on the next run, when it is compared with the catalogue. Nobody accepts a wallet automatically: a changed address is also what an attack in the middle looks like.

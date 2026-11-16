@@ -41,6 +41,15 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
   private const FORMAT = 1;
 
   /**
+   * How long a check stands, in seconds: a week.
+   *
+   * A catalogue can say the same for months while the seller's own answer
+   * changes (another wallet, another price): past this age a listing is
+   * asked again though its entry did not change, within the run's budget.
+   */
+  public const MAX_AGE = 604800;
+
+  /**
    * Builds the importer of one catalogue.
    *
    * @param string $source
@@ -189,8 +198,8 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    * The wallets a listing declared when it came in: the only ones it may pay.
    *
    * A catalogue entry that names another one (the seller moved, or someone
-   * sits in the middle) is refused and the listing retired; to list it with
-   * the new wallet, delete the listing and import again.
+   * sits in the middle) is refused and the listing retired, until staff
+   * accept the new wallet (acceptWallet()).
    *
    * @return string[]
    *   Its payTo and the payTo of each requirement kept with it.
@@ -245,7 +254,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       }
     };
     $hash = hash('sha256', json_encode([self::FORMAT, $r['hash']]));
-    if ($product && $product->get('field_source_hash')->value === $hash && !$product->get('field_retired')->value) {
+    if ($product && $product->get('field_source_hash')->value === $hash && !$product->get('field_retired')->value && !$this->stale($product)) {
       $keep();
       return 'unchanged';
     }
@@ -266,7 +275,21 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       $keep();
       return 'unverified';
     }
+    if ($product) {
+      $this->note('checked', (int) $product->id(), $this->time->getCurrentTime());
+    }
     if ($report['verdict'] === ResourceVerifier::FAIL) {
+      // Refused for its wallet alone: kept for staff, who may accept it
+      // (drush ombu:wallet-changes).
+      $moved = array_filter($report['checks'], fn($c, $at) => str_ends_with((string) $at, '.payee') && $c[0] === ResourceVerifier::FAIL, ARRAY_FILTER_USE_BOTH);
+      if ($product && $moved) {
+        $this->note('wallet_changed', (int) $product->id(), [
+          'url' => $r['url'],
+          'old' => self::payees($product),
+          'new' => array_values(array_unique(array_filter(array_column(array_filter($report['accepts'], 'is_array'), 'payTo')))),
+          'time' => $this->time->getCurrentTime(),
+        ]);
+      }
       $reasons[self::reason($report['checks'])] = ($reasons[self::reason($report['checks'])] ?? 0) + 1;
       return 'rejected';
     }
@@ -352,7 +375,89 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       $product->addVariation($variation);
     }
     $product->save();
+    $this->note('checked', (int) $product->id(), $this->time->getCurrentTime());
+    $this->note('wallet_changed', (int) $product->id(), NULL);
     return $outcome;
+  }
+
+  /**
+   * Whether a listing's last check is older than MAX_AGE (or was never noted).
+   */
+  private function stale(ProductInterface $product): bool {
+    $checked = $this->state->get("ombu.catalog.checked.$this->source", [])[(int) $product->id()] ?? 0;
+    return $this->time->getCurrentTime() - (int) $checked > self::MAX_AGE;
+  }
+
+  /**
+   * Notes something about a listing in the state, by its id; NULL forgets it.
+   *
+   * The lists are `checked` (when it was last asked) and `wallet_changed`
+   * (refused because it pays a wallet it never declared).
+   */
+  private function note(string $list, int $id, mixed $value): void {
+    $key = "ombu.catalog.$list.$this->source";
+    $all = $this->state->get($key, []);
+    if ($value === NULL) {
+      if (!isset($all[$id])) {
+        return;
+      }
+      unset($all[$id]);
+    }
+    else {
+      $all[$id] = $value;
+    }
+    $this->state->set($key, $all);
+  }
+
+  /**
+   * The listings refused because their seller now names another wallet.
+   *
+   * @return array<int, array{url: string, old: string[], new: string[], time: int}>
+   *   By listing id.
+   */
+  public function walletChanges(): array {
+    return $this->state->get("ombu.catalog.wallet_changed.$this->source", []);
+  }
+
+  /**
+   * Accepts the wallet a listing's seller answers with now, in place of the
+   * one it declared. For staff, after looking: a changed wallet is also what
+   * an attack in the middle looks like.
+   *
+   * The listing is the same one (its catalogue, URL and method name it, never
+   * its wallet): its id, SKU and reviews stay. Every other check runs again
+   * (freeze list, sanctions, activity of the new wallet); only a pass
+   * replaces the wallet. It stays retired until the next run of the import
+   * compares it with the catalogue.
+   *
+   * @return array
+   *   The verifier's report; its verdict says whether the wallet was taken.
+   */
+  public function acceptWallet(ProductInterface $product): array {
+    if ($product->get('field_source')->value !== $this->source) {
+      throw new \InvalidArgumentException("Listing {$product->id()} is not from $this->source.");
+    }
+    $report = $this->verifier->verify((string) $product->get('field_endpoint')->value, (string) $product->get('field_http_method')->value, [], ResourceVerifierFactory::assets(), []);
+    $accepts = array_values(array_filter($report['accepts'] ?? [], 'is_array'));
+    if ($report['verdict'] !== ResourceVerifier::PASS || !$accepts) {
+      return $report;
+    }
+    if ((int) ($report['activity'] ?? 0) < $this->minTransfers) {
+      return ['verdict' => ResourceVerifier::FAIL, 'checks' => $report['checks'] + ['activity' => [ResourceVerifier::FAIL, 'no incoming USDC']]] + $report;
+    }
+    usort($accepts, fn($a, $b) => (int) ($a['amount'] ?? $a['maxAmountRequired']) <=> (int) ($b['amount'] ?? $b['maxAmountRequired']));
+    $product->set('field_pay_to', $accepts[0]['payTo']);
+    $product->set('field_accepts', json_encode($accepts, JSON_UNESCAPED_SLASHES));
+    // No hash: the next run asks it again, against the wallet just taken.
+    $product->set('field_source_hash', NULL);
+    $product->save();
+    $this->note('wallet_changed', (int) $product->id(), NULL);
+    $this->loggerFactory->get('ombu')->notice('Listing @id (@url): new wallet @wallet accepted by staff.', [
+      '@id' => $product->id(),
+      '@url' => $product->get('field_endpoint')->value,
+      '@wallet' => $accepts[0]['payTo'],
+    ]);
+    return $report;
   }
 
   /**

@@ -189,6 +189,41 @@ final class ReviewsTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that a buyer who paid the old wallet still reviews after it changed.
+   *
+   * The listing keeps the wallets it has paid: a purchase is a purchase,
+   * whatever wallet the seller uses now. The old wallet no longer sells it.
+   */
+  public function testPurchasePaidToTheOldWalletStillBacksReview(): void {
+    $before = $this->paid(self::BUYER, self::SELLER);
+    $seller = $this->seller();
+    $verifier = $this->container->get('ombu.review_verifier');
+    $this->assertTrue($verifier->sells($this->listing, (int) $seller->id()));
+
+    $offer = json_decode($this->listing->get('field_accepts')->value, TRUE);
+    $offer[0]['payTo'] = self::OTHER;
+    $this->listing->set('field_accepts', json_encode($offer))->save();
+    $past = json_decode((string) $this->listing->get('field_past_accepts')->value, TRUE);
+    $this->assertCount(1, $past);
+    $this->assertSame(strtolower(self::SELLER), strtolower($past[0]['payTo']));
+    $this->assertArrayHasKey('until', $past[0]);
+
+    $review = $this->review($before, 5);
+    $this->assertCount(0, $review->validate(), 'Paid to the wallet of then: a purchase.');
+    $this->assertCount(0, $this->review($this->paid(self::BUYER, self::OTHER), 4)->validate(), 'Paid to the wallet of now: a purchase.');
+    $this->assertFalse($verifier->sells($this->listing, (int) $seller->id()), 'The old wallet no longer manages the listing.');
+    $stranger = '0x' . str_repeat('9', 40);
+    $this->assertRefused($this->paid(self::BUYER, $stranger), 'pays no USDC from your wallets to this listing');
+
+    // Saved again with nothing changed, or back to a wallet it had: no copies.
+    $this->listing->save();
+    $offer[0]['payTo'] = self::SELLER;
+    $this->listing->set('field_accepts', json_encode($offer))->save();
+    $past = json_decode((string) $this->listing->get('field_past_accepts')->value, TRUE);
+    $this->assertSame([strtolower(self::OTHER)], array_map('strtolower', array_column($past, 'payTo')), 'What it pays now is not history.');
+  }
+
+  /**
    * Tests that a payment to another wallet is refused.
    */
   public function testPaymentToAnotherWalletIsRefused(): void {

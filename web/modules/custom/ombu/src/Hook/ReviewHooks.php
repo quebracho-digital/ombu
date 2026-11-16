@@ -7,6 +7,7 @@ namespace Drupal\ombu\Hook;
 use Drupal\comment\CommentInterface;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Hook\Attribute\Hook;
@@ -21,6 +22,17 @@ use Drupal\ombu\ReviewVerifier;
 final class ReviewHooks {
 
   public function __construct(private readonly ReviewVerifier $verifier) {}
+
+  /**
+   * A listing that changes wallet keeps the old one, for its buyers' reviews.
+   */
+  #[Hook('commerce_product_presave')]
+  public function rememberWallets(EntityInterface $product): void {
+    $before = $product->isNew() ? NULL : $product->getOriginal();
+    if ($product instanceof ProductInterface && $before instanceof ProductInterface && $product->bundle() === 'listing') {
+      $this->verifier->remember($product, $before);
+    }
+  }
 
   /**
    * A review's rating as stars, not a digit.

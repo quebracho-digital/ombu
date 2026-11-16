@@ -120,7 +120,8 @@ final class ReviewVerifier {
       throw new ReviewRefusedException('Sign in with the wallet that paid: reviews need a purchase from your wallet.');
     }
 
-    $payees = $this->payees($listing);
+    // A purchase paid to a wallet the listing had then is a purchase.
+    $payees = $this->payees($listing, TRUE);
     // The chains this kind of transaction can be on.
     $checkable = array_filter($payees, fn($network) => $solana
       ? str_starts_with($network, 'solana:') && isset(Networks::ALL[$network])
@@ -315,11 +316,72 @@ final class ReviewVerifier {
   }
 
   /**
-   * Who a listing pays, by network: [asset, payTo] pairs; EVM's lowercase.
+   * The wallets a listing paid before and no longer does.
+   *
+   * @return array<int, array{network: string, asset: string, payTo: string, until: int}>
+   *   As kept in field_past_accepts by remember().
    */
-  public function payees(ProductInterface $listing): array {
+  public static function past(ProductInterface $listing): array {
+    if (!$listing->hasField('field_past_accepts')) {
+      return [];
+    }
+    $past = json_decode((string) $listing->get('field_past_accepts')->value, TRUE);
+    return array_values(array_filter(is_array($past) ? $past : [], fn($a) => is_array($a) && isset($a['network'], $a['asset'], $a['payTo'])
+      && is_string($a['network']) && is_string($a['asset']) && is_string($a['payTo'])));
+  }
+
+  /**
+   * Keeps, on a listing about to be saved, the wallets it stops paying.
+   *
+   * A purchase paid to the wallet of then still backs a review (payer()),
+   * whoever the seller pays now. The history gives no rights over the
+   * listing: sells() and listingsOf() look at what it pays today. A wallet it
+   * pays again leaves the history.
+   */
+  public function remember(ProductInterface $listing, ProductInterface $before): void {
+    if (!$listing->hasField('field_past_accepts')) {
+      return;
+    }
+    $flat = function (array $payees): array {
+      $out = [];
+      foreach ($payees as $network => $pairs) {
+        foreach ($pairs as [$asset, $payTo]) {
+          $out["$network|$asset|$payTo"] = ['network' => (string) $network, 'asset' => $asset, 'payTo' => $payTo];
+        }
+      }
+      return $out;
+    };
+    $now = $flat($this->payees($listing));
+    $kept = [];
+    foreach (self::past($before) as $accept) {
+      $kept[$accept['network'] . '|' . $accept['asset'] . '|' . $accept['payTo']] = $accept;
+    }
+    foreach (array_diff_key($flat($this->payees($before)), $now) as $id => $gone) {
+      $kept[$id] ??= $gone + ['until' => time()];
+    }
+    $kept = array_values(array_diff_key($kept, $now));
+    $listing->set('field_past_accepts', $kept ? json_encode($kept, JSON_UNESCAPED_SLASHES) : NULL);
+  }
+
+  /**
+   * Who a listing pays, by network: [asset, payTo] pairs; EVM's lowercase.
+   *
+   * With $past, also who it paid before (past()): for a purchase, not for
+   * who manages the listing.
+   */
+  public function payees(ProductInterface $listing, bool $past = FALSE): array {
     $key = fn(string $network, string $value) => str_starts_with($network, 'eip155:') ? strtolower($value) : $value;
     $payees = [];
+    if ($past) {
+      // What it paid before, then what it pays now.
+      foreach (self::past($listing) as $accept) {
+        $payees[$accept['network']][] = [$key($accept['network'], $accept['asset']), $key($accept['network'], $accept['payTo'])];
+      }
+      foreach ($this->payees($listing) as $network => $pairs) {
+        $payees[$network] = array_merge($payees[$network] ?? [], $pairs);
+      }
+      return $payees;
+    }
     if ($listing->get('field_source')->value === 'ours') {
       $payTo = $this->sellers->payTo($listing);
       $network = Sellers::network($listing);

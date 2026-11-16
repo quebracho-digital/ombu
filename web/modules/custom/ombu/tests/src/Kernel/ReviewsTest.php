@@ -189,38 +189,67 @@ final class ReviewsTest extends CommerceKernelTestBase {
   }
 
   /**
-   * Tests that a buyer who paid the old wallet still reviews after it changed.
+   * Tests that a purchase is judged by the wallet and the price of its day.
    *
-   * The listing keeps the wallets it has paid: a purchase is a purchase,
-   * whatever wallet the seller uses now. The old wallet no longer sells it.
+   * The listing keeps what it offered before each change: a purchase paid
+   * to the wallet of then, at the price of then, still backs a review, and
+   * one that mixes the days does not. The old wallet no longer sells it.
    */
-  public function testPurchasePaidToTheOldWalletStillBacksReview(): void {
-    $before = $this->paid(self::BUYER, self::SELLER);
+  public function testPurchaseIsJudgedByTheWalletAndThePriceOfItsDay(): void {
+    $then = time() - 1000;
+    $later = time() + 1000;
     $seller = $this->seller();
     $verifier = $this->container->get('ombu.review_verifier');
     $this->assertTrue($verifier->sells($this->listing, (int) $seller->id()));
+    $old = $this->paid(self::BUYER, self::SELLER, time: $then);
 
+    // Saved with nothing changed: no history.
+    $this->listing->save();
+    $this->assertTrue($this->listing->get('field_past_accepts')->isEmpty());
+    // Another wallet and another price.
     $offer = json_decode($this->listing->get('field_accepts')->value, TRUE);
     $offer[0]['payTo'] = self::OTHER;
+    $offer[0]['amount'] = '5000';
     $this->listing->set('field_accepts', json_encode($offer))->save();
     $past = json_decode((string) $this->listing->get('field_past_accepts')->value, TRUE);
     $this->assertCount(1, $past);
-    $this->assertSame(strtolower(self::SELLER), strtolower($past[0]['payTo']));
-    $this->assertArrayHasKey('until', $past[0]);
-
-    $review = $this->review($before, 5);
-    $this->assertCount(0, $review->validate(), 'Paid to the wallet of then: a purchase.');
-    $this->assertCount(0, $this->review($this->paid(self::BUYER, self::OTHER), 4)->validate(), 'Paid to the wallet of now: a purchase.');
+    $this->assertSame([strtolower(self::SELLER), '1000'], [$past[0]['payTo'], $past[0]['amount']]);
     $this->assertFalse($verifier->sells($this->listing, (int) $seller->id()), 'The old wallet no longer manages the listing.');
-    $stranger = '0x' . str_repeat('9', 40);
-    $this->assertRefused($this->paid(self::BUYER, $stranger), 'pays no USDC from your wallets to this listing');
 
-    // Saved again with nothing changed, or back to a wallet it had: no copies.
-    $this->listing->save();
-    $offer[0]['payTo'] = self::SELLER;
-    $this->listing->set('field_accepts', json_encode($offer))->save();
-    $past = json_decode((string) $this->listing->get('field_past_accepts')->value, TRUE);
-    $this->assertSame([strtolower(self::OTHER)], array_map('strtolower', array_column($past, 'payTo')), 'What it pays now is not history.');
+    $this->assertCount(0, $this->review($old, 5)->validate(), 'The wallet and the price of then.');
+    $this->assertCount(0, $this->review($this->paid(self::BUYER, self::OTHER, amount: 5000, time: $later), 4)->validate(), 'The wallet and the price of now.');
+    $why = 'pays no USDC from your wallets to this listing';
+    $this->assertRefused($this->paid(self::BUYER, self::OTHER, amount: 1000, time: $later), $why);
+    $this->assertRefused($this->paid(self::BUYER, self::SELLER, amount: 5000, time: $later), $why);
+    $this->assertRefused($this->paid(self::BUYER, self::OTHER, amount: 5000, time: $then), $why);
+    $this->assertRefused($this->paid(self::BUYER, self::SELLER), $why);
+  }
+
+  /**
+   * Tests that a purchase that backs a review backs no other, on any listing.
+   */
+  public function testPurchaseThatBacksReviewBacksNoneOnAnotherListing(): void {
+    $twin = $this->listing->createDuplicate();
+    $twin->save();
+    $tx = $this->paid(self::BUYER, self::SELLER);
+    $on = fn(Product $listing) => Comment::create([
+      'comment_type' => 'review',
+      'entity_type' => 'commerce_product',
+      'entity_id' => $listing->id(),
+      'field_name' => 'field_reviews',
+      'uid' => $this->buyer->id(),
+      'comment_body' => 'Clean markdown.',
+      'field_rating' => 5,
+      'field_tx_hash' => $tx,
+    ]);
+    $this->assertCount(0, $on($twin)->validate(), 'It pays the same wallet and price: it could back either.');
+    $on($this->listing)->save();
+    $messages = implode(' | ', array_map(fn($v) => (string) $v->getMessage(), iterator_to_array($on($twin)->validate())));
+    $this->assertStringContainsString('already backs a review', $messages);
+    // Written with other capitals, it is the same purchase.
+    $tx = '0x' . strtoupper(substr($tx, 2));
+    $messages = implode(' | ', array_map(fn($v) => (string) $v->getMessage(), iterator_to_array($on($twin)->validate())));
+    $this->assertStringContainsString('already backs a review', $messages);
   }
 
   /**
@@ -397,10 +426,16 @@ final class ReviewsTest extends CommerceKernelTestBase {
   /**
    * A transaction with one USDC Transfer, known to the chain.
    */
-  private function paid(string $from, string $to, string $status = '0x1', int $amount = 1000): string {
+  private function paid(string $from, string $to, string $status = '0x1', int $amount = 1000, ?int $time = NULL): string {
     $tx = '0x' . bin2hex(random_bytes(32));
+    // Its block and the block's time, when the test gives one.
+    $block = '0x' . bin2hex(random_bytes(4));
+    if ($time) {
+      self::$chain[$block] = ['timestamp' => '0x' . dechex($time)];
+    }
     $topic = fn(string $address) => '0x' . str_repeat('0', 24) . substr($address, 2);
     self::$chain[$tx] = [
+      'blockNumber' => $block,
       'status' => $status,
       'logs' => [[
         'address' => self::ASSET,

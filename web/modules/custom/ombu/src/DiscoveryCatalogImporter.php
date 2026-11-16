@@ -186,6 +186,24 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
   }
 
   /**
+   * The wallets a listing declared when it came in: the only ones it may pay.
+   *
+   * A catalogue entry that names another one (the seller moved, or someone
+   * sits in the middle) is refused and the listing retired; to list it with
+   * the new wallet, delete the listing and import again.
+   *
+   * @return string[]
+   *   Its payTo and the payTo of each requirement kept with it.
+   */
+  private static function payees(ProductInterface $product): array {
+    $payees = [(string) $product->get('field_pay_to')->value];
+    foreach (json_decode((string) $product->get('field_accepts')->value, TRUE) ?: [] as $accept) {
+      $payees[] = (string) ($accept['payTo'] ?? '');
+    }
+    return array_values(array_unique(array_filter($payees)));
+  }
+
+  /**
    * One resource: verify it if it is new or changed, then list it.
    *
    * @param array $r
@@ -237,7 +255,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     }
     $verified++;
     try {
-      $report = $this->verifier->verify($r['url'], $r['method'], $r['accepts'], $assets);
+      $report = $this->verifier->verify($r['url'], $r['method'], $r['accepts'], $assets, $product ? self::payees($product) : []);
     }
     catch (\Throwable $e) {
       $this->loggerFactory->get('ombu')->warning('Verifying @url: @m', ['@url' => $r['url'], '@m' => $e->getMessage()]);

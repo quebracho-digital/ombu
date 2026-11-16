@@ -23,3 +23,6 @@
 # The Meilisearch image tag (kevinquillen/ddev-meilisearch): no secret in it.
 !/.ddev/.env.meilisearch
 scripts/eval/similar-pool.json
+
+# Kernel tests of x402_pay write its stop flag here (a vfs path taken as relative).
+/web/vfs:/

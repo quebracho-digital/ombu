@@ -107,6 +107,27 @@ services:
   # Charges for the MCP tool ombu_call_service; only used if mcp_server is on.
   ombu.mcp_payments:
     class: Drupal\ombu\Mcp\McpPayments
-    arguments: ['@entity_type.manager', '@x402_pay.delivery', '@ombu.sellers', '@x402_pay.facilitators', '@x402_pay.claims', '@x402_pay.log', '@x402_pay.psr17', '@event_dispatcher', '@flood']
+    arguments: ['@entity_type.manager', '@x402_pay.delivery', '@ombu.sellers', '@x402_pay.facilitators', '@x402_pay.claims', '@x402_pay.log', '@x402_pay.psr17', '@event_dispatcher', '@flood', '@x402_pay.stop', '@ombu.stop']
     tags:
       - { name: mcp_server.transport_middleware, priority: 100 }
+  # The stop switch (drush ombu:stop, /admin/config/services/ombu-stop):
+  # payments first (x402_pay's), then the site read-only with no wallets.
+  ombu.stop_posts:
+    class: Drupal\ombu\StopPosts
+    arguments: ['@config.factory', '@entity_type.manager', '@language_manager', '@date.formatter', '@datetime.time', '@current_user', '@logger.channel.ombu', '@?pathauto.generator']
+  ombu.stop:
+    class: Drupal\ombu\Stop
+    arguments: ['@x402_pay.stop', '@state', '@datetime.time', '@cache_tags.invalidator', '@logger.channel.ombu', '@ombu.stop_posts', '@current_user']
+  Drupal\ombu\Stop: '@ombu.stop'
+  ombu.stop_subscriber:
+    class: Drupal\ombu\EventSubscriber\StopSubscriber
+    arguments: ['@ombu.stop', '@current_user']
+    tags:
+      - { name: event_subscriber }
+  # Our own allow and deny lists of wallets (drush ombu:screen), asked in
+  # every sale through the library's AddressCheck.
+  ombu.screening_subscriber:
+    class: Drupal\ombu\EventSubscriber\ScreeningSubscriber
+    arguments: ['@http_client', '@settings', '%site.path%']
+    tags:
+      - { name: event_subscriber }

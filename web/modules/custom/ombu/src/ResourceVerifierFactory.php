@@ -7,7 +7,7 @@ namespace Drupal\ombu;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\HttpFactory;
 use Quebracho\X402\Networks;
-use Quebracho\X402\Rpc;
+use Quebracho\X402\ChainalysisOracle;
 use Quebracho\X402\TokenBlacklist;
 
 /**
@@ -76,7 +76,7 @@ final class ResourceVerifierFactory {
     return new ResourceVerifier(
       new SellerProbe($http),
       new TokenBlacklist($http, $factory, $factory, FALSE, $tokens),
-      new Rpc($http, $factory, $factory, 'https://eth-mainnet.g.alchemy.com/v2/' . $key),
+      new ChainalysisOracle($http, $factory, $factory, 'https://eth-mainnet.g.alchemy.com/v2/' . $key),
       self::transfers($http, $key),
       $tokens,
     );

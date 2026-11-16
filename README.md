@@ -25,6 +25,7 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Similar services:** under every listing (and in its markdown), up to 12 alternatives, fusing shared terms and embeddings, optionally from Meilisearch; scored on a labelled set.
 - **For agents:** `/llms.txt`, `/market.json`, `/openapi.json`, any page plus `.md` as markdown (`/terms.md`, a listing, `/market.md?search=…`; or `Accept: text/markdown`), linked from the language switcher; and `/mcp`, an [MCP server](#mcp-for-agents) (where it is on: see below), linked from the footer.
 - **Blog:** the home page (`/blog`, and `/blog.md` for agents), posts in three languages seeded from `scripts/blog/`.
+- **Stop switch:** `drush ombu:stop on "reason"` pauses payments, then makes the whole site read-only with no wallet shown and 503 instead of 402, and publishes a blog post in three languages; `off` brings it back. See [The stop switch](#the-stop-switch).
 - **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
@@ -225,7 +226,7 @@ rating from paying wallets) and checks an unrated seller's terms before
 paying it; it decides hire / reject / ask a human, each reason citing the
 tx it paid for, and reviews what it bought.
 
-**Buying from a script**, in PHP on `x402_pay`'s signing (`scripts/lib/buyer.php`;
+**Buying from a script**, in PHP on the library's `PayingHttpClient` (`scripts/lib/buyer.php`: it signs only inside a budget, `BUYER_MAX_USDC` per network and run, 1 by default;
 the key in `scripts/.env` or `scripts/.env.mainnet`, git-ignored, as
 `BUYER_PRIVATE_KEY=0x…`):
 
@@ -239,6 +240,59 @@ ddev exec bash -c 'set -a; . scripts/.env; drush php:script ../scripts/review.ph
 `scripts/buy-ours.sh` is a buyer agent's round: it reads `/market.json` and
 buys each of them (on the network the site charges), printing every seller's balance on chain
 before and after.
+
+## The stop switch
+
+For an incident (a key that may have leaked, a facilitator that misbehaves):
+one command stops selling and freezes the site, and one brings it back.
+
+```sh
+ddev drush ombu:stop on "Rotating a key" --es="Rotación de una clave" --pt-br="Rotação de uma chave"
+ddev drush ombu:stop status     # exits 1 while the site is stopped
+ddev drush ombu:stop off "All clear"
+```
+
+The same at `/admin/config/services/ombu-stop` (permission *Stop and resume
+Ombú*, given to no role by the module).
+
+- **Order.** Stopping pauses payments first with `x402_pay`'s switch (the
+  library's flag file, `Quebracho\X402\Stop`, then the module's state), and
+  only then marks the site as stopped. Resuming goes the other way. Pausing
+  payments alone is still `drush x402:stop on|off|status`: that is not a stop
+  of the site and writes no post.
+- **Read-only.** Every request that is not GET, HEAD or OPTIONS answers
+  `503` with `Retry-After: 300`. Kept open: staff with the permission, the
+  password sign-in (to come and resume) and `/mcp`, whose transport is POST;
+  its free tools keep answering, the paid one answers the JSON-RPC error
+  `payments_paused`. Drush, cron and the importers are not stopped.
+- **No wallets.** In every response to someone who is not staff (HTML, JSON,
+  markdown, MCP results) what looks like an EVM or a Solana address is
+  replaced by `[hidden]`, the *Try it* form and the wallet sign-in are gone,
+  and a notice heads every page. A transaction hash stays. It is a filter by
+  pattern over the response, so it also hides token contracts.
+- **No 402.** A paid URL answers `503 {"error":"payments_paused"}`, with or
+  without a payment; a request that carries one is not looked at.
+- **A blog post each time.** A stop and a resume each publish a post in every
+  language of the site, under the category *Service status*, from templates
+  (config `ombu.stop`, editable in the form): category, titles and bodies,
+  with `{reason}` and `{date}`. The reason is public and is escaped. The
+  option *Publish a blog post* turns it off. Asked twice, stopped once: one
+  post.
+
+Not covered: pages a visitor's browser or Cloudflare cached before the stop,
+and anything a buyer already signed.
+
+## Wallets we refuse
+
+`drush ombu:screen deny <address>` puts a wallet on our own deny list: it buys
+nothing here, over HTTP or MCP (the sale answers `address_denied` before
+anything is verified or charged). `allow`, `remove`, `list` and `check` are the
+rest. It is the library's `Screening`, asked through its `AddressCheck` in
+every sale, after OFAC's list (which `x402_pay` already asks). With
+`CHAINALYSIS_API_KEY` in the environment the wallets on neither list are also
+asked to Chainalysis' sanctions API; if it does not answer, the sale goes on.
+The lists are two text files under the private files directory
+(`ombu/screening`), or where `$settings['ombu_screening_dir']` says.
 
 ## Legal, reports, purchases
 

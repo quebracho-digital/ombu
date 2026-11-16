@@ -32,3 +32,37 @@ views.style.ombu_cards:
     slider:
       type: boolean
       label: 'As a slider'
+
+ombu.stop:
+  type: config_object
+  label: 'Stop switch'
+  mapping:
+    post:
+      type: boolean
+      label: 'Publish a blog post at each stop and each resume'
+    templates:
+      type: sequence
+      label: 'The post, per language'
+      orderby: key
+      sequence:
+        type: mapping
+        label: 'Templates of a language'
+        mapping:
+          category:
+            type: label
+            label: 'Category'
+          stop_title:
+            type: label
+            label: 'Title of a stop'
+          stop_body:
+            type: text
+            label: 'Body of a stop'
+          resume_title:
+            type: label
+            label: 'Title of a resume'
+          resume_body:
+            type: text
+            label: 'Body of a resume'
+          no_reason:
+            type: label
+            label: 'The reason, when none is given'

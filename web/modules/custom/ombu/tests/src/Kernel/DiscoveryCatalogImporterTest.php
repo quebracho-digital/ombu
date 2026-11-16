@@ -45,6 +45,13 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
   private array $asked = [];
 
   /**
+   * The wallets each resource was verified against, by URL.
+   *
+   * @var array<string, string[]>
+   */
+  private array $payees = [];
+
+  /**
    * Set up.
    */
   protected function setUp(): void {
@@ -96,8 +103,9 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
    */
   private function verifier(\Closure $answer): ResourceVerifier {
     $verifier = $this->createMock(ResourceVerifier::class);
-    $verifier->method('verify')->willReturnCallback(function (string $url, string $method, array $announced, array $assets) use ($answer): array {
+    $verifier->method('verify')->willReturnCallback(function (string $url, string $method, array $announced, array $assets, array $payees = []) use ($answer): array {
       $this->asked[] = $url;
+      $this->payees[$url] = $payees;
       $this->assertContains('eip155:8453|' . strtolower(self::USDC), $assets, 'it asks only for tokens it can verify');
       [$verdict, $activity, $checks] = $answer(parse_url($url, PHP_URL_PATH)) + [2 => []];
       return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $announced, 'activity' => $activity];
@@ -258,6 +266,25 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(1, $counts['rejected']);
     $this->assertSame(1, $counts['retired']);
     $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+  }
+
+  /**
+   * Tests that a listing is asked again against the wallets it declared.
+   *
+   * A catalogue entry that now names another wallet (the seller's, or someone
+   * in the middle) is for the verifier to refuse: it gets the wallets the
+   * listing came in with. A new resource has none to compare.
+   */
+  public function testAnExistingListingIsCheckedAgainstTheWalletsItDeclared(): void {
+    $this->importer([$this->item('/a')], fn() => ['pass', 3])->import();
+    $this->assertSame([], $this->payees['https://seller.example/a'], 'A new resource declares its wallet now.');
+    $other = '0x' . str_repeat('2', 40);
+    $changed = $this->item('/a', ['accepts' => [$this->accept(['payTo' => $other])]]);
+    $counts = $this->importer([$changed], fn() => ['fail', 3, ['accepts[0].payee' => ['fail', 'payto_not_allowed']]])->import();
+    $this->assertSame([strtolower(self::PAY_TO)], array_map('strtolower', $this->payees['https://seller.example/a']));
+    $this->assertSame(1, $counts['rejected']);
+    $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+    $this->assertSame(strtolower(self::PAY_TO), strtolower($this->listing('/a')->get('field_pay_to')->value), 'The wallet on file is not replaced.');
   }
 
   /**

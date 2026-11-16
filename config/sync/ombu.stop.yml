@@ -1,0 +1,23 @@
+post: true
+templates:
+  en:
+    category: 'Service status'
+    stop_title: 'Ombú is paused: read-only for now'
+    stop_body: '<p>Since {date} Ombú is paused. The market can be read and searched, by people and by agents, but nothing can be bought, sold, reviewed or changed, and paid calls answer with a temporary error (503) instead of a price. No payment is taken while the pause lasts.</p><p><strong>Why:</strong> {reason}</p><p>We will say here when it is back.</p>'
+    resume_title: 'Ombú is back'
+    resume_body: '<p>Since {date} Ombú works again: buying, selling, reviews and paid calls, over the web and over MCP.</p><p>{reason}</p>'
+    no_reason: 'Maintenance.'
+  es:
+    category: 'Estado del servicio'
+    stop_title: 'Ombú está en pausa: por ahora, solo lectura'
+    stop_body: '<p>Desde el {date} Ombú está en pausa. El mercado se puede leer y buscar, tanto personas como agentes, pero no se puede comprar, vender, opinar ni cambiar nada, y las llamadas pagas responden con un error temporal (503) en lugar de un precio. Mientras dure la pausa no se cobra ningún pago.</p><p><strong>Motivo:</strong> {reason}</p><p>Avisaremos acá cuando vuelva.</p>'
+    resume_title: 'Ombú volvió'
+    resume_body: '<p>Desde el {date} Ombú funciona otra vez: comprar, vender, opinar y las llamadas pagas, por la web y por MCP.</p><p>{reason}</p>'
+    no_reason: 'Mantenimiento.'
+  pt-br:
+    category: 'Status do serviço'
+    stop_title: 'O Ombú está em pausa: por enquanto, somente leitura'
+    stop_body: '<p>Desde {date} o Ombú está em pausa. O mercado pode ser lido e pesquisado, por pessoas e por agentes, mas não é possível comprar, vender, avaliar nem alterar nada, e as chamadas pagas respondem com um erro temporário (503) em vez de um preço. Nenhum pagamento é cobrado enquanto durar a pausa.</p><p><strong>Motivo:</strong> {reason}</p><p>Avisaremos aqui quando voltar.</p>'
+    resume_title: 'O Ombú voltou'
+    resume_body: '<p>Desde {date} o Ombú funciona de novo: comprar, vender, avaliar e as chamadas pagas, pela web e por MCP.</p><p>{reason}</p>'
+    no_reason: 'Manutenção.'

@@ -4,19 +4,17 @@
  * @file
  * The "What's new" of the deploy of the stop switch: the security update of
  * the payment library (0.5.1) and of x402_pay (1.0.0-beta5), the stop
- * switch and its blog posts, the wallets we refuse, and the wallet a listing
- * declared. Every claim is in the commits of the branch chore/x402-0.5.1.
+ * switch and its blog posts, the wallets we refuse, the wallet a listing
+ * declared and its history, reviews judged by the day of the purchase, and
+ * the search by wallet. Every claim is in the commits of the branch chore/x402-0.5.1.
  *
- * A draft: publish it ('draft' => FALSE, and the date and the slug of the
- * day) only after the deploy is verified, never before; production must not
- * run the old library when the defect is told. The pt-br needs a native
- * review.
+ * Seeded with the deploy, published: every deploy goes with its post. The
+ * pt-br needs a native review.
  */
 
 $img = '/modules/custom/ombu/images/blog';
 
 return [
-  'draft' => TRUE,
   'categories' => ['whats-new'],
   'image' => 'ombu-tree.jpg',
   'alt' => [
@@ -48,6 +46,14 @@ return [
 <p>Ombú now keeps its own deny list of wallets: one on it buys nothing here, and the sale says <code>address_denied</code> before anything is verified or charged. It comes after the sanctions list that was already asked for every payer.</p>
 <p>A listing imported from a catalogue keeps the wallet it came in with. If the catalogue or the seller's own answer later names another wallet, the listing is retired instead of updated: a changed address is what an attack in the middle looks like, so a person looks at it first.</p>
 
+<p>When a seller does change wallet, staff can accept the new one after the other checks pass again, and the listing stays the same: its address, its reviews.</p>
+
+<h2>Reviews: the wallet and the price of the day you bought</h2>
+<p>A review needs a purchase. Now a listing keeps what it offered before each change, dated, so a purchase is judged by the day it was made: it must have paid the wallet the listing had that day, at least the price of that day. If you bought before a seller changed wallet, you can still review. One purchase backs one review on the whole site, never a second one on another listing.</p>
+
+<h2>Search by wallet</h2>
+<p>The market can be filtered by the wallet a service is paid to: <code>/market?wallet[]=0x…</code> for people, <code>/market.json?wallet=0x…</code> and the MCP search for agents. It is also a facet, the wallets with most services, and every service links to the others paid to the same wallet.</p>
+
 <h2>What is not done</h2>
 <p>The stop switch does not reach pages that a browser or our CDN cached before the stop, and cannot recall a payment already signed. The importers of the Bazaar and PayAI catalogues are still not running in production.</p>
 HTML, 'A stop switch that pauses payments and makes the site read-only, a fix for malformed payments, and wallets we refuse.'],
@@ -74,6 +80,14 @@ HTML, 'A stop switch that pauses payments and makes the site read-only, a fix fo
 <p>Ombú ahora lleva su propia lista de billeteras bloqueadas: la que está ahí no compra nada acá, y la venta responde <code>address_denied</code> antes de verificar o cobrar nada. Va después de la lista de sanciones que ya se consultaba para cada pagador.</p>
 <p>Un servicio importado de un catálogo conserva la billetera con la que entró. Si después el catálogo o la respuesta del propio vendedor nombran otra, el servicio se retira en vez de actualizarse: una dirección cambiada es justo lo que se ve en un ataque de intermediario, así que primero lo mira una persona.</p>
 
+<p>Cuando un vendedor sí cambia de billetera, el staff puede aceptar la nueva después de repetir los demás chequeos, y el servicio sigue siendo el mismo: su dirección, sus reseñas.</p>
+
+<h2>Reseñas: la billetera y el precio del día en que compraste</h2>
+<p>Una reseña necesita una compra. Ahora cada servicio conserva lo que ofrecía antes de cada cambio, con fecha, así que una compra se juzga por el día en que se hizo: tiene que haber pagado a la billetera que el servicio tenía ese día, y al menos el precio de ese día. Si compraste antes de que un vendedor cambiara de billetera, igual podés opinar. Una compra respalda una sola reseña en todo el sitio, nunca una segunda en otro servicio.</p>
+
+<h2>Buscar por billetera</h2>
+<p>El mercado se puede filtrar por la billetera en la que cobra un servicio: <code>/market?wallet[]=0x…</code> para personas, <code>/market.json?wallet=0x…</code> y la búsqueda por MCP para agentes. También es una faceta, las billeteras con más servicios, y cada servicio enlaza a los demás que cobran en la misma billetera.</p>
+
 <h2>Lo que no está hecho</h2>
 <p>El stop switch no alcanza a las páginas que un navegador o nuestra CDN guardaron antes de la parada, y no puede deshacer un pago ya firmado. Los importadores de los catálogos de Bazaar y PayAI siguen sin correr en producción.</p>
 HTML, 'Un stop switch que pausa los pagos y deja el sitio en solo lectura, un arreglo para pagos mal formados y billeteras que rechazamos.'],
@@ -99,6 +113,14 @@ HTML, 'Un stop switch que pausa los pagos y deja el sitio en solo lectura, un ar
 <h2>Carteiras que recusamos, e a carteira que um serviço declarou</h2>
 <p>O Ombú agora mantém a sua própria lista de carteiras bloqueadas: a que está nela não compra nada aqui, e a venda responde <code>address_denied</code> antes de verificar ou cobrar qualquer coisa. Ela vem depois da lista de sanções que já era consultada para cada pagador.</p>
 <p>Um serviço importado de um catálogo mantém a carteira com que entrou. Se depois o catálogo ou a resposta do próprio vendedor indicarem outra, o serviço é retirado em vez de atualizado: um endereço trocado é exatamente o que se vê em um ataque de intermediário, então primeiro uma pessoa examina.</p>
+
+<p>Quando um vendedor de fato troca de carteira, a equipe pode aceitar a nova depois de repetir as outras verificações, e o serviço continua o mesmo: o seu endereço, as suas avaliações.</p>
+
+<h2>Avaliações: a carteira e o preço do dia em que você comprou</h2>
+<p>Uma avaliação precisa de uma compra. Agora cada serviço guarda o que oferecia antes de cada mudança, com data, então uma compra é julgada pelo dia em que foi feita: precisa ter pago a carteira que o serviço tinha naquele dia, e pelo menos o preço daquele dia. Se você comprou antes de um vendedor trocar de carteira, ainda pode avaliar. Uma compra sustenta uma única avaliação em todo o site, nunca uma segunda em outro serviço.</p>
+
+<h2>Pesquisar por carteira</h2>
+<p>O mercado pode ser filtrado pela carteira em que um serviço recebe: <code>/market?wallet[]=0x…</code> para pessoas, <code>/market.json?wallet=0x…</code> e a pesquisa por MCP para agentes. Também é uma faceta, as carteiras com mais serviços, e cada serviço aponta para os outros que recebem na mesma carteira.</p>
 
 <h2>O que não está feito</h2>
 <p>O stop switch não alcança as páginas que um navegador ou a nossa CDN guardaram antes da parada, e não pode desfazer um pagamento já assinado. Os importadores dos catálogos Bazaar e PayAI continuam sem rodar em produção.</p>

@@ -61,6 +61,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     'payment' => 'rails',
     'tag' => 'tag',
     'seller' => 'source',
+    'wallet' => 'wallet',
   ];
 
   public function __construct(
@@ -188,7 +189,8 @@ final class CatalogueController implements ContainerInjectionInterface {
     }
     $query->setOption('search_api_facets', array_map(fn($field) => [
       'field' => $field,
-      'limit' => $field === 'tag' ? 30 : 0,
+      // Tags and wallets are many: the 30 with most listings.
+      'limit' => in_array($field, ['tag', 'wallet'], TRUE) ? 30 : 0,
       'operator' => 'or',
       'min_count' => 1,
       'missing' => FALSE,
@@ -218,6 +220,10 @@ final class CatalogueController implements ContainerInjectionInterface {
     $raw = $request->query->all()[$param] ?? [];
     $values = is_array($raw) ? $raw : explode(',', (string) $raw);
     $values = array_values(array_filter(array_map('trim', array_filter($values, 'is_string')), 'strlen'));
+    // An EVM address is indexed in lower case, however it is written.
+    if ($param === 'wallet') {
+      return array_map(fn($v) => str_starts_with($v, '0x') ? strtolower($v) : $v, $values);
+    }
     // Circle's category codes work too.
     return $param === 'category' ? array_map([CircleCatalogImporter::class, 'categoryLabel'], $values) : $values;
   }

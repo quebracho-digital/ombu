@@ -299,6 +299,22 @@ display:
           plugin_id: search_api_boolean
           value: '0'
           exposed: false
+        facets_wallet:
+          id: facets_wallet
+          table: search_api_index_listings_meilisearch
+          field: facets_wallet
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Wallet
+            identifier: wallet
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 10
+            min_count: 1
+            show_numbers: true
+            processor_configs: {  }
       style:
         type: default
       row:

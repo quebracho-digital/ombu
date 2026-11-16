@@ -1,0 +1,19 @@
+uuid: 7f493da9-14c7-48cc-a575-298ff7b65a14
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+id: commerce_product.field_past_accepts
+field_name: field_past_accepts
+entity_type: commerce_product
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

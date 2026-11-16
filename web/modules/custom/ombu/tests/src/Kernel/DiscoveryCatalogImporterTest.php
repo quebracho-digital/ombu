@@ -45,6 +45,13 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
   private array $asked = [];
 
   /**
+   * The wallets each resource was verified against, by URL.
+   *
+   * @var array<string, string[]>
+   */
+  private array $payees = [];
+
+  /**
    * Set up.
    */
   protected function setUp(): void {
@@ -96,11 +103,12 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
    */
   private function verifier(\Closure $answer): ResourceVerifier {
     $verifier = $this->createMock(ResourceVerifier::class);
-    $verifier->method('verify')->willReturnCallback(function (string $url, string $method, array $announced, array $assets) use ($answer): array {
+    $verifier->method('verify')->willReturnCallback(function (string $url, string $method, array $announced, array $assets, array $payees = []) use ($answer): array {
       $this->asked[] = $url;
+      $this->payees[$url] = $payees;
       $this->assertContains('eip155:8453|' . strtolower(self::USDC), $assets, 'it asks only for tokens it can verify');
-      [$verdict, $activity, $checks] = $answer(parse_url($url, PHP_URL_PATH)) + [2 => []];
-      return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $announced, 'activity' => $activity];
+      [$verdict, $activity, $checks, $live] = $answer(parse_url($url, PHP_URL_PATH)) + [2 => [], 3 => NULL];
+      return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $live ?? $announced, 'activity' => $activity];
     });
     return $verifier;
   }
@@ -258,6 +266,89 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(1, $counts['rejected']);
     $this->assertSame(1, $counts['retired']);
     $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+  }
+
+  /**
+   * Tests that a listing is asked again against the wallets it declared.
+   *
+   * A catalogue entry that now names another wallet (the seller's, or someone
+   * in the middle) is for the verifier to refuse: it gets the wallets the
+   * listing came in with. A new resource has none to compare.
+   */
+  public function testAnExistingListingIsCheckedAgainstTheWalletsItDeclared(): void {
+    $this->importer([$this->item('/a')], fn() => ['pass', 3])->import();
+    $this->assertSame([], $this->payees['https://seller.example/a'], 'A new resource declares its wallet now.');
+    $other = '0x' . str_repeat('2', 40);
+    $changed = $this->item('/a', ['accepts' => [$this->accept(['payTo' => $other])]]);
+    $counts = $this->importer([$changed], fn() => ['fail', 3, ['accepts[0].payee' => ['fail', 'payto_not_allowed']]])->import();
+    $this->assertSame([strtolower(self::PAY_TO)], array_map('strtolower', $this->payees['https://seller.example/a']));
+    $this->assertSame(1, $counts['rejected']);
+    $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+    $this->assertSame(strtolower(self::PAY_TO), strtolower($this->listing('/a')->get('field_pay_to')->value), 'The wallet on file is not replaced.');
+  }
+
+  /**
+   * Tests that an unchanged entry is asked again once its check is old.
+   *
+   * The catalogue may say the same for months while the seller's own answer
+   * changes (another wallet): the check has a maximum age.
+   */
+  public function testAnUnchangedEntryIsAskedAgainWhenItsCheckIsOld(): void {
+    $this->importer([$this->item('/a')], fn() => ['pass', 3])->import();
+    $this->asked = [];
+    $this->importer([$this->item('/a')], fn() => ['pass', 3])->import();
+    $this->assertSame([], $this->asked, 'Checked a moment ago: not asked.');
+
+    $state = $this->container->get('state');
+    $checked = $state->get('ombu.catalog.checked.bazaar');
+    $this->assertCount(1, $checked);
+    $state->set('ombu.catalog.checked.bazaar', array_map(fn() => time() - DiscoveryCatalogImporter::MAX_AGE - 60, $checked));
+    $other = '0x' . str_repeat('2', 40);
+    $counts = $this->importer([$this->item('/a')], fn() => ['fail', 3, ['accepts[0].payee' => ['fail', 'payto_not_allowed']], [$this->accept(['payTo' => $other])]])->import();
+    $this->assertSame(['https://seller.example/a'], $this->asked, 'Old check: asked again, though the catalogue says the same.');
+    $this->assertSame([strtolower(self::PAY_TO)], array_map('strtolower', $this->payees['https://seller.example/a']));
+    $this->assertSame(1, $counts['rejected']);
+    $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+    $changes = $state->get('ombu.catalog.wallet_changed.bazaar');
+    $this->assertSame([(int) $this->listing('/a')->id()], array_keys($changes), 'Staff can see whose wallet changed.');
+  }
+
+  /**
+   * Tests that staff can accept a seller's new wallet: same listing, same id.
+   *
+   * A listing is its catalogue, its URL and its method, never its wallet: the
+   * id, the SKU and the reviews stay.
+   */
+  public function testStaffAcceptTheNewWalletAndTheListingStaysTheSame(): void {
+    $this->importer([$this->item('/a')], fn() => ['pass', 3])->import();
+    $id = $this->listing('/a')->id();
+    $sku = $this->listing('/a')->get('variations')->entity->getSku();
+    $other = '0x' . str_repeat('2', 40);
+    $moved = $this->item('/a', ['accepts' => [$this->accept(['payTo' => $other])]]);
+    $refuse = fn() => ['fail', 3, ['accepts[0].payee' => ['fail', 'payto_not_allowed']]];
+    $this->importer([$moved], $refuse)->import();
+    $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value);
+
+    // A check that fails for another reason accepts nothing.
+    $importer = $this->importer([], fn() => ['fail', 3, ['accepts[0].ofac' => ['fail', 'sanctioned (OFAC SDN)']], [$this->accept(['payTo' => $other])]]);
+    $this->assertSame('fail', $importer->acceptWallet($this->listing('/a'))['verdict']);
+    $this->assertSame(strtolower(self::PAY_TO), strtolower($this->listing('/a')->get('field_pay_to')->value));
+
+    $live = fn() => ['pass', 3, [], [$this->accept(['payTo' => $other])]];
+    $report = $this->importer([], $live)->acceptWallet($this->listing('/a'));
+    $this->assertSame('pass', $report['verdict']);
+    $this->assertSame([], $this->payees['https://seller.example/a'], 'Asked with no wallet on file: that is what is being replaced.');
+    $this->assertSame($other, $this->listing('/a')->get('field_pay_to')->value);
+    $this->assertTrue((bool) $this->listing('/a')->get('field_retired')->value, 'Retired until the next run compares it with the catalogue.');
+    $this->assertSame([], $this->container->get('state')->get('ombu.catalog.wallet_changed.bazaar'));
+
+    $counts = $this->importer([$moved], fn() => ['pass', 3])->import();
+    $this->assertSame(1, $counts['updated']);
+    $this->assertSame([strtolower($other)], array_map('strtolower', $this->payees['https://seller.example/a']), 'The new wallet is the one on file now.');
+    $listing = $this->listing('/a');
+    $this->assertFalse((bool) $listing->get('field_retired')->value);
+    $this->assertSame($id, $listing->id());
+    $this->assertSame($sku, $listing->get('variations')->entity->getSku());
   }
 
   /**

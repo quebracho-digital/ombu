@@ -24,3 +24,9 @@ ombu.blog:
   route_name: view.blog.page_1
   menu_name: main
   weight: -49
+ombu.stop:
+  title: 'Stop Ombú'
+  description: 'Pause payments and make the whole site read-only, or bring it back.'
+  route_name: ombu.stop
+  parent: system.admin_config_services
+  weight: -10

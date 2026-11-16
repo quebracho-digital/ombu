@@ -13,7 +13,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\HttpFactory;
 use GuzzleHttp\Psr7\Response;
 use Quebracho\X402\Networks;
-use Quebracho\X402\Rpc;
+use Quebracho\X402\ChainalysisOracle;
 use Quebracho\X402\TokenBlacklist;
 
 /**
@@ -78,7 +78,7 @@ class ResourceVerifierTest extends UnitTestCase {
     ))),
     ]);
     $blacklist = new TokenBlacklist($node($freeze), $factory, $factory, FALSE, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']);
-    $ethereum = new Rpc($node($ofac), $factory, $factory, 'https://eth.invalid');
+    $ethereum = new ChainalysisOracle($node($ofac), $factory, $factory, 'https://eth.invalid');
     return new ResourceVerifier($probe, $blacklist, $ethereum, fn() => 3, ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted']);
   }
 
@@ -123,6 +123,49 @@ class ResourceVerifierTest extends UnitTestCase {
     $report = $this->verifier([$this->req()], self::FALSE, self::FALSE)->verify('https://seller.example/x', 'GET', [$this->req()]);
     $this->assertSame(ResourceVerifier::PASS, $report['verdict'], json_encode($report['checks']));
     $this->assertSame('3 incoming transfer(s)', $report['checks']['accepts[0].transfers'][1]);
+  }
+
+  /**
+   * A payTo that only looks like an address (a line break after it) is none.
+   *
+   * @covers ::verify
+   */
+  public function testPayToWithTrailingLineBreakIsNotAnAddress(): void {
+    $report = $this->verifier([$this->req(['payTo' => self::PAY_TO . "\n"])], self::FALSE, self::FALSE)->verify('https://seller.example/x');
+    $this->assertSame(ResourceVerifier::FAIL, $report['verdict'], json_encode($report['checks']));
+    $this->assertSame([ResourceVerifier::FAIL, 'payTo is not an EVM address'], $report['checks']['accepts[0].ofac']);
+  }
+
+  /**
+   * A listing declared its wallets when it came in: another one is refused.
+   *
+   * @covers ::verify
+   */
+  public function testPayToTheListingNeverDeclaredFails(): void {
+    $other = '0x' . str_repeat('1', 40);
+    $verifier = fn() => $this->verifier([$this->req()], self::FALSE, self::FALSE);
+    $report = $verifier()->verify('https://seller.example/x', 'GET', [], [], [$other]);
+    $this->assertSame(ResourceVerifier::FAIL, $report['verdict']);
+    $this->assertSame([ResourceVerifier::FAIL, 'payto_not_allowed'], $report['checks']['accepts[0].payee']);
+
+    // Its own wallet, however it was written: allowed.
+    $report = $verifier()->verify('https://seller.example/x', 'GET', [], [], [$other, strtolower(self::PAY_TO)]);
+    $this->assertSame(ResourceVerifier::PASS, $report['verdict'], json_encode($report['checks']));
+    $this->assertSame(ResourceVerifier::PASS, $report['checks']['accepts[0].payee'][0]);
+
+    // Nothing declared (a new resource): not asked.
+    $report = $verifier()->verify('https://seller.example/x');
+    $this->assertArrayNotHasKey('accepts[0].payee', $report['checks']);
+  }
+
+  /**
+   * An oracle that answers something else than a bool is not a pass.
+   *
+   * @covers ::verify
+   */
+  public function testAnOracleThatGivesNoBoolIsUnchecked(): void {
+    $report = $this->verifier([$this->req()], self::FALSE, '0x01')->verify('https://seller.example/x');
+    $this->assertSame([ResourceVerifier::UNCHECKED, 'oracle gave no bool'], $report['checks']['accepts[0].ofac']);
   }
 
   /**
@@ -267,7 +310,7 @@ class ResourceVerifierTest extends UnitTestCase {
     $factory = new HttpFactory();
     $node = new Client(['handler' => HandlerStack::create(new MockHandler(array_fill(0, 8, new Response(200, [], json_encode(['jsonrpc' => '2.0', 'id' => 1, 'result' => self::FALSE])))))]);
     $tokens = ['eip155:8453|' . self::BASE_USDC => 'isBlacklisted'];
-    $verifier = new ResourceVerifier($probe, new TokenBlacklist($node, $factory, $factory, FALSE, $tokens), new Rpc($node, $factory, $factory, 'https://eth.invalid'), fn($network, $asset, $payTo) => $payTo === self::PAY_TO ? 100 : 0, $tokens);
+    $verifier = new ResourceVerifier($probe, new TokenBlacklist($node, $factory, $factory, FALSE, $tokens), new ChainalysisOracle($node, $factory, $factory, 'https://eth.invalid'), fn($network, $asset, $payTo) => $payTo === self::PAY_TO ? 100 : 0, $tokens);
     $report = $verifier->verify('https://seller.example/x');
     $this->assertSame(0, $report['activity'], 'a fresh address beside an old one is not activity');
   }

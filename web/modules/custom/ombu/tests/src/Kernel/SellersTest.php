@@ -414,6 +414,83 @@ final class SellersTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Paused (payments alone, or the site stopped) an mcp call names no price
+   * and no wallet, runs nothing and charges nothing.
+   */
+  public function testAnMcpCallIsRefusedWhilePaused(): void {
+    $flag = sys_get_temp_dir() . '/ombu-stop-' . bin2hex(random_bytes(4)) . '/paused';
+    $this->setSetting('x402_pay_stop_file', $flag);
+    $this->container->get('kernel')->rebuildContainer();
+    $ping = $this->listing('ping', 'seller_ping', '0.0001');
+    $this->facilitatorSaysYes();
+    $ran = 0;
+    $handler = $this->mcpHandler($ran);
+    $required = $this->mcpCall($ping, $handler);
+    $accepted = $required['structuredContent']['accepts'][0];
+    $payment = (new EvmExact(new Signer(self::BUYER_KEY)))->pay($required['structuredContent'], $accepted);
+    $call = function (array $meta = []) use ($ping, $handler): array {
+      $body = json_encode([
+        'jsonrpc' => '2.0',
+        'id' => 7,
+        'method' => 'tools/call',
+        'params' => ['name' => McpPayments::TOOL, 'arguments' => ['id' => (int) $ping->id(), 'input' => []]] + ($meta ? ['_meta' => $meta] : []),
+      ]);
+      $response = $this->container->get('ombu.mcp_payments')->process(new ServerRequest('POST', '/mcp', ['Content-Type' => 'application/json'], $body), $handler);
+      return [json_decode((string) $response->getBody(), TRUE), (string) $response->getBody()];
+    };
+    foreach (['x402_pay.stop', 'ombu.stop'] as $switch) {
+      $this->container->get($switch)->engage('test');
+      foreach ([[], [X402McpMiddleware::PAYMENT => $payment]] as $meta) {
+        [$answer, $raw] = $call($meta);
+        $this->assertSame('payments_paused', $answer['error']['data']['reason'], $switch);
+        $this->assertSame(7, $answer['id']);
+        $this->assertStringNotContainsString($accepted['payTo'], $raw, 'No wallet is named.');
+      }
+      $this->container->get($switch)->release();
+    }
+    $this->assertSame(0, $ran, 'The seller never ran.');
+    $this->assertSame('', $this->logged(), 'Nothing was logged as a sale.');
+    // Resumed: the same payment buys.
+    [$paid] = $call([X402McpMiddleware::PAYMENT => $payment]);
+    $this->assertArrayNotHasKey('isError', $paid['result'], json_encode($paid));
+    $this->assertSame(1, $ran);
+  }
+
+  /**
+   * A wallet on our deny list buys nothing: refused before anything is run.
+   */
+  public function testAnMcpCallFromWalletOnOurDenyListIsRefused(): void {
+    $dir = sys_get_temp_dir() . '/ombu-screening-' . bin2hex(random_bytes(4));
+    $this->setSetting('ombu_screening_dir', $dir);
+    $this->container->get('kernel')->rebuildContainer();
+    $ping = $this->listing('ping', 'seller_ping', '0.0001');
+    $this->facilitatorSaysYes();
+    $ran = 0;
+    $handler = $this->mcpHandler($ran);
+    $required = $this->mcpCall($ping, $handler);
+    $accepted = $required['structuredContent']['accepts'][0];
+    $buyer = new Signer(self::BUYER_KEY);
+    $screening = $this->container->get('ombu.screening_subscriber')->screening();
+    $screening->set($buyer->address(), 'deny');
+    $this->assertSame('address_denied', $screening->check($buyer->address()));
+
+    $payment = (new EvmExact($buyer))->pay($required['structuredContent'], $accepted);
+    $refused = $this->mcpCall($ping, $handler, [X402McpMiddleware::PAYMENT => $payment]);
+    $this->assertTrue($refused['isError'] ?? FALSE, json_encode($refused));
+    $this->assertSame('address_denied', $refused['structuredContent']['error']);
+    $this->assertSame(0, $ran, 'The seller never ran.');
+
+    // Off the list: the same wallet buys.
+    $screening->set($buyer->address(), NULL);
+    $payment = (new EvmExact($buyer))->pay($required['structuredContent'], $accepted);
+    $paid = $this->mcpCall($ping, $handler, [X402McpMiddleware::PAYMENT => $payment]);
+    $this->assertArrayNotHasKey('isError', $paid, json_encode($paid));
+    $this->assertSame(1, $ran);
+    array_map('unlink', glob("$dir/*") ?: []);
+    @rmdir($dir);
+  }
+
+  /**
    * Past the site's deadline, or on a settle answer that is not a real TRUE,
    * the buyer is not charged and gets nothing.
    */

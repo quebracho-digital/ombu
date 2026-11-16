@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\ombu;
 
 use Quebracho\X402\AddressCheck;
-use Quebracho\X402\Rpc;
+use Quebracho\X402\ChainalysisOracle;
+use Quebracho\X402\Field;
+use Quebracho\X402\PayeeAllowlist;
 use Quebracho\X402\TokenBlacklist;
 
 /**
@@ -27,23 +29,14 @@ class ResourceVerifier {
   public const UNCHECKED = 'unchecked';
 
   /**
-   * Chainalysis' sanctions oracle, `isSanctioned(address)`, on Ethereum.
-   *
-   * The SDN list is the same for an address on any EVM chain, so Ethereum's
-   * copy answers for all of them (Base has no deployment).
-   */
-  public const OFAC_ORACLE = '0x40c57923924b5c5c5455c48d93317139addac8fb';
-  public const OFAC_SELECTOR = '0xdf592f7d';
-
-  /**
    * Builds the verifier from its probe, its nodes and its token list.
    *
    * @param \Drupal\ombu\SellerProbe $probe
    *   Asks the seller for its 402.
    * @param \Quebracho\X402\TokenBlacklist $blacklist
    *   Asks the token whether payTo is frozen.
-   * @param \Quebracho\X402\Rpc|null $ethereum
-   *   Ethereum's node, for OFAC's oracle.
+   * @param \Quebracho\X402\ChainalysisOracle|null $oracle
+   *   Chainalysis' sanctions oracle on Ethereum (the library's), for OFAC.
    * @param \Closure|null $transfers
    *   fn(string $network, string $asset, string $payTo): int, the USDC
    *   transfers payTo has received (capped); throws when it cannot ask.
@@ -54,7 +47,7 @@ class ResourceVerifier {
   public function __construct(
     private readonly SellerProbe $probe,
     private readonly TokenBlacklist $blacklist,
-    private readonly ?Rpc $ethereum,
+    private readonly ?ChainalysisOracle $oracle,
     private readonly ?\Closure $transfers = NULL,
     array $tokens = [],
   ) {
@@ -81,13 +74,16 @@ class ResourceVerifier {
    *   `exact` requirements paid in one of these are checked and returned. A
    *   resource that also takes Solana, another token or a batch-settlement is
    *   judged by the part Ombú can verify. None left is a failure.
+   * @param string[] $payees
+   *   When not empty, the wallets the listing declared when it came in: a
+   *   requirement that pays any other fails (PayeeAllowlist).
    *
    * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array, activity: ?int}
    *   `accepts` are the requirements that were checked; `activity` is the fewest
    *   USDC transfers any of their payTo addresses has received (NULL: not
    *   asked, or the index did not answer).
    */
-  public function verify(string $url, string $method = 'GET', array $announced = [], array $assets = []): array {
+  public function verify(string $url, string $method = 'GET', array $announced = [], array $assets = [], array $payees = []): array {
     $checks = [];
     try {
       // Ask with GET first: a POST to a seller that skips x402 could run the
@@ -116,6 +112,9 @@ class ResourceVerifier {
         return $this->report($checks + ['accepts' => [self::FAIL, 'no exact requirement in a token Ombú verifies']], []);
       }
     }
+    // The wallets the listing came in with are the only ones it may pay: a
+    // seller that changes wallet is listed again, never updated in place.
+    $allowlist = $payees ? new PayeeAllowlist($payees) : NULL;
     $counts = [];
     $fingerprints = array_map([self::class, 'fingerprint'], array_filter($announced, 'is_array'));
     foreach (array_values($accepts) as $i => $req) {
@@ -134,6 +133,11 @@ class ResourceVerifier {
         continue;
       }
       $checks[$at] = [self::PASS, $req['network'] . ' ' . $amount];
+      if ($allowlist) {
+        $payee = new AddressCheck(AddressCheck::PAY_TO, (string) $req['network'], (string) $req['payTo'], $req);
+        $allowlist($payee);
+        $checks["$at.payee"] = $payee->reason() === NULL ? [self::PASS, 'a wallet the listing declared'] : [self::FAIL, $payee->reason()];
+      }
       $checks["$at.freeze"] = $this->freeze($req);
       $checks["$at.ofac"] = $this->ofac((string) $req['network'], (string) $req['payTo']);
       $count = NULL;
@@ -170,25 +174,24 @@ class ResourceVerifier {
     if (!str_starts_with($network, 'eip155:')) {
       return [self::UNCHECKED, 'OFAC oracle is EVM only'];
     }
-    if (!preg_match('/^0x[0-9a-fA-F]{40}$/', $payTo)) {
+    // The whole value, nothing before or after: a "$" in a pattern lets a
+    // final line break through.
+    if (!Field::is(Field::ADDRESS, $payTo)) {
       return [self::FAIL, 'payTo is not an EVM address'];
     }
-    if ($this->ethereum === NULL) {
+    if ($this->oracle === NULL) {
       return [self::UNCHECKED, 'no Ethereum node configured'];
     }
     try {
-      $call = ['to' => self::OFAC_ORACLE, 'data' => self::OFAC_SELECTOR . Rpc::word($payTo)];
-      $answer = ($this->ethereum)('eth_call', [$call, 'latest']);
+      $sanctioned = $this->oracle->sanctioned($payTo);
+    }
+    catch (\UnexpectedValueException) {
+      return [self::UNCHECKED, 'oracle gave no bool'];
     }
     catch (\Throwable) {
       return [self::UNCHECKED, 'node did not answer'];
     }
-    if (!is_string($answer) || !preg_match('/^0x[0-9a-fA-F]{64}$/', $answer)) {
-      return [self::UNCHECKED, 'oracle gave no bool'];
-    }
-    return gmp_cmp(Rpc::number($answer), 0) === 0
-      ? [self::PASS, 'not sanctioned']
-      : [self::FAIL, 'sanctioned (OFAC SDN)'];
+    return $sanctioned ? [self::FAIL, 'sanctioned (OFAC SDN)'] : [self::PASS, 'not sanctioned'];
   }
 
   /**

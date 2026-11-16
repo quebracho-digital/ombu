@@ -85,3 +85,11 @@ ombu.mcp_message:
   options:
     _auth: ['cookie']
     no_cache: TRUE
+
+ombu.stop:
+  path: '/admin/config/services/ombu-stop'
+  defaults:
+    _form: '\Drupal\ombu\Form\StopForm'
+    _title: 'Stop Ombú'
+  requirements:
+    _permission: 'stop and resume ombu'

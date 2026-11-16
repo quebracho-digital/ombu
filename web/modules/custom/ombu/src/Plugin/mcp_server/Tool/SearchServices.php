@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
       'search' => ['type' => 'string', 'description' => 'Words to search for.'],
       'category' => ['type' => 'string', 'description' => 'A category from the facets of a previous search.'],
       'network' => ['type' => 'string', 'description' => 'CAIP-2 network id, e.g. eip155:8453.'],
+      'wallet' => ['type' => 'string', 'description' => 'A wallet (the payTo of an offer): the services paid to it.'],
       'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50, 'default' => 10],
       'offset' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 100000, 'default' => 0],
     ],
@@ -44,6 +45,7 @@ final class SearchServices extends CatalogueToolBase {
       'search',
       'category',
       'network',
+      'wallet',
       'limit',
       'offset',
     ])), fn($v) => $v !== '' && $v !== NULL));

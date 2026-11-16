@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\ombu\Sellers;
+use Drupal\ombu\Stop;
 use Drupal\x402_pay\ClaimStore;
 use Drupal\x402_pay\Delivery;
 use Drupal\x402_pay\Event\PaymentEvent;
@@ -16,6 +17,7 @@ use Drupal\x402_pay\Facilitators;
 use Drupal\x402_pay\PaymentLog;
 use Drupal\x402_pay\Plugin\Field\FieldType\X402PriceItem;
 use Drupal\x402_pay\Reconciler;
+use Drupal\x402_pay\Stop as PaymentsStop;
 use GuzzleHttp\Psr7\HttpFactory;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -72,6 +74,8 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
     private readonly HttpFactory $psr17,
     private readonly EventDispatcherInterface $events,
     private readonly FloodInterface $flood,
+    private readonly ?PaymentsStop $stop = NULL,
+    private readonly ?Stop $site = NULL,
   ) {}
 
   /**
@@ -138,6 +142,23 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
     $params = is_array($message) && !array_is_list($message) && ($message['method'] ?? NULL) === 'tools/call' && is_array($message['params'] ?? NULL) ? $message['params'] : [];
     $this->admitted = $this->listing = NULL;
     $product = $this->listing($params);
+    // Paused by hand, payments alone or the whole site: nothing is quoted,
+    // verified, claimed, run or charged (a free listing neither: it is
+    // a sale all the same), and the call names no wallet. Asked here
+    // for every switch; the library asks its own again before it settles.
+    if ($product && ($this->stop?->engaged() || $this->site?->engaged())) {
+      // A notification (no id) gets no answer, as from the library.
+      if (!array_key_exists('id', $message)) {
+        return $this->psr17->createResponse(202);
+      }
+      $paused = $this->psr17->createResponse(200)->withHeader('Content-Type', 'application/json');
+      $paused->getBody()->write(json_encode([
+        'jsonrpc' => '2.0',
+        'id' => $message['id'] ?? NULL,
+        'error' => ['code' => -32000, 'message' => 'Payments are paused', 'data' => ['reason' => PaymentsStop::REASON]],
+      ]));
+      return $paused;
+    }
     $requirements = $product ? $this->requirements($product) : NULL;
     if (!$product || !$requirements) {
       return $handler->handle($request);
@@ -164,6 +185,12 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
     $deadline = Settings::get('x402_pay_deadline');
     $started = (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(TRUE));
     $settle = function (array $payment, array $req) use ($seller, &$facilitator, $deadline, $started): array {
+      // Stopped while the seller worked: nothing is sent. The library asks
+      // its own file again here; the module's state and the site's stop are
+      // ours to ask.
+      if ($this->stop?->engaged() || $this->site?->engaged()) {
+        return ['success' => FALSE, 'errorReason' => PaymentsStop::REASON, 'transaction' => '', 'network' => $req['network']];
+      }
       if ($deadline && microtime(TRUE) - $started > $deadline) {
         return ['success' => FALSE, 'errorReason' => 'deadline', 'transaction' => '', 'network' => $req['network']];
       }
@@ -220,6 +247,7 @@ final class McpPayments implements MiddlewareInterface, EventDispatcherInterface
       ],
       verify: $verify,
       release: fn(string $key) => $this->claims->release($key),
+      stop: $this->stop?->library(),
     );
     try {
       return $middleware->process($request, $handler);

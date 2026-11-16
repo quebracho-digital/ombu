@@ -120,7 +120,8 @@ final class ReviewVerifier {
       throw new ReviewRefusedException('Sign in with the wallet that paid: reviews need a purchase from your wallet.');
     }
 
-    $payees = $this->payees($listing);
+    // A purchase paid to a wallet the listing had then is a purchase.
+    $payees = $this->payees($listing, TRUE);
     // The chains this kind of transaction can be on.
     $checkable = array_filter($payees, fn($network) => $solana
       ? str_starts_with($network, 'solana:') && isset(Networks::ALL[$network])
@@ -146,6 +147,10 @@ final class ReviewVerifier {
       if (($receipt['status'] ?? NULL) !== '0x1') {
         throw new ReviewRefusedException('That transaction failed on chain.');
       }
+      // The wallet and the price of the day it was paid, not of today.
+      $block = isset($receipt['blockNumber']) ? $this->rpc(self::RPC[$network], 'eth_getBlockByNumber', [$receipt['blockNumber'], FALSE]) : NULL;
+      $offers = $this->on($listing, $network, isset($block['timestamp']) ? (int) hexdec((string) $block['timestamp']) : NULL);
+      $accepted = array_map(fn($o) => [$o['asset'], $o['payTo']], $offers);
       foreach ($receipt['logs'] ?? [] as $log) {
         $topics = array_map('strtolower', $log['topics'] ?? []);
         if (count($topics) !== 3 || $topics[0] !== self::TRANSFER) {
@@ -153,7 +158,7 @@ final class ReviewVerifier {
         }
         $from = '0x' . substr($topics[1], -40);
         $to = '0x' . substr($topics[2], -40);
-        if (in_array([strtolower($log['address'] ?? ''), $to], $accepted, TRUE) && in_array($from, $wallets, TRUE) && $this->paysFor($listing, $network, $tx, gmp_strval(gmp_init(substr((string) ($log['data'] ?? ''), 2) ?: '0', 16)))) {
+        if (in_array([strtolower($log['address'] ?? ''), $to], $accepted, TRUE) && in_array($from, $wallets, TRUE) && $this->paysFor($listing, $offers, $tx, gmp_strval(gmp_init(substr((string) ($log['data'] ?? ''), 2) ?: '0', 16)))) {
           return $from;
         }
       }
@@ -179,6 +184,9 @@ final class ReviewVerifier {
     if ($result['meta']['err'] ?? NULL) {
       throw new ReviewRefusedException('That transaction failed on chain.');
     }
+    // The wallet and the price of the day it was paid, not of today.
+    $offers = $this->on($listing, $network, isset($result['blockTime']) ? (int) $result['blockTime'] : NULL);
+    $accepted = array_map(fn($o) => [$o['asset'], $o['payTo']], $offers);
     foreach ($result['transaction']['message']['instructions'] ?? [] as $instruction) {
       $info = $instruction['parsed']['info'] ?? [];
       if (($instruction['program'] ?? '') !== 'spl-token' || ($instruction['parsed']['type'] ?? '') !== 'transferChecked') {
@@ -186,7 +194,7 @@ final class ReviewVerifier {
       }
       foreach ($accepted as [$mint, $payTo]) {
         if (($info['mint'] ?? '') === $mint && ($info['destination'] ?? '') === Solana::ata($payTo, $mint)
-          && in_array($info['authority'] ?? '', $wallets, TRUE) && $this->paysFor($listing, $network, $tx, (string) ($info['tokenAmount']['amount'] ?? '0'))) {
+          && in_array($info['authority'] ?? '', $wallets, TRUE) && $this->paysFor($listing, $offers, $tx, (string) ($info['tokenAmount']['amount'] ?? '0'))) {
           return $info['authority'];
         }
       }
@@ -198,10 +206,10 @@ final class ReviewVerifier {
    * Whether a transfer bought this listing, not merely paid its seller.
    *
    * Our sellers share one payTo, so our own sales log must show this tx
-   * settled for this listing. A Circle listing's transfer must be at least
-   * its price on that network.
+   * settled for this listing. An imported listing's transfer must be at
+   * least its price on that network on the day it was paid ($offers).
    */
-  private function paysFor(ProductInterface $listing, string $network, string $tx, string $amount): bool {
+  private function paysFor(ProductInterface $listing, array $offers, string $tx, string $amount): bool {
     if ($listing->get('field_source')->value === 'ours') {
       return (bool) $this->database->select('x402_pay_log', 'l')->fields('l', ['id'])
         ->condition('transaction', $tx)->condition('status', 'settled')
@@ -212,14 +220,21 @@ final class ReviewVerifier {
         ->range(0, 1)->execute()->fetchField();
     }
     $prices = [];
-    foreach (json_decode((string) $listing->get('field_accepts')->value, TRUE) ?: [] as $accept) {
+    foreach ($offers as $offer) {
       // An upto amount is a ceiling, not the price: it says nothing of it.
-      if (($accept['network'] ?? NULL) === $network && isset($accept['amount']) && ($accept['scheme'] ?? 'exact') !== 'upto') {
-        $prices[] = (float) $accept['amount'];
+      if (isset($offer['amount']) && ($offer['scheme'] ?? 'exact') !== 'upto') {
+        $prices[] = (float) $offer['amount'];
       }
     }
     // ponytail: compared as floats, exact below 2^53 atomic units.
     return (float) $amount >= ($prices ? min($prices) : 1);
+  }
+
+  /**
+   * What a listing offered on a network at a time (at()).
+   */
+  private function on(ProductInterface $listing, string $network, ?int $time): array {
+    return array_values(array_filter($this->at($listing, $time), fn($o) => $o['network'] === $network));
   }
 
   /**
@@ -315,11 +330,113 @@ final class ReviewVerifier {
   }
 
   /**
-   * Who a listing pays, by network: [asset, payTo] pairs; EVM's lowercase.
+   * What a listing offered before each change: wallets and prices, dated.
+   *
+   * @return array<int, array{network: string, asset: string, payTo: string, amount?: string, scheme?: string, until: int}>
+   *   As kept in field_past_accepts by remember().
    */
-  public function payees(ProductInterface $listing): array {
+  public static function past(ProductInterface $listing): array {
+    if (!$listing->hasField('field_past_accepts')) {
+      return [];
+    }
+    $past = json_decode((string) $listing->get('field_past_accepts')->value, TRUE);
+    return array_values(array_filter(is_array($past) ? $past : [], fn($a) => is_array($a) && isset($a['network'], $a['asset'], $a['payTo'])
+      && is_string($a['network']) && is_string($a['asset']) && is_string($a['payTo'])));
+  }
+
+  /**
+   * Keeps, on a listing about to be saved, what it offered until now.
+   *
+   * Whenever its offers change (a wallet, a price, a network), all the offers
+   * it had are added to the history with the time of the change: together
+   * they say what it took, and to whom, at any date (at()). A purchase paid
+   * to the wallet and at the price of its day still backs a review
+   * (payer()), whoever the seller pays now. The history gives no rights
+   * over the listing: sells() and listingsOf() look at what it pays today.
+   */
+  public function remember(ProductInterface $listing, ProductInterface $before): void {
+    if (!$listing->hasField('field_past_accepts')) {
+      return;
+    }
+    $id = fn(array $o) => implode('|', [$o['network'], $o['asset'], $o['payTo'], $o['amount'] ?? '', $o['scheme'] ?? '']);
+    $was = $this->offers($before);
+    $now = $this->offers($listing);
+    $same = array_map($id, $was);
+    $new = array_map($id, $now);
+    sort($same);
+    sort($new);
+    if (!$was || $same === $new) {
+      return;
+    }
+    $until = time();
+    $past = self::past($before);
+    foreach ($was as $offer) {
+      $past[] = $offer + ['until' => $until];
+    }
+    $listing->set('field_past_accepts', json_encode($past, JSON_UNESCAPED_SLASHES));
+  }
+
+  /**
+   * What a listing offers now: network, asset, payTo and, for an imported
+   * one, the amount and the scheme. EVM values lowercase.
+   */
+  private function offers(ProductInterface $listing): array {
+    $key = fn(string $network, string $value) => str_starts_with($network, 'eip155:') ? strtolower($value) : $value;
+    $offers = [];
+    if ($listing->get('field_source')->value === 'ours') {
+      $payTo = $this->sellers->payTo($listing);
+      $network = Sellers::network($listing);
+      if ($payTo && isset(Networks::ALL[$network])) {
+        $offers[] = ['network' => $network, 'asset' => $key($network, Networks::ALL[$network]['asset']), 'payTo' => $key($network, $payTo)];
+      }
+      return $offers;
+    }
+    foreach (json_decode((string) $listing->get('field_accepts')->value, TRUE) ?: [] as $accept) {
+      if (isset($accept['network'], $accept['asset'], $accept['payTo']) && is_string($accept['network']) && is_string($accept['asset']) && is_string($accept['payTo'])) {
+        $offers[] = [
+          'network' => $accept['network'],
+          'asset' => $key($accept['network'], $accept['asset']),
+          'payTo' => $key($accept['network'], $accept['payTo']),
+        ] + (isset($accept['amount']) ? ['amount' => (string) $accept['amount']] : []) + (isset($accept['scheme']) ? ['scheme' => (string) $accept['scheme']] : []);
+      }
+    }
+    return $offers;
+  }
+
+  /**
+   * What a listing offered at a time: the wallet and the price of that day.
+   *
+   * The history holds, for each change, everything offered until then. So a
+   * time falls in the first change that came after it; later than all of
+   * them, or unknown (NULL), it is what the listing offers now. Before the
+   * first change there is no earlier record: what it offered until that
+   * change stands for all the time before.
+   */
+  public function at(ProductInterface $listing, ?int $time): array {
+    $past = $time === NULL ? [] : array_filter(self::past($listing), fn($o) => (int) ($o['until'] ?? 0) >= $time);
+    if (!$past) {
+      return $this->offers($listing);
+    }
+    $first = min(array_map(fn($o) => (int) $o['until'], $past));
+    return array_values(array_filter($past, fn($o) => (int) $o['until'] === $first));
+  }
+
+  /**
+   * Who a listing pays, by network: [asset, payTo] pairs; EVM's lowercase.
+   *
+   * With $past, also who it paid before (past()): for a purchase, not for
+   * who manages the listing.
+   */
+  public function payees(ProductInterface $listing, bool $past = FALSE): array {
     $key = fn(string $network, string $value) => str_starts_with($network, 'eip155:') ? strtolower($value) : $value;
     $payees = [];
+    if ($past) {
+      // What it paid before, then what it pays now.
+      foreach ([...self::past($listing), ...$this->offers($listing)] as $offer) {
+        $payees[$offer['network']][] = [$key($offer['network'], $offer['asset']), $key($offer['network'], $offer['payTo'])];
+      }
+      return $payees;
+    }
     if ($listing->get('field_source')->value === 'ours') {
       $payTo = $this->sellers->payTo($listing);
       $network = Sellers::network($listing);

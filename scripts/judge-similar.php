@@ -17,12 +17,13 @@
  * in scripts/eval/similar-judge.json, resumable (an answered pair is not
  * asked again), shaped by JUDGE_MODEL and JUDGE_LIMIT (pairs this run, 0 =
  * all). Two judges:
- * - JUDGE_MODEL=subq:snap (with SUBQ_API_KEY): the SubQ Decisions API,
- *   subq-snap-1.2: a choice among alternative/works_with/unrelated with
- *   probabilities and confidence, billing input only. The default: the
- *   1,433 pairs of the labelled set cost a couple of cents.
- * - JUDGE_MODEL=fireworks.<model id> (or AI's chat default, without the var):
- *   the AI module's chat, one word of text per pair.
+ * - JUDGE_MODEL=subq.subq_snap_1_2, or JUDGE_SUBQ=1 (after
+ *   scripts/setup-subq-server.php, with SUBQ_API_KEY in the container): the
+ *   SubQ Decisions API, a choice among alternative/works_with/unrelated with
+ *   probabilities and confidence, billing input only. The 1,433 pairs of
+ *   the labelled set cost a couple of cents.
+ * - JUDGE_MODEL=<server>.<model> of any chat model of ai_provider_universal:
+ *   decide() prompts it for the same JSON, without probabilities.
  *
  * "scores" rebuilds each engine's top 12 from the pairs' engine tags, scores
  * the lists through the judge's answers instead of the labels, and prints
@@ -94,21 +95,21 @@ $judged = is_file(JUDGED) ? json_decode((string) file_get_contents(JUDGED), TRUE
 
 if ($mode === '') {
   // The judge is a decision model, asked through the module's own provider:
-  // JUDGE_MODEL=<model entity id> (e.g. snap.subq_snap) over
+  // JUDGE_MODEL=<model entity id> (e.g. subq.subq_snap_1_2) over
   // UniversalProvider::decide(), the same call the importer's decision model
   // will take and what DECISIONS asks for a decision (an Ombú interface, a
-  // pinned version, fail-closed). SubQ has its own backend now
-  // (ai_provider_universal's `subq`, patch 0001 in scripts/patches/):
+  // pinned version, fail-closed). SubQ has its own backend
+  // (ai_provider_universal's `subq`, 1.0.x):
   // scripts/setup-subq-server.php creates the server with it. A chat model
-  // id also works (JUDGE_MODEL=fireworks.<id>): decide() prompts it for the
+  // entity id also works (JUDGE_MODEL=<server>.<model>): decide() prompts it for the
   // same JSON, without calibrated probabilities.
-  if (!$judge_model && getenv('JUDGE_SUBQ') !== '') {
+  if (!$judge_model && getenv('JUDGE_SUBQ') !== FALSE) {
     // JUDGE_SUBQ set (any value): the SubQ Snap model created by the setup
     // script. The model entity id assumes its discovery; the judge names it
     // in its error if it is not there.
-    $judge_model = 'snap.subq_snap';
+    $judge_model = 'subq.subq_snap_1_2';
   }
-  $judge_model ??= throw new \RuntimeException('Set JUDGE_MODEL (a model entity id, e.g. snap.subq_snap) and create the server: drush php:script ../scripts/setup-subq-server.php');
+  $judge_model ??= throw new \RuntimeException('Set JUDGE_MODEL (a model entity id, e.g. subq.subq_snap_1_2) and create the server: drush php:script ../scripts/setup-subq-server.php');
   echo "Judge: $judge_model\n";
 
   $system = <<<TXT
@@ -129,8 +130,10 @@ if ($mode === '') {
       ],
     ],
   ];
-  [$provider_id, $model_id] = array_pad(explode('.', $judge_model, 2), 2, '');
-  $provider = \Drupal::service('ai.provider')->createInstance($provider_id);
+  // A model entity id of ai_provider_universal (server.model), asked
+  // through its provider.
+  $model_id = $judge_model;
+  $provider = \Drupal::service('ai.provider')->createInstance('universal');
   $ask = static function (string $prompt) use ($provider, $model_id, $question): array {
     $start = microtime(TRUE);
     $answers = $provider->decide($model_id, $prompt, $question, ['ombu_judge']);
@@ -157,7 +160,6 @@ if ($mode === '') {
     }
     return NULL;
   };
-  echo "Judge: $judge_model\n";
 
   $asked = $skipped = $bad = 0;
   foreach ($pairs as $id => $listing) {
@@ -196,6 +198,8 @@ if ($mode === '') {
     // pending answers, and the run is resumable.
     file_put_contents(JUDGED, json_encode($judged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n");
   }
+  // JUDGE_LIMIT leaves the loop mid-listing: keep what that listing got.
+  file_put_contents(JUDGED, json_encode($judged, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n");
   echo "Asked $asked, skipped $skipped (already judged)" . ($bad ? ", $bad not one word" : ', all answers clean') . ".\n";
   echo "Next: drush php:script ../scripts/judge-similar.php scores\n";
   return;

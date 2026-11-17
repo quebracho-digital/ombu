@@ -26,3 +26,5 @@ scripts/eval/similar-pool.json
 
 # Kernel tests of x402_pay write its stop flag here (a vfs path taken as relative).
 /web/vfs:/
+scripts/eval/similar-judge-pairs.json
+scripts/eval/similar-judge.json

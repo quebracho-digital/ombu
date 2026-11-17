@@ -28,6 +28,36 @@
 
 ## 2026-11-17
 
+### SubQ goes upstream; composer takes ai_provider_universal from 1.0.x-dev
+
+Decidido por Leo (2026-11-17): "arregla los errores y los tests, actualiza el
+modulo ai_provider y pushealo a drupal y que composer use la version dev".
+The `subq` backend (SubQ Snap, the System One wire) is in
+ai_provider_universal 1.0.x on drupal.org (`f5c81fc`), with its kernel test,
+the README, `docs/servers-and-models.md` and the CHANGELOG. Ombú takes the
+module from `1.0.x-dev` as before, now at that commit; the patch,
+`patches.json` and `cweagans/composer-patches` are gone. The cooldown exempts
+`drupal/ai_provider_universal` like our other modules, or a fix of ours would
+wait two days.
+
+`scripts/setup-subq-server.php` keeps the key in the environment
+(`SUBQ_API_KEY`, the `env` provider, as `key.key.fireworks`): the first
+version stored the value in the Key entity, which a `drush cex` would have
+written into the public config/sync. Tried on dev against the live API:
+discovery keeps the four `subq-snap*` models, and the judge
+(`JUDGE_SUBQ=1`, model `subq.subq_snap_1_2`) answered three pairs with
+probabilities and confidence.
+
+### The import's coherence filters read Alchemy as it answers
+
+`drush ombu:import-catalog --min-price/--max-age-days` (commit 9a506a3)
+would have rejected everything: it read the amount from a key Alchemy does
+not send (`raw`; the atomic amount is `rawContract.value`), compared the
+smallest transfer instead of the largest (one is enough), and asked the
+oldest 100 transfers, so a wallet with more sales looked stale.
+`TransferHistory` now takes `rawContract.value`, answers `maxAmount`, and
+asks newest first; a unit test runs it over a response shaped as Alchemy's.
+
 ### The terms have Ombú handling only its own sellers' money
 
 Decidido por Leo (2026-11-17): "ombu no maneja dinero mas que de los listings
@@ -301,7 +331,7 @@ Decidido por Leo (2026-11-08 17:20): "creo que no vamos a usar 8004scan para nad
 
 - The live 402 must list the network, asset, payTo and amount the catalogue announced; payTo is not frozen by the token nor on OFAC's list; at least `$minTransfers` (1) incoming USDC transfers to payTo (Alchemy). Only the `exact` requirements on the six EVM mainnets whose USDC is checked are judged; Solana and Arc are not imported (no verified contract here).
 - What cannot be asked (a node, the seller) is not imported and, if it was, not retired; only a "no" retires. A listing whose entry did not change is not asked again; a run verifies at most 200 new or changed resources (`$budget`).
-- By hand only (`drush ombu:import-catalog bazaar|payai`), not from cron. Not deployed. Circle does not run these checks yet; moving them into `CatalogImporterInterface` and into Circle is still open.
+- By hand only (`drush ombu:import-catalog bazaar|payai`, narrowed with `--only-tags`, `--min-price` and `--max-age-days` since 2026-11-17), not from cron. Not deployed. Circle does not run these checks yet; moving them into `CatalogImporterInterface` and into Circle is still open.
 
 ### Metatag writes the tags; the home moves to Layout Builder
 

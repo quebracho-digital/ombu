@@ -30,6 +30,13 @@ use GuzzleHttp\ClientInterface;
  * most $budget resources that are new or changed; the rest wait for the next
  * run. A listing whose catalogue entry did not change is not asked again.
  *
+ * The import can be narrowed (the "granularity" of what comes in): $onlyTags
+ * keeps only resources carrying one of the tags named, and the coherence
+ * filters ($minPrice, $maxAgeDays) demand that payTo's incoming transfers look
+ * like real sales of this listing: at least one of at least the listing's own
+ * price, and no older than a window. A resource that passes the checks but
+ * fails the coherence is 'inactive' with its reason, never listed.
+ *
  * Owns one source: it never touches the listings of another, and a listing
  * staff delete stays deleted (state `ombu.<source>_blocked`).
  */
@@ -74,6 +81,16 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    *   Resources to verify per run (0 = no limit).
    * @param int $minTransfers
    *   Incoming USDC transfers payTo must have received to be listed.
+   * @param string[] $onlyTags
+   *   When not empty, only resources carrying at least one of these tags are
+   *   asked (the rest are 'skipped'); the granularity of what comes in.
+   * @param int $minPrice
+   *   Atomic units. With the detail from the transfer index: at least one
+   *   incoming transfer to payTo of at least this (0 = any amount). A wallet
+   *   paid once 0.50 USDC two years ago is not evidence a $0.005 listing sells.
+   * @param int $maxAgeDays
+   *   With the detail: the newest incoming transfer no older than this many
+   *   days (0 = any age). A sale of this listing happened recently.
    */
   public function __construct(
     private readonly string $source,
@@ -87,6 +104,9 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     private readonly TimeInterface $time,
     private readonly int $budget = 200,
     private readonly int $minTransfers = 1,
+    private readonly array $onlyTags = [],
+    private readonly int $minPrice = 0,
+    private readonly int $maxAgeDays = 0,
   ) {}
 
   /**
@@ -129,7 +149,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
   private function doImport(int $max): array {
     $counts = array_fill_keys([
       'created', 'updated', 'unchanged', 'exists', 'blocked', 'unsupported',
-      'rejected', 'inactive', 'unverified', 'deferred', 'retired',
+      'rejected', 'inactive', 'unverified', 'deferred', 'skipped', 'retired',
     ], 0);
     $reasons = [];
     $seen = [];
@@ -161,6 +181,23 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
         }
         $done[$normal['key']] = TRUE;
         $read++;
+        if ($this->onlyTags && !array_intersect($this->onlyTags, $normal['tags'])) {
+          // The granularity of what comes in: not this run's business. A
+          // listing it already has stays (not retired), like anything the
+          // verifier was not asked about.
+          $products = $this->entityTypeManager->getStorage('commerce_product');
+          $ids = $products->getQuery()->accessCheck(FALSE)
+            ->condition('type', 'listing')
+            ->condition('field_endpoint', $normal['url'])
+            ->condition('field_http_method', $normal['method'])
+            ->condition('field_source', $this->source)
+            ->range(0, 1)->execute();
+          if ($ids) {
+            $seen[$normal['key']] = TRUE;
+          }
+          $counts['skipped']++;
+          continue;
+        }
         $outcome = $this->handle($normal, $verified, $reasons, $seen);
         $counts[$outcome]++;
         if ($max && $read >= $max) {
@@ -297,8 +334,57 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       $reasons['no incoming USDC'] = ($reasons['no incoming USDC'] ?? 0) + 1;
       return 'inactive';
     }
+    if (!$this->coherent($report, $reasons)) {
+      return 'inactive';
+    }
     $seen[$r['key']] = TRUE;
     return $this->save($product, $r, $report['accepts'], $hash);
+  }
+
+  /**
+   * Do payTo's incoming transfers look like real sales of this listing?
+   *
+   * With the detail the transfer index answered (per checked requirement:
+   * count, smallest amount, newest timestamp): at least one transfer of at
+   * least the requirement's own price, and no older than the window. Both
+   * filters are 0 = off; a check the index could not answer is not a failure
+   * here (the count already proved activity), it is just not filtered.
+   *
+   * @param array $report
+   *   The verifier's report (its `transfers` detail, keyed as `accepts`).
+   * @param array $reasons
+   *   The tally of the reasons (counted here).
+   *
+   * @return bool
+   *   Whether every checked requirement with detail passes the filters.
+   */
+  private function coherent(array $report, array &$reasons): bool {
+    if (!$this->minPrice && !$this->maxAgeDays) {
+      return TRUE;
+    }
+    $transfers = $report['transfers'] ?? NULL;
+    if (!$transfers) {
+      return TRUE;
+    }
+    foreach ($report['accepts'] as $i => $req) {
+      $detail = $transfers["accepts[$i]"] ?? NULL;
+      if (!$detail) {
+        continue;
+      }
+      $price = (int) ($req['amount'] ?? $req['maxAmountRequired'] ?? 0);
+      if ($this->minPrice && ($detail['minAmount'] ?? 0) < max($price, $this->minPrice)) {
+        $reasons['no incoming transfer of the listing\'s price'] = ($reasons['no incoming transfer of the listing\'s price'] ?? 0) + 1;
+        return FALSE;
+      }
+      if ($this->maxAgeDays) {
+        $newest = $detail['newest'] ?? NULL;
+        if ($newest !== NULL && $newest < $this->time->getRequestTime() - $this->maxAgeDays * 86400) {
+          $reasons['no incoming transfer in the window'] = ($reasons['no incoming transfer in the window'] ?? 0) + 1;
+          return FALSE;
+        }
+      }
+    }
+    return TRUE;
   }
 
   /**

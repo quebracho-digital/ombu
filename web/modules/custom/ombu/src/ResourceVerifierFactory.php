@@ -83,33 +83,11 @@ final class ResourceVerifierFactory {
   }
 
   /**
-   * USDC transfers payTo received, through Alchemy (capped at 100).
+   * USDC transfers payTo received, through Alchemy (capped at 100), with what
+   * a coherence filter needs: the smallest amount and the newest timestamp.
    */
   private static function transfers(ClientInterface $http, string $key): \Closure {
-    return function (string $network, string $asset, string $payTo) use ($http, $key): int {
-      $chain = str_starts_with($network, 'eip155:') ? (int) substr($network, 7) : 0;
-      if (!isset(self::USDC[$chain])) {
-        throw new \RuntimeException("No index for $network.");
-      }
-      $response = $http->request('POST', 'https://' . self::USDC[$chain][1] . ".g.alchemy.com/v2/$key", [
-        'timeout' => 15,
-        'json' => [
-          'jsonrpc' => '2.0',
-          'id' => 1,
-          'method' => 'alchemy_getAssetTransfers',
-          'params' => [[
-            'toAddress' => $payTo,
-            'contractAddresses' => [$asset],
-            'category' => ['erc20'],
-            'maxCount' => '0x64',
-            'excludeZeroValue' => TRUE,
-          ],
-          ],
-        ],
-      ]);
-      $transfers = json_decode((string) $response->getBody(), TRUE)['result']['transfers'] ?? NULL;
-      return is_array($transfers) ? count($transfers) : throw new \RuntimeException('No answer.');
-    };
+    return TransferHistory::closure($http, $key);
   }
 
 }

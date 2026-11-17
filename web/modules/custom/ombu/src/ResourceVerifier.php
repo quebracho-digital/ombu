@@ -78,13 +78,19 @@ class ResourceVerifier {
    *   When not empty, the wallets the listing declared when it came in: a
    *   requirement that pays any other fails (PayeeAllowlist).
    *
-   * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array, activity: ?int}
+   * @return array{verdict: string, checks: array<string, array{0: string, 1: string}>, accepts: array, activity: ?int, transfers: ?array}
    *   `accepts` are the requirements that were checked; `activity` is the fewest
    *   USDC transfers any of their payTo addresses has received (NULL: not
-   *   asked, or the index did not answer).
+   *   asked, or the index did not answer); `transfers`, when the index
+   *   answered, is what it said of each checked requirement, under the same
+   *   keys as `accepts` (accepts[i] => ['count' => int, 'minAmount' => ?int,
+   *   'newest' => ?int]: amounts in atomic units, newest a Unix timestamp).
+   *   What an importer needs to demand transfers that look like real sales;
+   *   the verdict never reads it.
    */
   public function verify(string $url, string $method = 'GET', array $announced = [], array $assets = [], array $payees = []): array {
     $checks = [];
+    $details = [];
     try {
       // Ask with GET first: a POST to a seller that skips x402 could run the
       // call unpaid. Only a POST-only endpoint (404/405 to GET) gets the POST.
@@ -141,13 +147,17 @@ class ResourceVerifier {
       $checks["$at.freeze"] = $this->freeze($req);
       $checks["$at.ofac"] = $this->ofac((string) $req['network'], (string) $req['payTo']);
       $count = NULL;
-      $checks["$at.transfers"] = $this->history($req, $count);
+      $detail = NULL;
+      $checks["$at.transfers"] = $this->history($req, $count, $detail);
       $counts[] = $count;
+      if ($detail !== NULL) {
+        $details[$at] = $detail;
+      }
     }
     // Every payTo kept must have history: the one a buyer ends up paying is
     // the one listed, and a fresh address beside an old one proves nothing.
     $activity = !$counts || in_array(NULL, $counts, TRUE) ? NULL : min($counts);
-    return $this->report($checks, $accepts, $activity);
+    return $this->report($checks, $accepts, $activity, $details ?: NULL);
   }
 
   /**
@@ -197,24 +207,32 @@ class ResourceVerifier {
   /**
    * How many USDC transfers payTo has received. Informational.
    */
-  private function history(array $req, ?int &$count = NULL): array {
+  private function history(array $req, ?int &$count = NULL, ?array &$detail = NULL): array {
     if ($this->transfers === NULL) {
       return [self::UNCHECKED, 'no transfer index configured'];
     }
     try {
-      $count = ($this->transfers)((string) $req['network'], (string) $req['asset'], (string) $req['payTo']);
+      $answer = ($this->transfers)((string) $req['network'], (string) $req['asset'], (string) $req['payTo']);
     }
     catch (\Throwable) {
       return [self::UNCHECKED, 'transfer index did not answer'];
     }
-    $count = (int) $count;
+    // The index answers with a count, or with a count and its detail (a
+    // resource the coherence filters will use); both are history.
+    if (is_array($answer)) {
+      $detail = $answer;
+      $count = (int) ($answer['count'] ?? 0);
+    }
+    else {
+      $count = (int) $answer;
+    }
     return [self::PASS, $count . ' incoming transfer(s)'];
   }
 
   /**
    * The verdict over the required checks; transfers never decide it.
    */
-  private function report(array $checks, array $accepts, ?int $activity = NULL): array {
+  private function report(array $checks, array $accepts, ?int $activity = NULL, ?array $transfers = NULL): array {
     $verdict = self::PASS;
     foreach ($checks as $name => [$result]) {
       if (str_ends_with($name, '.transfers')) {
@@ -228,7 +246,7 @@ class ResourceVerifier {
         $verdict = self::UNCHECKED;
       }
     }
-    return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $accepts, 'activity' => $activity];
+    return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $accepts, 'activity' => $activity, 'transfers' => $transfers];
   }
 
   /**

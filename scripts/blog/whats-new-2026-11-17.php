@@ -34,6 +34,7 @@ return [
 
 <h2>New dependency versions wait two days</h2>
 <p>Ombú is built on a few hundred open-source packages. When one of them is compromised, the bad version is usually caught and pulled within hours. So when we update, a version published less than two days ago is not taken: the previous one stays until the new one has been out long enough to be trusted. Our own packages (the payment library and the Drupal payment and wallet modules) are exempt, so a fix of ours still ships the same day. A security fix of someone else's package can skip the wait, on purpose and by hand.</p>
+<p>The delay is part of how Quebracho keeps a compromised package from reaching what we run: fewer packages, and time before trusting a new one. For the same reason Ombú is written in PHP and uses no Node: there is no npm in the build, so none of the thousands of small packages a JavaScript build pulls in, where most supply-chain attacks of recent years have landed.</p>
 
 <h2>Bringing production back</h2>
 <p>We wrote down, step by step, how to rebuild Ombú on a clean machine from the code, the nightly backup and its secrets, and what to check afterwards: the market, both search indexes, payments, the blog. It also lists what a backup alone does not cover, and the copies to keep before anything goes wrong.</p>
@@ -53,6 +54,7 @@ HTML, 'The terms now say Ombú only handles the money of its own services; new d
 
 <h2>Las versiones nuevas de las dependencias esperan dos días</h2>
 <p>Ombú está construido sobre unos cuantos cientos de paquetes de código abierto. Cuando uno de ellos es comprometido, la versión maliciosa suele detectarse y retirarse en cuestión de horas. Por eso, cuando actualizamos, no se toma una versión publicada hace menos de dos días: queda la anterior hasta que la nueva lleve el tiempo suficiente afuera como para confiar en ella. Nuestros propios paquetes (la librería de pagos y los módulos de Drupal de pagos y billeteras) quedan exceptuados, así un arreglo nuestro sigue saliendo el mismo día. Un arreglo de seguridad de un paquete ajeno puede saltarse la espera, a propósito y a mano.</p>
+<p>La espera es parte de la estrategia de Quebracho para que un paquete comprometido no llegue a lo que corremos: menos paquetes, y tiempo antes de confiar en uno nuevo. Por la misma razón Ombú está escrito en PHP y no usa Node: no hay npm en el build, así que tampoco los miles de paquetes chicos que arrastra un build de JavaScript, donde cayeron la mayoría de los ataques a la cadena de suministro de los últimos años.</p>
 
 <h2>Volver a levantar producción</h2>
 <p>Escribimos, paso a paso, cómo reconstruir Ombú en una máquina limpia a partir del código, el backup de cada noche y sus secretos, y qué revisar después: el mercado, los dos índices de búsqueda, los pagos, el blog. También dice lo que un backup solo no cubre, y las copias que hay que tener antes de que algo falle.</p>
@@ -72,6 +74,7 @@ HTML, 'Los términos ahora dicen que Ombú solo maneja la plata de sus propios s
 
 <h2>Versões novas das dependências esperam dois dias</h2>
 <p>O Ombú é construído sobre algumas centenas de pacotes de código aberto. Quando um deles é comprometido, a versão maliciosa costuma ser detectada e retirada em poucas horas. Por isso, quando atualizamos, uma versão publicada há menos de dois dias não é usada: fica a anterior até que a nova esteja publicada há tempo suficiente para confiarmos nela. Os nossos próprios pacotes (a biblioteca de pagamentos e os módulos de Drupal de pagamentos e carteiras) ficam de fora, assim uma correção nossa continua saindo no mesmo dia. Uma correção de segurança de um pacote alheio pode pular a espera, de propósito e à mão.</p>
+<p>A espera faz parte da estratégia da Quebracho para que um pacote comprometido não chegue ao que rodamos: menos pacotes, e tempo antes de confiar num novo. Pelo mesmo motivo o Ombú é escrito em PHP e não usa Node: não há npm no build, e portanto nenhum dos milhares de pacotes pequenos que um build de JavaScript puxa, onde caiu a maioria dos ataques à cadeia de suprimentos dos últimos anos.</p>
 
 <h2>Colocar a produção de pé de novo</h2>
 <p>Escrevemos, passo a passo, como reconstruir o Ombú numa máquina limpa a partir do código, do backup de cada noite e dos seus segredos, e o que verificar depois: o mercado, os dois índices de busca, os pagamentos, o blog. Também diz o que um backup sozinho não cobre, e as cópias que é preciso ter antes que algo falhe.</p>

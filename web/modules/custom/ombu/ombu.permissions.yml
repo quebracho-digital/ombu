@@ -2,3 +2,7 @@ stop and resume ombu:
   title: 'Stop and resume Ombú'
   description: 'Pause payments and put the whole site in read-only mode, and bring it back. Whoever has it keeps writing while the site is stopped and sees wallets.'
   restrict access: true
+view ombu dashboard:
+  title: 'View the Ombú dashboard'
+  description: 'See the site vitals at /admin/ombu: stop switch, sales, search, cron, imports, moderation and blog.'
+  restrict access: true

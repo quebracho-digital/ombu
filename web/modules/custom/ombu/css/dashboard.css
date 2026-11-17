@@ -1,0 +1,74 @@
+/**
+ * The Ombú dashboard: one card per vital.
+ */
+
+.ombu-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.ombu-dashboard__block {
+  padding: 1rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.ombu-dashboard__block--attention {
+  border-color: #d97706;
+  box-shadow: inset 4px 0 0 #d97706;
+}
+
+.ombu-dashboard__block--nodata {
+  opacity: 0.75;
+}
+
+.ombu-dashboard__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.ombu-dashboard__facts {
+  margin: 0;
+}
+
+.ombu-dashboard__fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.ombu-dashboard__fact dt {
+  color: #52525b;
+}
+
+.ombu-dashboard__fact dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ombu-dashboard__fact--attention dd {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.ombu-dashboard__fact--nodata dd {
+  color: #71717a;
+  font-style: italic;
+}
+
+.ombu-dashboard__note {
+  margin: 0.75rem 0 0;
+  color: #52525b;
+  font-size: 0.875rem;
+}
+
+.ombu-dashboard__links {
+  margin: 0.75rem 0 0;
+  padding-inline-start: 1.25rem;
+}

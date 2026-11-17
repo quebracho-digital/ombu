@@ -30,3 +30,9 @@ ombu.stop:
   route_name: ombu.stop
   parent: system.admin_config_services
   weight: -10
+ombu.dashboard:
+  title: 'Ombú'
+  description: 'Vitals of the market: sales, search, cron, imports, moderation and blog.'
+  route_name: ombu.dashboard
+  parent: system.admin
+  weight: -50

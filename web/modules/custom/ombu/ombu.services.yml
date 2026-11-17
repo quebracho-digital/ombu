@@ -119,6 +119,23 @@ services:
     class: Drupal\ombu\Stop
     arguments: ['@x402_pay.stop', '@state', '@datetime.time', '@cache_tags.invalidator', '@logger.channel.ombu', '@ombu.stop_posts', '@current_user']
   Drupal\ombu\Stop: '@ombu.stop'
+  # The dashboard's vitals: each block read from its source, no HTML, so a
+  # kernel test can assert the numbers without a browser.
+  ombu.dashboard:
+    class: Drupal\ombu\Dashboard\Vitals
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@state'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@queue'
+      - '@plugin.manager.queue_worker'
+      - '@ombu.stop'
+      - '@x402_pay.stop'
+      - '@logger.channel.ombu'
+      - '@string_translation'
+  Drupal\ombu\Dashboard\Vitals: '@ombu.dashboard'
   ombu.stop_subscriber:
     class: Drupal\ombu\EventSubscriber\StopSubscriber
     arguments: ['@ombu.stop', '@current_user']

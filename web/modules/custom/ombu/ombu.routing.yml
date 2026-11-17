@@ -7,6 +7,15 @@ ombu.catalogue:
   options:
     no_cache: TRUE
 
+# The site's vitals, read-only: the actions live where each block links.
+ombu.dashboard:
+  path: '/admin/ombu'
+  defaults:
+    _controller: '\Drupal\ombu\Controller\DashboardController'
+    _title: 'Ombú'
+  requirements:
+    _permission: 'view ombu dashboard'
+
 ombu.openapi:
   path: '/openapi.json'
   defaults:

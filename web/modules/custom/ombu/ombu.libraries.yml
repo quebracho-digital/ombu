@@ -74,6 +74,12 @@ home:
     theme:
       css/home.css: {}
 
+# The dashboard at /admin/ombu: one card per vital, states in colour.
+dashboard:
+  css:
+    theme:
+      css/dashboard.css: {}
+
 # The share block (ShareBlock): its links and the copy button.
 share:
   css:

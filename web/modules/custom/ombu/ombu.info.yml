@@ -15,6 +15,7 @@ dependencies:
   - drupal:path
   - drupal:taxonomy
   - drupal:text
+  - drupal:views
   - facets:facets_exposed_filters
   - llms_txt:llms_txt
   - key:key

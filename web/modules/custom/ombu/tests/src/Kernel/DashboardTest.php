@@ -94,8 +94,11 @@ final class DashboardTest extends CommerceKernelTestBase {
     $wid = $this->container->get('database')->insert('watchdog')->fields([
       'uid' => 0,
       'type' => 'php',
-      'message' => 'Something failed: @error',
-      'variables' => serialize(['@error' => 'boom']),
+      'message' => 'Something failed: @error at @tx',
+      'variables' => serialize([
+        '@error' => 'boom',
+        '@tx' => '0x' . str_repeat('a', 64),
+      ]),
       'severity' => RfcLogLevel::ERROR,
       'location' => '',
       'referer' => '',
@@ -107,25 +110,68 @@ final class DashboardTest extends CommerceKernelTestBase {
     $state->set('system.cron_last', $now - 60);
     $state->set('ombu.bazaar_last', $now - 3600);
     $state->set('ombu.catalog.wallet_changed.bazaar', [
-      10 => ['url' => 'https://example.com/x', 'old' => [], 'new' => [], 'time' => $now],
+      10 => [
+        'url' => 'https://example.com/x',
+        'old' => ['0x' . str_repeat('1', 40)],
+        'new' => ['0x' . str_repeat('2', 40)],
+        'time' => $now,
+      ],
     ]);
 
-    $facts = $this->facts($this->container->get('ombu.dashboard')->blocks());
+    $vitals = $this->container->get('ombu.dashboard');
+    $blocks = $vitals->blocks();
+    $facts = $this->facts($blocks);
 
     $this->assertSame('2', $facts['sales.settled_24h']['value']);
+    $this->assertTrue($facts['sales.settled_24h']['primary']);
+    $this->assertSame('number', $facts['sales.settled_24h']['kind']);
     $this->assertSame('3', $facts['sales.settled_7d']['value']);
     $this->assertSame('1', $facts['sales.refused_24h']['value']);
     $this->assertSame('2', $facts['sales.refused_7d']['value']);
     $this->assertSame('attention', $facts['sales.refused_24h']['status']);
     $this->assertSame('1', $facts['moderation.comments_pending']['value']);
+    $this->assertTrue($facts['moderation.comments_pending']['primary']);
     $this->assertSame('1', $facts['moderation.contact_7d']['value']);
     $this->assertSame('1', $facts['errors.errors_24h']['value']);
+    $this->assertTrue($facts['errors.errors_24h']['primary']);
     $this->assertStringContainsString('Something failed', $facts["errors.error_$wid"]['value']);
-    $this->assertSame('Published', $facts["blog.post_{$node->id()}"]['value']);
+    $error = $facts["errors.error_$wid"];
+    $this->assertSame('entry', $error['kind']);
+    $this->assertStringContainsString("/admin/reports/dblog/event/$wid", (string) $error['url']);
+    $this->assertStringContainsString('<code title="0x', (string) $error['value_html']);
+    $this->assertStringContainsString('0xaaaa…aaaa', (string) $error['value_html']);
     $this->assertSame('1', $facts['wallet_changes.wallet_bazaar']['value']);
+    $this->assertTrue($facts['wallet_changes.wallet_total']['primary']);
+    $this->assertSame('0', $facts['screening.deny_count']['value']);
+    $this->assertTrue($facts['screening.deny_count']['primary']);
     $this->assertNotSame('Never', $facts['cron.cron_last']['value']);
     $this->assertNotSame('Never', $facts['imports.import_bazaar']['value']);
     $this->assertSame('Running', $facts['stop.site']['value']);
+    $this->assertTrue($facts['stop.site']['primary']);
+
+    $errors = $vitals->block('errors');
+    $this->assertTrue($errors['wide']);
+    $blog = $vitals->block('blog');
+    $this->assertTrue($blog['wide']);
+    $this->assertSame($node->label(), $blog['posts'][0]['title']);
+    $this->assertTrue($blog['posts'][0]['published']);
+    $this->assertStringContainsString("/node/{$node->id()}/edit", (string) $blog['posts'][0]['edit']);
+
+    $changed = $vitals->block('wallet_changes')['changes'];
+    $this->assertCount(1, $changed);
+    $this->assertSame(['0x' . str_repeat('1', 40)], $changed[0]['old']);
+    $this->assertSame(['0x' . str_repeat('2', 40)], $changed[0]['new']);
+    $this->assertStringContainsString('0x1111…1111', (string) $changed[0]['old_html']);
+    $this->assertStringContainsString('title="0x' . str_repeat('1', 40) . '"', (string) $changed[0]['old_html']);
+    $this->assertSame('ombu.wallet_change_accept', $changed[0]['action']['url']->getRouteName());
+    $this->assertSame(10, (int) $changed[0]['action']['url']->getRouteParameters()['commerce_product']);
+
+    $page = $vitals->page();
+    $this->assertSame('attention', $page['summary']['status']);
+    $this->assertCount(5, $page['summary']['items']);
+    $this->assertContains('sales', array_column($page['summary']['items'], 'id'));
+    $this->assertContains('errors', array_column($page['summary']['items'], 'id'));
+    $this->assertSame(['errors', 'blog'], array_slice(array_column($page['blocks'], 'id'), -2));
   }
 
   /**
@@ -140,6 +186,7 @@ final class DashboardTest extends CommerceKernelTestBase {
       'search',
       'cron',
       'imports',
+      'screening',
       'wallet_changes',
       'errors',
       'moderation',
@@ -153,8 +200,21 @@ final class DashboardTest extends CommerceKernelTestBase {
     $this->assertSame('0', $facts['moderation.contact_7d']['value']);
     $this->assertSame('0', $facts['errors.errors_24h']['value']);
     $this->assertSame('0', $facts['wallet_changes.wallet_bazaar']['value']);
+    $this->assertSame('0', $facts['screening.deny_count']['value']);
     $this->assertSame('Never', $facts['cron.cron_last']['value']);
     $this->assertSame('Never', $facts['imports.import_bazaar']['value']);
+  }
+
+  /**
+   * With empty tables, cron and the imports need attention; wide cards last.
+   */
+  public function testSummary(): void {
+    $vitals = $this->container->get('ombu.dashboard');
+    $page = $vitals->page();
+    $this->assertSame('attention', $page['summary']['status']);
+    $this->assertSame('2 things to look at', (string) $page['summary']['label']);
+    $this->assertSame(['cron', 'imports'], array_column($page['summary']['items'], 'id'));
+    $this->assertSame(['errors', 'blog'], array_slice(array_column($page['blocks'], 'id'), -2));
   }
 
   /**
@@ -238,7 +298,7 @@ final class DashboardTest extends CommerceKernelTestBase {
   /**
    * The facts of every block, keyed "block.key".
    *
-   * @return array<string, array<string, string>>
+   * @return array<string, array<string, mixed>>
    *   The facts.
    */
   private function facts(array $blocks): array {

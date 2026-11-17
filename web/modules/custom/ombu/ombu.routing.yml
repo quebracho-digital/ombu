@@ -16,6 +16,34 @@ ombu.dashboard:
   requirements:
     _permission: 'view ombu dashboard'
 
+# The actions the dashboard links to: each one is its own form, so the
+# dashboard itself stays read-only.
+ombu.screening:
+  path: '/admin/ombu/screening'
+  defaults:
+    _form: '\Drupal\ombu\Form\ScreeningForm'
+    _title: 'Blocked wallets'
+  requirements:
+    _permission: 'manage ombu screening'
+
+ombu.screening.remove:
+  path: '/admin/ombu/screening/remove/{address}'
+  defaults:
+    _form: '\Drupal\ombu\Form\ScreeningRemoveForm'
+    _title: 'Remove a blocked wallet'
+  requirements:
+    _permission: 'manage ombu screening'
+    address: '[A-Za-z0-9]+'
+
+ombu.wallet_change_accept:
+  path: '/admin/ombu/wallet-changes/{commerce_product}/accept'
+  defaults:
+    _form: '\Drupal\ombu\Form\WalletChangeForm'
+    _title: 'Accept a changed wallet'
+  requirements:
+    _permission: 'accept ombu wallet changes'
+    commerce_product: '\d+'
+
 ombu.openapi:
   path: '/openapi.json'
   defaults:

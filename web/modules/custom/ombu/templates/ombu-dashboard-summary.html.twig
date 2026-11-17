@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * The strip above the Ombú dashboard cards: the state and what to look at.
+ *
+ * Variables:
+ * - summary: status, label and the items in attention (id, title), each
+ *   linking to its card.
+ */
+#}
+<div class="ombu-dashboard__summary ombu-dashboard__summary--{{ summary.status }}">
+  <span class="ombu-dashboard__summary-label">{{ summary.label }}</span>
+  {% if summary.items %}
+    <ul class="ombu-dashboard__summary-items">
+      {% for item in summary.items %}
+        <li><a href="#ombu-{{ item.id }}">{{ item.title }}</a></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>

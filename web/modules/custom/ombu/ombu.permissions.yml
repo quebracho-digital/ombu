@@ -6,3 +6,11 @@ view ombu dashboard:
   title: 'View the Ombú dashboard'
   description: 'See the site vitals at /admin/ombu: stop switch, sales, search, cron, imports, moderation and blog.'
   restrict access: true
+manage ombu screening:
+  title: 'Manage the Ombú screening lists'
+  description: 'See the blocked wallets, block one and remove one from the deny list. A blocked wallet cannot buy on Ombú.'
+  restrict access: true
+accept ombu wallet changes:
+  title: 'Accept changed wallets on Ombú listings'
+  description: 'Review a listing whose seller answers with another wallet, re-check its endpoint and accept the new wallet.'
+  restrict access: true

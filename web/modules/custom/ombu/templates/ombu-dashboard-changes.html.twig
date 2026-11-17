@@ -1,0 +1,44 @@
+{#
+/**
+ * @file
+ * The list of changed wallets of one card: old and new address, and the action.
+ *
+ * Variables:
+ * - changes: each with listing, old_html, new_html, date and action.
+ */
+#}
+<ul class="ombu-dashboard__changes">
+  {% for change in changes %}
+    <li class="ombu-dashboard__change">
+      <p class="ombu-dashboard__change-listing"><code>{{ change.listing }}</code></p>
+      <dl class="ombu-dashboard__change-wallets">
+        <div>
+          <dt>{{ 'Old wallet'|t }}</dt>
+          <dd>
+            {% if change.old_html %}
+              {{ change.old_html }}
+            {% else %}
+              <span class="ombu-dashboard__empty">{{ 'None declared'|t }}</span>
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'New wallet'|t }}</dt>
+          <dd>
+            {% if change.new_html %}
+              {{ change.new_html }}
+            {% else %}
+              <span class="ombu-dashboard__empty">{{ 'None answered'|t }}</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+      {% if change.date %}
+        <p class="ombu-dashboard__change-date">{{ change.date }}</p>
+      {% endif %}
+      {% if change.action %}
+        {{ link(change.action.title, change.action.url, {'class': ['ombu-dashboard__action', 'ombu-dashboard__action--primary']}) }}
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>

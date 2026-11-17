@@ -4,37 +4,23 @@
  * The Ombú dashboard: one card per vital, nothing that changes the site.
  *
  * Variables:
- * - blocks: the vitals, each with id, title, status, facts, links and note.
+ * - blocks: the vitals, each with id, title, status, glyph, wide, facts,
+ *   links, note and, for the blog, posts, or for changed wallets, changes.
+ * - summary: the strip above the cards: status, label and the items in
+ *   attention (id, title), each linking to its card.
  *   Values are plain strings or markup, escaped here by Twig; links are Url
  *   objects rendered by the link() function.
+ *
+ * The summary and each card live in their own template: the page only loops
+ * and includes them.
  */
 #}
 <div class="ombu-dashboard">
+  {% if summary %}
+    {% include '@ombu/ombu-dashboard-summary.html.twig' with {'summary': summary} only %}
+  {% endif %}
+
   {% for vital in blocks %}
-    <section class="ombu-dashboard__block ombu-dashboard__block--{{ vital.status }}" id="ombu-{{ vital.id }}">
-      <h2 class="ombu-dashboard__title">{{ vital.title }}</h2>
-      {% if vital.facts %}
-        <dl class="ombu-dashboard__facts">
-          {% for fact in vital.facts %}
-            <div class="ombu-dashboard__fact ombu-dashboard__fact--{{ fact.status }}">
-              <dt>{{ fact.label }}</dt>
-              <dd>{{ fact.value }}</dd>
-            </div>
-          {% endfor %}
-        </dl>
-      {% else %}
-        <p class="ombu-dashboard__empty">{{ 'No data.'|t }}</p>
-      {% endif %}
-      {% if vital.note %}
-        <p class="ombu-dashboard__note">{{ vital.note }}</p>
-      {% endif %}
-      {% if vital.links %}
-        <ul class="ombu-dashboard__links">
-          {% for item in vital.links %}
-            <li>{{ link(item.title, item.url) }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </section>
+    {% include '@ombu/ombu-dashboard-card.html.twig' with {'vital': vital} only %}
   {% endfor %}
 </div>

@@ -39,6 +39,7 @@ final class DashboardBlockDeriver extends DeriverBase implements ContainerDerive
       'search' => $this->t('Search'),
       'cron' => $this->t('Cron and queues'),
       'imports' => $this->t('Catalogue imports'),
+      'screening' => $this->t('Screening'),
       'wallet_changes' => $this->t('Changed wallets'),
       'errors' => $this->t('Errors'),
       'moderation' => $this->t('Moderation'),

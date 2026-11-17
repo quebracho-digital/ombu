@@ -135,6 +135,8 @@ services:
       - '@x402_pay.stop'
       - '@logger.channel.ombu'
       - '@string_translation'
+      - '@ombu.screening_lists'
+      - '@ombu.wallet_changes'
   Drupal\ombu\Dashboard\Vitals: '@ombu.dashboard'
   ombu.stop_subscriber:
     class: Drupal\ombu\EventSubscriber\StopSubscriber
@@ -148,3 +150,15 @@ services:
     arguments: ['@http_client', '@settings', '%site.path%']
     tags:
       - { name: event_subscriber }
+  # The lists the subscriber reads, with the check, the .htaccess and the log
+  # line that the panel and drush ombu:screen share.
+  ombu.screening_lists:
+    class: Drupal\ombu\Screening\ScreeningLists
+    arguments: ['@ombu.screening_subscriber', '@logger.channel.ombu', '@current_user']
+  Drupal\ombu\Screening\ScreeningLists: '@ombu.screening_lists'
+  # The listings retired by a changed wallet, from the state; accepting one
+  # asks the importer of its source to verify the endpoint again.
+  ombu.wallet_changes:
+    class: Drupal\ombu\WalletChanges
+    arguments: ['@state', '@entity_type.manager', '@service_container']
+  Drupal\ombu\WalletChanges: '@ombu.wallet_changes'

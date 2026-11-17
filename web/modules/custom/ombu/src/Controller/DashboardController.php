@@ -24,9 +24,11 @@ final class DashboardController implements ContainerInjectionInterface {
    * {@inheritdoc}
    */
   public function __invoke(): array {
+    $page = $this->vitals->page();
     return [
       '#theme' => 'ombu_dashboard',
-      '#blocks' => $this->vitals->blocks(),
+      '#blocks' => $page['blocks'],
+      '#summary' => $page['summary'],
       // Every block reads live data: a cached page would lie.
       '#cache' => ['max-age' => 0],
       '#attached' => ['library' => ['ombu/dashboard']],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ombu\Drush\Commands;
 
 use Drupal\ombu\DiscoveryCatalogImporter;
+use Drupal\ombu\WalletChanges;
 use Drush\Attributes as CLI;
 use Drush\Commands\AutowireTrait;
 use Drush\Commands\DrushCommands;
@@ -28,6 +29,8 @@ final class CatalogImportCommands extends DrushCommands {
   public function __construct(
     #[Autowire(service: 'service_container')]
     private readonly ContainerInterface $container,
+    #[Autowire(service: 'ombu.wallet_changes')]
+    private readonly WalletChanges $walletChangeService,
   ) {
     parent::__construct();
   }
@@ -122,9 +125,7 @@ final class CatalogImportCommands extends DrushCommands {
       }
       return self::EXIT_SUCCESS;
     }
-    $listing = $this->container->get('entity_type.manager')->getStorage('commerce_product')->load((int) $options['accept'])
-      ?? throw new \InvalidArgumentException("No listing {$options['accept']}.");
-    $report = $importer->acceptWallet($listing);
+    $report = $this->walletChangeService->accept((int) $options['accept'], $source);
     foreach ($report['checks'] as $at => [$verdict, $detail]) {
       $this->io()->writeln("$verdict  $at: $detail");
     }

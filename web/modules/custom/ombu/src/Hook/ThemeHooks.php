@@ -28,7 +28,7 @@ final class ThemeHooks {
       // The share block (ShareBlock): links to each network and a copy button.
       'ombu_share' => ['variables' => ['links' => [], 'url' => '']],
       // The dashboard (DashboardController): one card per vital.
-      'ombu_dashboard' => ['variables' => ['blocks' => []]],
+      'ombu_dashboard' => ['variables' => ['blocks' => [], 'summary' => NULL]],
       // The home (a Layout Builder page): its fixed parts (HomePartBlock), and
       // one template per views block it places, its own and blog's "home".
       'ombu_home_hero' => ['variables' => ['sellers' => NULL, 'market' => NULL]],

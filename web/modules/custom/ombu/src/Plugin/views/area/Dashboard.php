@@ -53,9 +53,11 @@ final class Dashboard extends AreaPluginBase {
     if (!$this->currentUser->hasPermission('view ombu dashboard')) {
       return [];
     }
+    $page = $this->vitals->page();
     return [
       '#theme' => 'ombu_dashboard',
-      '#blocks' => $this->vitals->blocks(),
+      '#blocks' => $page['blocks'],
+      '#summary' => $page['summary'],
       // Live numbers: a cached page would lie.
       '#cache' => ['max-age' => 0],
       '#attached' => ['library' => ['ombu/dashboard']],

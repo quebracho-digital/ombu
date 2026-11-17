@@ -107,7 +107,7 @@ $pages['/terms'] = ['Terms of use', <<<HTML
 <p>A <em>Verified seller</em> badge only means that we know which wallet receives that seller's payments. It is not a guarantee of the service, its quality or its legality.</p>
 
 <h2>3. Buying from third parties</h2>
-<p>A purchase from a third-party seller is a contract between the User and that seller only. The User pays the seller directly, on the blockchain, from their own wallet. Delivery, quality, legality, refunds, invoices, taxes and any claim about that service are matters between the User and the seller. When a third-party service is called through Ombú's payment door, Ombú may relay the payment authorization the User signed to the network and pay the network fee, without ever holding the funds; this does not make the Operator a party to the sale. Read each seller's own terms before buying.</p>
+<p>A purchase from a third-party seller is a contract between the User and that seller only. The User pays the seller directly, on the blockchain, from their own wallet. Delivery, quality, legality, refunds, invoices, taxes and any claim about that service are matters between the User and the seller. Buyers call a third-party seller's endpoint directly, from their own wallet, and pay it on the blockchain: the Operator never holds, transmits or relays any money or payment authorization of these purchases. Read each seller's own terms before buying.</p>
 
 <h2>4. Services sold by Ombú</h2>
 <ul>
@@ -186,7 +186,7 @@ $es['/terms'] = ['Términos de uso', <<<HTML
 <p>La marca <em>Vendedor verificado</em> solo significa que conocemos la billetera que recibe los pagos de ese vendedor. No es una garantía del servicio, de su calidad ni de su legalidad.</p>
 
 <h2>3. Comprar a terceros</h2>
-<p>Una compra a un vendedor tercero es un contrato exclusivamente entre el Usuario y ese vendedor. El Usuario le paga directamente al vendedor, en la blockchain, desde su propia billetera. La entrega, la calidad, la legalidad, los reembolsos, las facturas, los impuestos y cualquier reclamo sobre ese servicio son cuestiones entre el Usuario y el vendedor. Cuando se llama a un servicio de terceros a través de la puerta de pago de Ombú, Ombú puede transmitir a la red la autorización de pago que firmó el Usuario y pagar la comisión de la red, sin retener nunca los fondos; esto no convierte al Operador en parte de la venta. Lee los términos de cada vendedor antes de comprar.</p>
+<p>Una compra a un vendedor tercero es un contrato exclusivamente entre el Usuario y ese vendedor. El Usuario le paga directamente al vendedor, en la blockchain, desde su propia billetera. La entrega, la calidad, la legalidad, los reembolsos, las facturas, los impuestos y cualquier reclamo sobre ese servicio son cuestiones entre el Usuario y el vendedor. Quien compra llama directamente al endpoint del vendedor tercero, desde su propia billetera, y le paga en la blockchain: el Operador nunca retiene, transmite ni retransmite dinero ni autorizaciones de pago de esas compras. Lee los términos de cada vendedor antes de comprar.</p>
 
 <h2>4. Servicios vendidos por Ombú</h2>
 <ul>

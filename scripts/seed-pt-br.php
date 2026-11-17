@@ -279,7 +279,7 @@ $page('/terms', 'Termos de uso', <<<HTML
 <p>O selo <em>Vendedor verificado</em> só significa que conhecemos a carteira que recebe os pagamentos desse vendedor. Não é uma garantia do serviço, de sua qualidade nem de sua legalidade.</p>
 
 <h2>3. Comprar de terceiros</h2>
-<p>Uma compra de um vendedor terceiro é um contrato exclusivamente entre o Usuário e esse vendedor. O Usuário paga diretamente ao vendedor, na blockchain, a partir de sua própria carteira. Entrega, qualidade, legalidade, reembolsos, notas fiscais, impostos e qualquer reclamação sobre esse serviço são questões entre o Usuário e o vendedor. Quando um serviço de terceiros é chamado pela porta de pagamento do Ombú, o Ombú pode transmitir à rede a autorização de pagamento que o Usuário assinou e pagar a taxa da rede, sem nunca reter os fundos; isso não torna o Operador parte da venda. Leia os termos de cada vendedor antes de comprar.</p>
+<p>Uma compra de um vendedor terceiro é um contrato exclusivamente entre o Usuário e esse vendedor. O Usuário paga diretamente ao vendedor, na blockchain, a partir de sua própria carteira. Entrega, qualidade, legalidade, reembolsos, notas fiscais, impostos e qualquer reclamação sobre esse serviço são questões entre o Usuário e o vendedor. Quem compra chama diretamente o endpoint do vendedor terceiro, a partir de sua própria carteira, e paga a ele na blockchain: o Operador nunca retém, transmite nem retransmite dinheiro nem autorizações de pagamento dessas compras. Leia os termos de cada vendedor antes de comprar.</p>
 
 <h2>4. Serviços vendidos pelo Ombú</h2>
 <ul>

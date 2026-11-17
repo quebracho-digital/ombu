@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\Component\Serialization\Json;
 
 const EVAL_DIR = __DIR__ . '/eval';
 const POOL = EVAL_DIR . '/similar-pool.json';
@@ -92,12 +93,24 @@ $judged = is_file(JUDGED) ? json_decode((string) file_get_contents(JUDGED), TRUE
 // --- the judge: one model answer per pair, resumable ------------------------
 
 if ($mode === '') {
-  // Two judges, one file:
-  // - JUDGE_MODEL=fireworks.<id> (or AI's chat default): the AI module's chat.
-  // - JUDGE_MODEL=subq:snap: the SubQ Decisions API (api.subq.ai/v1/systemone,
-  //   SUBQ_API_KEY): subq-snap-1.2 answers a choice with probabilities, and
-  //   bills input only ($0.04/1M). The 1,433 pairs of the labelled set are a
-  //   couple of cents.
+  // The judge is a decision model, asked through the module's own provider:
+  // JUDGE_MODEL=<model entity id> (e.g. snap.subq_snap) over
+  // UniversalProvider::decide(), the same call the importer's decision model
+  // will take and what DECISIONS asks for a decision (an Ombú interface, a
+  // pinned version, fail-closed). SubQ Snap speaks the System One protocol:
+  // its server is an ai_universal server with the typesafe backend pointing
+  // at api.subq.ai (scripts/setup-subq-server.php creates it, or
+  // JUDGE_MODEL=fireworks.<id>: decide() prompts a chat model for the same
+  // JSON, without calibrated probabilities).
+  if (!$judge_model && getenv('JUDGE_SUBQ') !== '') {
+    // JUDGE_SUBQ set (any value): the SubQ Snap model created by the setup
+    // script. The model entity id assumes its discovery; the judge names it
+    // in its error if it is not there.
+    $judge_model = 'snap.subq_snap';
+  }
+  $judge_model ??= throw new \RuntimeException('Set JUDGE_MODEL (a model entity id, e.g. snap.subq_snap) and create the server: drush php:script ../scripts/setup-subq-server.php');
+  echo "Judge: $judge_model\n";
+
   $system = <<<TXT
     You judge marketplace service listings. Two listings follow. A buyer of the first is looking for an alternative: a different service that does the same job and could replace it for the same need. Answer exactly one word:
     - "alternative": a buyer of the first could use the second instead.
@@ -105,71 +118,45 @@ if ($mode === '') {
     - "unrelated": neither.
     One word, nothing else.
     TXT;
-  if (str_starts_with((string) $judge_model, 'subq:')) {
-    $key = (string) (getenv('SUBQ_API_KEY') ?: throw new \RuntimeException('SUBQ_API_KEY is not set: the SubQ judge needs it (.ddev/.env or the shell).'));
-    $judge_model = 'subq:subq-snap-1.2';
-    $ask = static function (string $prompt) use ($key): array {
-      $start = microtime(TRUE);
-      $response = \Drupal::service('http_client')->request('POST', 'https://api.subq.ai/v1/systemone', [
-        'timeout' => 60,
-        'headers' => ['Authorization' => "Bearer $key"],
-        'json' => [
-          'model' => 'subq-snap-1.2',
-          'state' => $prompt,
-          'questions' => [
-            'judgment' => [
-              'type' => 'choice',
-              'instructions' => 'How does the buyer of Listing A relate to Listing B?',
-              'criteria' => [
-                'alternative' => 'A buyer of the first could use the second instead (the same job, a different service)',
-                'works_with' => 'Not a replacement, but they are used together (one feeds the other)',
-                'unrelated' => 'Neither',
-              ],
-            ],
-          ],
-        ],
-      ]);
-      $answer = json_decode((string) $response->getBody(), TRUE);
-      $judgment = $answer['answers']['judgment'] ?? NULL;
-      if (!is_array($judgment)) {
-        throw new \RuntimeException('The Decisions API answered no judgment: ' . substr((string) $response->getBody(), 0, 200));
-      }
-      $probabilities = $judgment['probabilities'] ?? [];
-      arsort($probabilities);
-      $best = array_key_first($probabilities);
-      return [
-        'text' => (string) $best,
-        'probabilities' => array_map('floatval', $probabilities),
-        'confidence' => (float) ($judgment['confidence'] ?? 0),
-        'tokens_in' => (int) ($answer['usage']['input_tokens'] ?? 0),
-        'tokens_out' => 0,
-        'ms' => (int) round((microtime(TRUE) - $start) * 1000),
-      ];
-    };
-    $normalize = static fn (string $text): ?string => in_array($word = strtolower(trim($text)), ['alternative', 'works_with', 'unrelated'], TRUE) ? $word : NULL;
-  }
-  else {
-    if (!$judge_model) {
-      $default = \Drupal::service('ai.provider')->getDefaultProviderForOperationType('chat');
-      $judge_model = $default ? $default['provider_id'] . '.' . $default['model_id'] : NULL;
+  $question = [
+    'judgment' => [
+      'type' => 'choice',
+      'instructions' => 'How does the buyer of Listing A relate to Listing B?',
+      'criteria' => [
+        'alternative' => 'A buyer of the first could use the second instead (the same job, a different service)',
+        'works_with' => 'Not a replacement, but they are used together (one feeds the other)',
+        'unrelated' => 'Neither',
+      ],
+    ],
+  ];
+  [$provider_id, $model_id] = array_pad(explode('.', $judge_model, 2), 2, '');
+  $provider = \Drupal::service('ai.provider')->createInstance($provider_id);
+  $ask = static function (string $prompt) use ($provider, $model_id, $question): array {
+    $start = microtime(TRUE);
+    $answers = $provider->decide($model_id, $prompt, $question, ['ombu_judge']);
+    $judgment = $answers['judgment'] ?? NULL;
+    if (!is_array($judgment)) {
+      return ['text' => Json::encode($answers), 'tokens_in' => NULL, 'tokens_out' => NULL, 'ms' => (int) round((microtime(TRUE) - $start) * 1000)];
     }
-    $judge_model ??= throw new \RuntimeException('Set JUDGE_MODEL (e.g. subq:snap, or fireworks.<model id>): the AI module has no chat default.');
-    [$provider_id, $model_id] = array_pad(explode('.', $judge_model, 2), 2, '');
-    $provider = \Drupal::service('ai.provider')->createInstance($provider_id);
-    $provider->setChatSystemRole($system);
-    $ask = static function (string $prompt) use ($provider, $model_id): array {
-      $start = microtime(TRUE);
-      $response = $provider->chat(new ChatInput([new ChatMessage('user', $prompt)]), $model_id, ['ombu_judge']);
-      $usage = $response->getTokenUsage();
-      return [
-        'text' => trim((string) $response->getNormalized()->getText()),
-        'tokens_in' => $usage->input ?? NULL,
-        'tokens_out' => $usage->output ?? NULL,
-        'ms' => (int) round((microtime(TRUE) - $start) * 1000),
-      ];
-    };
-    $normalize = static fn (string $text): ?string => in_array($word = strtolower(trim($text)), ['alternative', 'works_with', 'unrelated'], TRUE) ? $word : NULL;
-  }
+    return [
+      'text' => (string) ($judgment['choice'] ?? $judgment['noul'] ?? key($judgment['probabilities'] ?? []) ?? ''),
+      'probabilities' => array_map('floatval', $judgment['probabilities'] ?? []),
+      'confidence' => isset($judgment['confidence']) ? (float) $judgment['confidence'] : NULL,
+      'tokens_in' => NULL,
+      'tokens_out' => NULL,
+      'ms' => (int) round((microtime(TRUE) - $start) * 1000),
+    ];
+  };
+  $normalize = static function (string $text): ?string {
+    // A decision model answers the choice id; a chat model may answer the
+    // word in prose. Both end here.
+    foreach (['alternative', 'works_with', 'unrelated'] as $word) {
+      if (str_contains(strtolower($text), $word)) {
+        return $word;
+      }
+    }
+    return NULL;
+  };
   echo "Judge: $judge_model\n";
 
   $asked = $skipped = $bad = 0;

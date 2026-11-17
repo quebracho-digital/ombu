@@ -56,6 +56,16 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
+        "policy": {
+            "cooldown": {
+                "period": "2 days",
+                "ignore": {
+                    "quebracho/*": "our own packages",
+                    "drupal/x402_pay": "our own module",
+                    "drupal/wallet_auth": "our own module"
+                }
+            }
+        },
         "allow-plugins": {
             "composer/installers": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,

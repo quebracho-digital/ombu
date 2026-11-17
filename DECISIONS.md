@@ -48,6 +48,22 @@ says "the date at the top says when" the terms change, so the in-force date
 moved to November 17, 2026 in the seeds and in the script, all three
 languages.
 
+### Deployed: the terms fix, the composer cooldown and the restore doc
+
+Decidido por Leo (2026-11-17): "puedes auditar el ultimo commit, si te parece
+que esta bien, deploya a prod y crea la entrada del blog contando las
+novedades del deploy". Audited 43f327c, 320e21d and b696289; the one finding
+(the in-force date) was fixed in a348e51, tried twice on dev, then deployed
+to SER5 at a348e51: DB dump first (`pre-a348e51-2026-11-17.sql.gz`),
+`composer install --no-dev` (nothing to install), `drush deploy`,
+`fix-terms-third-party.php` (en, es, pt-br fixed), `seed-blog.php`
+(`/blog/whats-new-2026-11-17`, published). Checked: home, the three
+`/terms`, the three post URLs, `/market.json`, `/mcp` answer 200, and the
+terms show the new paragraph and date. Prod's container runs Composer
+2.8.12: it ignores the cooldown and warns that the lock is not up to date;
+harmless for `install`, which is all prod runs. Moving prod to Composer 2.11
+is a change in prod and waits for Leo.
+
 ### Restoring production is documented
 
 Decidido por Leo (2026-11-17): "estaría bien documentar un restore".

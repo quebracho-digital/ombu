@@ -17,12 +17,24 @@
  * re-runs discovery.
  */
 
+use Drupal\ai_provider_universal\Backend\AiServerBackendManager;
 use Drupal\key\Entity\Key;
 use Drupal\ai_provider_universal\Commands\UniversalCommands;
 use Drupal\ai_provider_universal\Entity\AiUniversalServer;
 
 $server_id = 'subq';
-$model_id = 'subq_snap';
+
+// The backend: SubQ's own (`subq`, patch 0001), falling back to typesafe
+// (the same wire) until the patch is applied. A server created with
+// typesafe moves to subq here, so an old run is upgraded in place.
+$backend = 'typesafe';
+try {
+  \Drupal::service(AiServerBackendManager::class)->createInstance('subq');
+  $backend = 'subq';
+}
+catch (\Throwable) {
+  echo "The subq backend is not installed (patch 0001 not applied?): falling back to typesafe, the same wire.\n";
+}
 
 $key = Key::load('subq_api_key');
 if (!$key) {
@@ -50,13 +62,17 @@ $server = AiUniversalServer::load($server_id);
 if (!$server) {
   AiUniversalServer::create([
     'id' => $server_id,
-    'label' => 'SubQ (Snap, System One)',
-    'backend' => 'typesafe',
+    'label' => $backend === 'subq' ? 'SubQ (Snap)' : 'SubQ (Snap, System One)',
+    'backend' => $backend,
     'host_name' => 'https://api.subq.ai',
     'api_key' => 'subq_api_key',
     'timeout' => 60,
   ])->save();
-  echo "Server $server_id created (typesafe → api.subq.ai).\n";
+  echo "Server $server_id created ($backend → api.subq.ai).\n";
+}
+elseif ($server->getBackend() !== $backend) {
+  $server->set('backend', $backend)->save();
+  echo "Server $server_id moved to the $backend backend.\n";
 }
 else {
   echo "Server $server_id exists.\n";
@@ -71,5 +87,6 @@ foreach ($models as $id => $model) {
 }
 if (!$models) {
   echo "Discovery found no models: check the key and https://docs.subq.ai/endpoints/models-api/.\n";
+  return;
 }
-echo "Judge with: JUDGE_MODEL={$server_id}." . array_key_first($models ?: [$model_id => 1]) . " ddev drush php:script ../scripts/judge-similar.php\n";
+echo "Judge with: JUDGE_MODEL=" . $server_id . '.' . array_key_first($models) . " ddev drush php:script ../scripts/judge-similar.php\n";

@@ -97,11 +97,11 @@ if ($mode === '') {
   // JUDGE_MODEL=<model entity id> (e.g. snap.subq_snap) over
   // UniversalProvider::decide(), the same call the importer's decision model
   // will take and what DECISIONS asks for a decision (an Ombú interface, a
-  // pinned version, fail-closed). SubQ Snap speaks the System One protocol:
-  // its server is an ai_universal server with the typesafe backend pointing
-  // at api.subq.ai (scripts/setup-subq-server.php creates it, or
-  // JUDGE_MODEL=fireworks.<id>: decide() prompts a chat model for the same
-  // JSON, without calibrated probabilities).
+  // pinned version, fail-closed). SubQ has its own backend now
+  // (ai_provider_universal's `subq`, patch 0001 in scripts/patches/):
+  // scripts/setup-subq-server.php creates the server with it. A chat model
+  // id also works (JUDGE_MODEL=fireworks.<id>): decide() prompts it for the
+  // same JSON, without calibrated probabilities.
   if (!$judge_model && getenv('JUDGE_SUBQ') !== '') {
     // JUDGE_SUBQ set (any value): the SubQ Snap model created by the setup
     // script. The model entity id assumes its discovery; the judge names it

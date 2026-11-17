@@ -501,32 +501,95 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
   }
 
   /**
-   * Coherence: at least one incoming transfer of the listing's own price.
+   * Runs one import of $items with a verifier that reports $transfers.
    *
-   * The verifier passes and payTo has activity, but no transfer reached the
-   * listing's price: the resource is not evidence of selling this listing, so
-   * it is not listed. One transfer of the price is enough, whatever the
-   * smaller ones beside it.
+   * The coherence filters are private, so they are driven through import(),
+   * with a verifier stub that puts the transfers detail in its report as the
+   * real one does.
+   *
+   * @param array $items
+   *   The catalogue's items.
+   * @param array $transfers
+   *   The transfers of accepts[0]: [amount, time] pairs.
+   * @param bool $priceMatch
+   *   The --price-match filter.
+   * @param int $maxAgeDays
+   *   The --max-age-days filter.
    */
-  public function testMinPriceDemandsATransferOfTheListingsPrice(): void {
-    $items = [$this->item('/cheap', ['accepts' => [$this->accept(['amount' => '5000'])]])];
-    $run = function (int $largest) use ($items): array {
-      // coherent() is private, so the filters are driven through import(),
-      // with a verifier stub that puts the detail in its report as the real
-      // one does.
-      $verifier = $this->createMock(ResourceVerifier::class);
-      $verifier->method('verify')->willReturn(['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 3, 'maxAmount' => $largest, 'newest' => time()]]]);
-      $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
-      return (new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], 1))->import();
-    };
+  private function importWithTransfers(array $items, array $transfers, bool $priceMatch = TRUE, int $maxAgeDays = 0): array {
+    $detail = [
+      'count' => count($transfers),
+      'newest' => NULL,
+      'transfers' => array_map(fn(array $t) => ['amount' => $t[0], 'time' => $t[1]], $transfers),
+    ];
+    $verifier = $this->createMock(ResourceVerifier::class);
+    $verifier->method('verify')->willReturnCallback(fn(string $url, string $method, array $announced) => [
+      'verdict' => 'pass',
+      'checks' => [],
+      'accepts' => $announced,
+      'activity' => max(1, count($transfers)),
+      'transfers' => ['accepts[0]' => $detail],
+    ]);
+    $page = json_encode(['items' => $items, 'pagination' => ['total' => count($items)]]);
+    $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], $page)]))]);
+    $importer = new DiscoveryCatalogImporter(
+      'bazaar',
+      'https://catalogue.example/resources',
+      $client,
+      $this->container->get('entity_type.manager'),
+      $this->container->get('logger.factory'),
+      $this->container->get('lock'),
+      $verifier,
+      $this->container->get('state'),
+      $this->container->get('datetime.time'),
+      200,
+      1,
+      [],
+      $priceMatch,
+      $maxAgeDays,
+    );
+    return $importer->import();
+  }
 
-    $counts = $run(100);
-    $this->assertSame(1, $counts['inactive'], 'A 0.0001 transfer is not a sale of a $0.005 listing.');
+  /**
+   * Price match, first import: a transfer of exactly the current price.
+   *
+   * An `exact` payment moves the price, no more and no less: a large
+   * transfer for something else is not a sale of a $0.005 listing.
+   */
+  public function testPriceMatchOnFirstImportTakesTheCurrentPrice(): void {
+    $items = [$this->item('/cheap')];
+    $counts = $this->importWithTransfers($items, [[1000000, time()], [100, time()]]);
+    $this->assertSame(1, $counts['inactive'], '1 USDC and 0.0001 USDC are not sales of a 0.005 listing.');
     $this->assertSame(['no incoming transfer of the listing\'s price' => 1], $counts['reasons']);
     $this->assertNull($this->listing('/cheap'));
 
-    $counts = $run(5000);
-    $this->assertSame(1, $counts['created'], 'A transfer of the listing\'s price is evidence.');
+    $counts = $this->importWithTransfers($items, [[1000000, time()], [5000, time() - 86400]]);
+    $this->assertSame(1, $counts['created'], 'One transfer of the price is evidence.');
+  }
+
+  /**
+   * Price match, with history: the price the listing had on the transfer's day.
+   */
+  public function testPriceMatchDatesEachTransferByThePriceHistory(): void {
+    $day = 86400;
+    $this->importWithTransfers([$this->item('/a', ['accepts' => [$this->accept(['amount' => '3000'])]])], [[3000, time()]]);
+    // The seller raised the price; the listing keeps what it took before.
+    $this->importWithTransfers([$this->item('/a')], [[3000, time()]]);
+    $listing = $this->listing('/a');
+    $past = json_decode((string) $listing->get('field_past_accepts')->value, TRUE);
+    $this->assertSame('3000', $past[0]['amount'], 'The old price is in the history.');
+    // Date the change ten days ago.
+    $past[0]['until'] = time() - 10 * $day;
+    $listing->set('field_past_accepts', json_encode($past))->save();
+
+    $changed = [$this->item('/a', ['description' => 'Changed, so it is verified again'])];
+    $counts = $this->importWithTransfers($changed, [[3000, time() - 5 * $day]]);
+    $this->assertSame(1, $counts['inactive'], 'Five days ago the price was already 5000: a 3000 transfer is not a sale.');
+
+    $changed = [$this->item('/a', ['description' => 'Changed again'])];
+    $counts = $this->importWithTransfers($changed, [[3000, time() - 20 * $day]]);
+    $this->assertSame(1, $counts['updated'], 'Twenty days ago the price was 3000: that transfer was a sale.');
   }
 
   /**
@@ -536,21 +599,21 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
    */
   public function testMaxAgeDaysDemandsARecentTransfer(): void {
     $items = [$this->item('/stale')];
-    $old = ['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 3, 'maxAmount' => 5000, 'newest' => time() - 90 * 86400]]];
+    $old = ['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 1, 'newest' => time() - 90 * 86400, 'transfers' => [['amount' => 5000, 'time' => time() - 90 * 86400]]]]];
     $verifier = $this->createMock(ResourceVerifier::class);
     $verifier->method('verify')->willReturn($old);
     $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
-    $importer = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], 0, 30);
+    $importer = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], FALSE, 30);
     $counts = $importer->import();
     $this->assertSame(1, $counts['inactive']);
     $this->assertSame(['no incoming transfer in the window' => 1], $counts['reasons']);
 
     $fresh = $old;
-    $fresh['transfers'] = ['accepts[0]' => ['count' => 3, 'maxAmount' => 5000, 'newest' => time() - 2 * 86400]];
+    $fresh['transfers'] = ['accepts[0]' => ['count' => 1, 'newest' => time() - 2 * 86400, 'transfers' => [['amount' => 5000, 'time' => time() - 2 * 86400]]]];
     $verifier = $this->createMock(ResourceVerifier::class);
     $verifier->method('verify')->willReturn($fresh);
     $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
-    $importer = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], 0, 30);
+    $importer = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], FALSE, 30);
     $counts = $importer->import();
     $this->assertSame(1, $counts['created'], 'A sale two days ago is inside the window.');
   }

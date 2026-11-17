@@ -32,10 +32,11 @@ use GuzzleHttp\ClientInterface;
  *
  * The import can be narrowed (the "granularity" of what comes in): $onlyTags
  * keeps only resources carrying one of the tags named, and the coherence
- * filters ($minPrice, $maxAgeDays) demand that payTo's incoming transfers look
- * like real sales of this listing: at least one of at least the listing's own
- * price, and no older than a window. A resource that passes the checks but
- * fails the coherence is 'inactive' with its reason, never listed.
+ * filters ($priceMatch, $maxAgeDays) demand that payTo's incoming transfers
+ * look like real sales of this listing: at least one of exactly the price it
+ * had on that day, and no older than a window. A resource that passes the
+ * checks but fails the coherence is 'inactive' with its reason, never
+ * listed.
  *
  * Owns one source: it never touches the listings of another, and a listing
  * staff delete stays deleted (state `ombu.<source>_blocked`).
@@ -84,13 +85,15 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    * @param string[] $onlyTags
    *   When not empty, only resources carrying at least one of these tags are
    *   asked (the rest are 'skipped'); the granularity of what comes in.
-   * @param int $minPrice
-   *   Atomic units. With the detail from the transfer index: at least one
-   *   incoming transfer to payTo of at least this (0 = any amount). A wallet
-   *   paid once 0.50 USDC two years ago is not evidence a $0.005 listing sells.
+   * @param bool $priceMatch
+   *   With the detail from the transfer index: payTo must have received at
+   *   least one transfer of exactly the price the listing had on that day
+   *   (an `exact` payment moves the price, no more, no less). A wallet paid
+   *   1,000 USDC for something else is not evidence a $0.005 listing sells.
    * @param int $maxAgeDays
-   *   With the detail: the newest incoming transfer no older than this many
-   *   days (0 = any age). A sale of this listing happened recently.
+   *   With the detail: the newest incoming transfer (with $priceMatch, the
+   *   newest of the listing's price) no older than this many days (0 = any
+   *   age). A sale of this listing happened recently.
    */
   public function __construct(
     private readonly string $source,
@@ -105,7 +108,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     private readonly int $budget = 200,
     private readonly int $minTransfers = 1,
     private readonly array $onlyTags = [],
-    private readonly int $minPrice = 0,
+    private readonly bool $priceMatch = FALSE,
     private readonly int $maxAgeDays = 0,
   ) {}
 
@@ -334,7 +337,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       $reasons['no incoming USDC'] = ($reasons['no incoming USDC'] ?? 0) + 1;
       return 'inactive';
     }
-    if (!$this->coherent($report, $reasons)) {
+    if (!$this->coherent($report, $product, $reasons)) {
       return 'inactive';
     }
     $seen[$r['key']] = TRUE;
@@ -344,22 +347,25 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
   /**
    * Do payTo's incoming transfers look like real sales of this listing?
    *
-   * With the detail the transfer index answered (per checked requirement:
-   * count, largest amount, newest timestamp): at least one transfer of at
-   * least the requirement's own price, and no older than the window. Both
-   * filters are 0 = off; a check the index could not answer is not a failure
+   * With the detail the transfer index answered (per checked requirement,
+   * each transfer's amount and day): with $priceMatch, at least one
+   * transfer of exactly the price the listing had on its day (priceAt());
+   * with $maxAgeDays, the newest of those (or of all, without $priceMatch)
+   * inside the window. A check the index could not answer is not a failure
    * here (the count already proved activity), it is just not filtered.
    *
    * @param array $report
    *   The verifier's report (its `transfers` detail, keyed as `accepts`).
+   * @param \Drupal\commerce_product\Entity\ProductInterface|null $product
+   *   The listing, when it exists: its price history dates the transfers.
    * @param array $reasons
    *   The tally of the reasons (counted here).
    *
    * @return bool
    *   Whether every checked requirement with detail passes the filters.
    */
-  private function coherent(array $report, array &$reasons): bool {
-    if (!$this->minPrice && !$this->maxAgeDays) {
+  private function coherent(array $report, ?ProductInterface $product, array &$reasons): bool {
+    if (!$this->priceMatch && !$this->maxAgeDays) {
       return TRUE;
     }
     $transfers = $report['transfers'] ?? NULL;
@@ -371,14 +377,18 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       if (!$detail) {
         continue;
       }
-      $price = (int) ($req['amount'] ?? $req['maxAmountRequired'] ?? 0);
-      // One transfer of at least the price is enough: the largest decides.
-      if ($this->minPrice && ($detail['maxAmount'] ?? 0) < max($price, $this->minPrice)) {
-        $reasons['no incoming transfer of the listing\'s price'] = ($reasons['no incoming transfer of the listing\'s price'] ?? 0) + 1;
-        return FALSE;
+      $evidence = $detail['transfers'] ?? [];
+      if ($this->priceMatch) {
+        $evidence = array_filter($evidence, fn(array $t) => $t['amount'] !== NULL
+          && in_array($t['amount'], $this->priceAt($product, $req, $t['time']), TRUE));
+        if (!$evidence) {
+          $reasons['no incoming transfer of the listing\'s price'] = ($reasons['no incoming transfer of the listing\'s price'] ?? 0) + 1;
+          return FALSE;
+        }
       }
       if ($this->maxAgeDays) {
-        $newest = $detail['newest'] ?? NULL;
+        $times = array_filter(array_column($evidence, 'time'), 'is_int');
+        $newest = $times ? max($times) : NULL;
         if ($newest !== NULL && $newest < $this->time->getRequestTime() - $this->maxAgeDays * 86400) {
           $reasons['no incoming transfer in the window'] = ($reasons['no incoming transfer in the window'] ?? 0) + 1;
           return FALSE;
@@ -386,6 +396,51 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       }
     }
     return TRUE;
+  }
+
+  /**
+   * The prices a requirement's payTo took at a time, in atomic units.
+   *
+   * A new listing has no history: its announced price. An existing one is
+   * dated by its history (field_past_accepts, as ReviewVerifier::at() reads
+   * it): a time before a change takes what was offered until that change;
+   * after the last change, what the listing offers now, plus the price the
+   * catalogue announces in this run (the seller may have changed it before
+   * we noticed).
+   *
+   * @param \Drupal\commerce_product\Entity\ProductInterface|null $product
+   *   The listing, or NULL if it is new.
+   * @param array $req
+   *   The checked requirement (network, asset, payTo, amount).
+   * @param int|null $time
+   *   When the transfer happened (NULL: unknown, taken as now).
+   *
+   * @return int[]
+   *   The prices of that payTo, on that network and asset, at that time.
+   */
+  private function priceAt(?ProductInterface $product, array $req, ?int $time): array {
+    $network = (string) ($req['network'] ?? '');
+    $evm = str_starts_with($network, 'eip155:');
+    $key = fn(array $o) => $network === (string) ($o['network'] ?? '')
+      && ($evm ? strtolower((string) ($o['asset'] ?? '')) === strtolower((string) ($req['asset'] ?? '')) : ($o['asset'] ?? NULL) === ($req['asset'] ?? NULL))
+      && ($evm ? strtolower((string) ($o['payTo'] ?? '')) === strtolower((string) ($req['payTo'] ?? '')) : ($o['payTo'] ?? NULL) === ($req['payTo'] ?? NULL));
+    $amounts = fn(array $offers) => array_values(array_unique(array_map(
+      fn(array $o) => (int) ($o['amount'] ?? $o['maxAmountRequired'] ?? -1),
+      array_filter($offers, $key),
+    )));
+    $announced = $amounts([$req]);
+    if (!$product) {
+      return $announced;
+    }
+    if ($time !== NULL) {
+      $past = array_filter(ReviewVerifier::past($product), fn(array $o) => (int) ($o['until'] ?? 0) >= $time);
+      if ($past) {
+        $first = min(array_map(fn(array $o) => (int) $o['until'], $past));
+        return $amounts(array_filter($past, fn(array $o) => (int) $o['until'] === $first));
+      }
+    }
+    $now = json_decode((string) $product->get('field_accepts')->value, TRUE) ?: [];
+    return array_values(array_unique([...$amounts(array_filter($now, 'is_array')), ...$announced]));
   }
 
   /**

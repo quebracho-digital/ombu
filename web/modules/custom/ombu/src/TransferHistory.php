@@ -9,12 +9,12 @@ use GuzzleHttp\ClientInterface;
 /**
  * The incoming USDC transfers of a payTo, with what coherence needs.
  *
- * `ResourceVerifier` counts them; the largest amount and the newest day let
- * an importer demand transfers that look like real sales of a listing (one
- * of at least its price, a recent one). The closure answers
- * ['count' => int, 'maxAmount' => int|null, 'newest' => int|null]: amounts
- * in atomic units of the asset (6 decimals for USDC), days as Unix
- * timestamps.
+ * `ResourceVerifier` counts them; each transfer's amount and day let an
+ * importer demand transfers that look like real sales of a listing: of the
+ * price it had that day, recent. The closure answers ['count' => int,
+ * 'newest' => int|null, 'transfers' => [['amount' => int|null, 'time' =>
+ * int|null], ...]]: amounts in atomic units of the asset (6 decimals for
+ * USDC), days as Unix timestamps, newest first.
  */
 final class TransferHistory {
 
@@ -31,7 +31,7 @@ final class TransferHistory {
    *   The Alchemy API key.
    *
    * @return \Closure
-   *   fn(network, asset, payTo): the count, maxAmount and newest. Throws
+   *   fn(network, asset, payTo): the count, newest and transfers. Throws
    *   when it cannot ask (the verifier reports unchecked).
    */
   public static function closure(ClientInterface $http, string $key): \Closure {
@@ -62,23 +62,22 @@ final class TransferHistory {
       if (!is_array($transfers)) {
         throw new \RuntimeException('No answer.');
       }
-      $maxAmount = NULL;
       $newest = NULL;
+      $detail = [];
       foreach ($transfers as $transfer) {
         // The atomic amount is rawContract.value, in hex; `value` is a
         // decimal float and loses precision.
         $raw = (string) ($transfer['rawContract']['value'] ?? '');
-        if (preg_match('/^0x[0-9a-f]{1,15}$/i', $raw)) {
-          $amount = (int) hexdec($raw);
-          $maxAmount = $maxAmount === NULL ? $amount : max($maxAmount, $amount);
-        }
+        $amount = preg_match('/^0x[0-9a-f]{1,15}$/i', $raw) ? (int) hexdec($raw) : NULL;
         // A transfer without a readable timestamp is not fresh evidence.
         $ts = strtotime((string) ($transfer['metadata']['blockTimestamp'] ?? ''));
-        if ($ts !== FALSE) {
+        $ts = $ts === FALSE ? NULL : $ts;
+        if ($ts !== NULL) {
           $newest = $newest === NULL ? $ts : max($newest, $ts);
         }
+        $detail[] = ['amount' => $amount, 'time' => $ts];
       }
-      return ['count' => count($transfers), 'maxAmount' => $maxAmount, 'newest' => $newest];
+      return ['count' => count($transfers), 'newest' => $newest, 'transfers' => $detail];
     };
   }
 

@@ -55,8 +55,21 @@ would have rejected everything: it read the amount from a key Alchemy does
 not send (`raw`; the atomic amount is `rawContract.value`), compared the
 smallest transfer instead of the largest (one is enough), and asked the
 oldest 100 transfers, so a wallet with more sales looked stale.
-`TransferHistory` now takes `rawContract.value`, answers `maxAmount`, and
-asks newest first; a unit test runs it over a response shaped as Alchemy's.
+`TransferHistory` now takes `rawContract.value`, answers each transfer's
+amount and day, and asks newest first; a unit test runs it over a response
+shaped as Alchemy's.
+
+Decidido por Leo (2026-11-17): "el checkeo de monto debe coincidir con la
+fecha si es que el precio cambio, verificamos que en la fecha de la
+transaccion era el precio del momento ... la primera vez que importamos
+deberiamos verificar si hubo transacciones con el monto actual". So
+`--min-price` became `--price-match`: an `exact` payment moves the price, no
+more and no less, so a transfer counts only if its amount is exactly the
+price the listing had on the transfer's day, read from `field_past_accepts`
+(the history reviews use). A new listing has no history: its current price.
+After the last change, the price the catalogue announces in the run also
+counts, since the seller may have changed it before the import noticed.
+With `--max-age-days`, the window looks at the newest matching transfer.
 
 ### The terms have Ombú handling only its own sellers' money
 
@@ -331,7 +344,7 @@ Decidido por Leo (2026-11-08 17:20): "creo que no vamos a usar 8004scan para nad
 
 - The live 402 must list the network, asset, payTo and amount the catalogue announced; payTo is not frozen by the token nor on OFAC's list; at least `$minTransfers` (1) incoming USDC transfers to payTo (Alchemy). Only the `exact` requirements on the six EVM mainnets whose USDC is checked are judged; Solana and Arc are not imported (no verified contract here).
 - What cannot be asked (a node, the seller) is not imported and, if it was, not retired; only a "no" retires. A listing whose entry did not change is not asked again; a run verifies at most 200 new or changed resources (`$budget`).
-- By hand only (`drush ombu:import-catalog bazaar|payai`, narrowed with `--only-tags`, `--min-price` and `--max-age-days` since 2026-11-17), not from cron. Not deployed. Circle does not run these checks yet; moving them into `CatalogImporterInterface` and into Circle is still open.
+- By hand only (`drush ombu:import-catalog bazaar|payai`, narrowed with `--only-tags`, `--price-match` and `--max-age-days` since 2026-11-17), not from cron. Not deployed. Circle does not run these checks yet; moving them into `CatalogImporterInterface` and into Circle is still open.
 
 ### Metatag writes the tags; the home moves to Layout Builder
 

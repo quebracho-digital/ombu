@@ -64,20 +64,28 @@ class TransferHistoryTest extends UnitTestCase {
   }
 
   /**
-   * The largest amount and the newest day, read from rawContract and metadata.
+   * Each transfer's amount and day, from rawContract and metadata.
    *
    * @covers ::closure
    */
-  public function testLargestAmountAndNewestDay(): void {
+  public function testAmountAndDayOfEachTransfer(): void {
     [$answer, $params] = $this->ask([
       // 0.005 USDC, the newest.
       $this->transfer('0x1388', 0.005, '2026-11-15T10:00:00.000Z'),
-      // 0.5 USDC, the largest; one smaller transfer does not hide it.
+      // 0.5 USDC.
       $this->transfer('0x7a120', 0.5, '2026-10-01T10:00:00.000Z'),
-      // 0.0001 USDC, no metadata: its amount counts, it is not fresh.
+      // 0.0001 USDC, no metadata: no day.
       $this->transfer('0x64', 0.0001, NULL),
     ]);
-    $this->assertSame(['count' => 3, 'maxAmount' => 500000, 'newest' => strtotime('2026-11-15T10:00:00Z')], $answer);
+    $this->assertSame([
+      'count' => 3,
+      'newest' => strtotime('2026-11-15T10:00:00Z'),
+      'transfers' => [
+        ['amount' => 5000, 'time' => strtotime('2026-11-15T10:00:00Z')],
+        ['amount' => 500000, 'time' => strtotime('2026-10-01T10:00:00Z')],
+        ['amount' => 100, 'time' => NULL],
+      ],
+    ], $answer);
     $this->assertSame('desc', $params['order'], 'Newest first: a wallet with over 100 sales still shows its latest one.');
     $this->assertTrue($params['withMetadata']);
   }
@@ -89,7 +97,7 @@ class TransferHistoryTest extends UnitTestCase {
    */
   public function testNoTransfers(): void {
     [$answer] = $this->ask([]);
-    $this->assertSame(['count' => 0, 'maxAmount' => NULL, 'newest' => NULL], $answer);
+    $this->assertSame(['count' => 0, 'newest' => NULL, 'transfers' => []], $answer);
   }
 
   /**

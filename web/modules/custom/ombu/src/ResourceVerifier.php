@@ -83,8 +83,8 @@ class ResourceVerifier {
    *   USDC transfers any of their payTo addresses has received (NULL: not
    *   asked, or the index did not answer); `transfers`, when the index
    *   answered, is what it said of each checked requirement, under the same
-   *   keys as `accepts` (accepts[i] => ['count' => int, 'maxAmount' => ?int,
-   *   'newest' => ?int]: amounts in atomic units, newest a Unix timestamp).
+   *   keys as `accepts` (accepts[i] => TransferHistory's answer: count,
+   *   newest, and each transfer's amount and time).
    *   What an importer needs to demand transfers that look like real sales;
    *   the verdict never reads it.
    */

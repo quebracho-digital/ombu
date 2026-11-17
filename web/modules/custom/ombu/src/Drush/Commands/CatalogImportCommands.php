@@ -36,17 +36,16 @@ final class CatalogImportCommands extends DrushCommands {
    * Imports a catalogue's verified resources as listings.
    *
    * The granularity of what comes in: --only-tags narrows to resources
-   * carrying one of the tags; --min-price (atomic units, e.g. 5000 = $0.005)
-   * and --max-age-days (a window, e.g. 30) demand that payTo's incoming
-   * transfers look like real sales: one of at least the listing's own price,
-   * inside the window. The budget and the minimum transfer count stay the
-   * service's (200, 1).
+   * carrying one of the tags; --price-match and --max-age-days (a window,
+   * e.g. 30) demand that payTo's incoming transfers look like real sales:
+   * one of exactly the price the listing had on its day, inside the window.
+   * The budget and the minimum transfer count stay the service's (200, 1).
    */
   #[CLI\Command(name: 'ombu:import-catalog')]
   #[CLI\Argument(name: 'source', description: 'bazaar or payai.')]
   #[CLI\Option(name: 'max', description: 'Stop after reading this many resources (0 = all). A partial run retires nothing.')]
   #[CLI\Option(name: 'only-tags', description: 'Comma-separated tags: import only resources carrying one of them.')]
-  #[CLI\Option(name: 'min-price', description: 'In atomic units: payTo must have received a transfer of at least this (0 = any).')]
+  #[CLI\Option(name: 'price-match', description: 'payTo must have received a transfer of exactly the price the listing had on that day.')]
   #[CLI\Option(name: 'max-age-days', description: 'The newest incoming transfer no older than this many days (0 = any).')]
   #[CLI\Usage(name: 'drush ombu:import-catalog bazaar --max=300', description: 'Read the first 300 resources of Bazaar and list the verified ones.')]
   #[CLI\Usage(name: 'drush ombu:import-catalog payai --only-tags=ai,inference --max-age-days=30', description: 'Only AI-tagged resources with a recent USDC sale.')]
@@ -55,7 +54,7 @@ final class CatalogImportCommands extends DrushCommands {
     array $options = [
       'max' => 0,
       'only-tags' => '',
-      'min-price' => 0,
+      'price-match' => FALSE,
       'max-age-days' => 0,
     ],
   ): void {
@@ -73,7 +72,7 @@ final class CatalogImportCommands extends DrushCommands {
   private function narrow(string $source, array $options): DiscoveryCatalogImporter {
     /** @var \Drupal\ombu\DiscoveryCatalogImporter $base */
     $base = $this->container->get("ombu.{$source}_importer");
-    if (!$options['only-tags'] && !(int) $options['min-price'] && !(int) $options['max-age-days']) {
+    if (!$options['only-tags'] && !$options['price-match'] && !(int) $options['max-age-days']) {
       return $base;
     }
     return new DiscoveryCatalogImporter(
@@ -89,7 +88,7 @@ final class CatalogImportCommands extends DrushCommands {
       200,
       1,
       array_values(array_filter(array_map('trim', explode(',', (string) $options['only-tags'])))),
-      (int) $options['min-price'],
+      (bool) $options['price-match'],
       (int) $options['max-age-days'],
     );
   }

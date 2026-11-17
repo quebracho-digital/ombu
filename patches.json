@@ -1,7 +1,0 @@
-{
-  "patches": {
-    "drupal/ai_provider_universal": {
-      "SubQ (Snap) backend: System One wire, input-only pricing, decision models only": "patches/0001-feat-backend-SubQ-Snap-speaks-System-One.patch"
-    }
-  }
-}

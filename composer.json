@@ -21,7 +21,6 @@
     ],
     "require": {
         "composer/installers": "^2.3",
-        "cweagans/composer-patches": "~1.7.3",
         "drupal/ai": "^1.5",
         "drupal/ai_provider_universal": "1.0.x-dev@dev",
         "drupal/belgrade": "^3.1",
@@ -63,12 +62,12 @@
                 "ignore": {
                     "quebracho/*": "our own packages",
                     "drupal/x402_pay": "our own module",
-                    "drupal/wallet_auth": "our own module"
+                    "drupal/wallet_auth": "our own module",
+                    "drupal/ai_provider_universal": "our own module"
                 }
             }
         },
         "allow-plugins": {
-            "cweagans/composer-patches": true,
             "composer/installers": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "drupal/core-composer-scaffold": true,
@@ -83,7 +82,6 @@
         "sort-packages": true
     },
     "extra": {
-        "patches-file": "patches.json",
         "drupal-scaffold": {
             "locations": {
                 "web-root": "web/"

@@ -26,6 +26,36 @@
 6. **Leo decides** scope, releases, and what is published (pushes to this
    public repo, drupal.org). Claude proposes, with a recommendation.
 
+## 2026-11-17
+
+### The terms have Ombú handling only its own sellers' money
+
+Decidido por Leo (2026-11-17): "ombu no maneja dinero mas que de los listings
+propios, puedes ajustar los terminos en todos los idiomas?". Section 3 of
+the terms said that, when a third-party service is called through Ombú's
+payment door, Ombú may relay the signed payment authorization to the network
+and pay the network fee. Never true of the market as it runs: buyers call a
+third-party seller's endpoint directly from their own wallet; only Ombú's
+own listings settle through its facilitator. The old wording made the
+Operator look like a transmitter of other sellers' payments, which Ombú does
+not do and must not promise. Fixed in the seeds (`seed-legal.php` en and es,
+`seed-pt-br.php`), and, for the pages already published,
+`scripts/fix-terms-third-party.php` replaces exactly that paragraph, in
+every language present: it matches the old paragraph by its first sentence,
+so a paragraph a lawyer rewrote is left alone with a note. Run once on
+production after `git pull`.
+
+### Restoring production is documented
+
+Decidido por Leo (2026-11-17): "estaría bien documentar un restore".
+`deploy/RESTORE.md`: from git plus the nightly backup plus `deploy/.env`,
+the steps on a clean machine (compose up, dump in, `drush deploy`, both
+indexes, the tunnel, cron) and the checks after, with what could not be
+verified from the laptop (no ssh from that session) marked **check**. The
+first thing to do before any incident is on the doc: copy `deploy/.env`
+off SER5 (it is git-ignored and holds every secret), take a fresh dump, and
+copy `web/sites/default/files` (sellers' images, the screening lists).
+
 ## 2026-10-25
 
 ### Agents keep reading markdown, with nothing hidden

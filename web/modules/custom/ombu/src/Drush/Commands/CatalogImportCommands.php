@@ -50,7 +50,15 @@ final class CatalogImportCommands extends DrushCommands {
   #[CLI\Option(name: 'max-age-days', description: 'The newest incoming transfer no older than this many days (0 = any).')]
   #[CLI\Usage(name: 'drush ombu:import-catalog bazaar --max=300', description: 'Read the first 300 resources of Bazaar and list the verified ones.')]
   #[CLI\Usage(name: 'drush ombu:import-catalog payai --only-tags=ai,inference --max-age-days=30', description: 'Only AI-tagged resources with a recent USDC sale.')]
-  public function import(string $source, array $options = ['max' => 0, 'only-tags' => '', 'min-price' => 0, 'max-age-days' => 0]): void {
+  public function import(
+    string $source,
+    array $options = [
+      'max' => 0,
+      'only-tags' => '',
+      'min-price' => 0,
+      'max-age-days' => 0,
+    ],
+  ): void {
     if (!in_array($source, ['bazaar', 'payai'], TRUE)) {
       throw new \InvalidArgumentException("Unknown source: $source (bazaar or payai).");
     }

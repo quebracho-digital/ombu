@@ -492,47 +492,42 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
    */
   public function testASkippedListingOfTheSourceIsNotRetired(): void {
     $this->importer([$this->item('/a'), $this->item('/b')], fn() => ['pass', 3])->import();
-    $items = [$this->item('/a', ['description' => 'same']), $this->item('/b', ['tags' => ['weather']])];
+    $items = [$this->item('/a', ['tags' => ['ai']]), $this->item('/b', ['tags' => ['weather']])];
     $importer = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 2]]))]))]), $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $this->verifier(fn() => ['pass', 3]), $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, ['ai']);
     $counts = $importer->import();
     $this->assertSame(1, $counts['skipped'], '/b has none of the tags');
     $this->assertSame(0, $counts['retired'], 'A skipped listing of this source stays.');
-    $this->assertNull($this->listing('/b')->get('field_retired')->value);
+    $this->assertFalse((bool) $this->listing('/b')->get('field_retired')->value);
   }
 
   /**
    * Coherence: at least one incoming transfer of the listing's own price.
    *
-   * The verifier passes and payTo has activity, but the transfers detail says
-   * the smallest transfer was smaller than the listing's price: the resource
-   * is not evidence of selling this listing, so it is not listed.
+   * The verifier passes and payTo has activity, but no transfer reached the
+   * listing's price: the resource is not evidence of selling this listing, so
+   * it is not listed. One transfer of the price is enough, whatever the
+   * smaller ones beside it.
    */
   public function testMinPriceDemandsATransferOfTheListingsPrice(): void {
     $items = [$this->item('/cheap', ['accepts' => [$this->accept(['amount' => '5000'])]])];
-    $detail = fn(int $min) => ['accepts[0]' => ['count' => 3, 'minAmount' => $min, 'newest' => time()]];
-    // A verifier stub that answers with the transfers detail: coherent() is
-    // private, so the filters are driven through import(), where the real
-    // verifier would have put the detail in its report.
-    $verifier = $this->createMock(ResourceVerifier::class);
-    $verifier->method('verify')->willReturnCallback(fn() => ['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => $detail($this->minTransferAmount ?? 100)]);
-    $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
-    $strict = new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], 5000);
-    $counts = $strict->import();
+    $run = function (int $largest) use ($items): array {
+      // coherent() is private, so the filters are driven through import(),
+      // with a verifier stub that puts the detail in its report as the real
+      // one does.
+      $verifier = $this->createMock(ResourceVerifier::class);
+      $verifier->method('verify')->willReturn(['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 3, 'maxAmount' => $largest, 'newest' => time()]]]);
+      $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
+      return (new DiscoveryCatalogImporter('bazaar', 'https://catalogue.example/resources', $client, $this->container->get('entity_type.manager'), $this->container->get('logger.factory'), $this->container->get('lock'), $verifier, $this->container->get('state'), $this->container->get('datetime.time'), 200, 1, [], 1))->import();
+    };
+
+    $counts = $run(100);
     $this->assertSame(1, $counts['inactive'], 'A 0.0001 transfer is not a sale of a $0.005 listing.');
     $this->assertSame(['no incoming transfer of the listing\'s price' => 1], $counts['reasons']);
     $this->assertNull($this->listing('/cheap'));
 
-    $this->minTransferAmount = 5000;
-    $counts = $strict->import();
+    $counts = $run(5000);
     $this->assertSame(1, $counts['created'], 'A transfer of the listing\'s price is evidence.');
   }
-
-  /**
-   * The smallest incoming transfer the stub verifier reports (testMinPrice).
-   *
-   * @var int
-   */
-  private int $minTransferAmount = 100;
 
   /**
    * Coherence: the newest incoming transfer inside the window.
@@ -541,7 +536,7 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
    */
   public function testMaxAgeDaysDemandsARecentTransfer(): void {
     $items = [$this->item('/stale')];
-    $old = ['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 3, 'minAmount' => 5000, 'newest' => time() - 90 * 86400]]];
+    $old = ['verdict' => 'pass', 'checks' => [], 'accepts' => $items[0]['accepts'], 'activity' => 3, 'transfers' => ['accepts[0]' => ['count' => 3, 'maxAmount' => 5000, 'newest' => time() - 90 * 86400]]];
     $verifier = $this->createMock(ResourceVerifier::class);
     $verifier->method('verify')->willReturn($old);
     $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);
@@ -551,7 +546,7 @@ final class DiscoveryCatalogImporterTest extends CommerceKernelTestBase {
     $this->assertSame(['no incoming transfer in the window' => 1], $counts['reasons']);
 
     $fresh = $old;
-    $fresh['transfers'] = ['accepts[0]' => ['count' => 3, 'minAmount' => 5000, 'newest' => time() - 2 * 86400]];
+    $fresh['transfers'] = ['accepts[0]' => ['count' => 3, 'maxAmount' => 5000, 'newest' => time() - 2 * 86400]];
     $verifier = $this->createMock(ResourceVerifier::class);
     $verifier->method('verify')->willReturn($fresh);
     $client = new Client(['handler' => HandlerStack::create(new MockHandler([new Response(200, [], json_encode(['items' => $items, 'pagination' => ['total' => 1]]))]))]);

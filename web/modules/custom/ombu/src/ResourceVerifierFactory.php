@@ -83,8 +83,10 @@ final class ResourceVerifierFactory {
   }
 
   /**
-   * USDC transfers payTo received, through Alchemy (capped at 100), with what
-   * a coherence filter needs: the smallest amount and the newest timestamp.
+   * USDC transfers payTo received, through Alchemy (capped at 100).
+   *
+   * With what a coherence filter needs: the largest amount and the newest
+   * timestamp (TransferHistory).
    */
   private static function transfers(ClientInterface $http, string $key): \Closure {
     return TransferHistory::closure($http, $key);

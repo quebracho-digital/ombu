@@ -83,7 +83,7 @@ class ResourceVerifier {
    *   USDC transfers any of their payTo addresses has received (NULL: not
    *   asked, or the index did not answer); `transfers`, when the index
    *   answered, is what it said of each checked requirement, under the same
-   *   keys as `accepts` (accepts[i] => ['count' => int, 'minAmount' => ?int,
+   *   keys as `accepts` (accepts[i] => ['count' => int, 'maxAmount' => ?int,
    *   'newest' => ?int]: amounts in atomic units, newest a Unix timestamp).
    *   What an importer needs to demand transfers that look like real sales;
    *   the verdict never reads it.
@@ -246,7 +246,13 @@ class ResourceVerifier {
         $verdict = self::UNCHECKED;
       }
     }
-    return ['verdict' => $verdict, 'checks' => $checks, 'accepts' => $accepts, 'activity' => $activity, 'transfers' => $transfers];
+    return [
+      'verdict' => $verdict,
+      'checks' => $checks,
+      'accepts' => $accepts,
+      'activity' => $activity,
+      'transfers' => $transfers,
+    ];
   }
 
   /**

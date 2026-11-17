@@ -345,7 +345,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    * Do payTo's incoming transfers look like real sales of this listing?
    *
    * With the detail the transfer index answered (per checked requirement:
-   * count, smallest amount, newest timestamp): at least one transfer of at
+   * count, largest amount, newest timestamp): at least one transfer of at
    * least the requirement's own price, and no older than the window. Both
    * filters are 0 = off; a check the index could not answer is not a failure
    * here (the count already proved activity), it is just not filtered.
@@ -372,7 +372,8 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
         continue;
       }
       $price = (int) ($req['amount'] ?? $req['maxAmountRequired'] ?? 0);
-      if ($this->minPrice && ($detail['minAmount'] ?? 0) < max($price, $this->minPrice)) {
+      // One transfer of at least the price is enough: the largest decides.
+      if ($this->minPrice && ($detail['maxAmount'] ?? 0) < max($price, $this->minPrice)) {
         $reasons['no incoming transfer of the listing\'s price'] = ($reasons['no incoming transfer of the listing\'s price'] ?? 0) + 1;
         return FALSE;
       }

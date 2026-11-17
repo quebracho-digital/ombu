@@ -43,7 +43,10 @@ not do and must not promise. Fixed in the seeds (`seed-legal.php` en and es,
 `scripts/fix-terms-third-party.php` replaces exactly that paragraph, in
 every language present: it matches the old paragraph by its first sentence,
 so a paragraph a lawyer rewrote is left alone with a note. Run once on
-production after `git pull`.
+production after `git pull`. The audit before the deploy found that section 10
+says "the date at the top says when" the terms change, so the in-force date
+moved to November 17, 2026 in the seeds and in the script, all three
+languages.
 
 ### Restoring production is documented
 

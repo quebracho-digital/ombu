@@ -29,8 +29,8 @@ if (!$name || !$email || !$address || !\Drupal::service('email.validator')->isVa
 $name = htmlspecialchars($name);
 $address = htmlspecialchars($address);
 $mail = '<a href="mailto:' . htmlspecialchars($email) . '">' . htmlspecialchars($email) . '</a>';
-$date_en = 'October 13, 2026';
-$date_es = '13 de octubre de 2026';
+$date_en = 'November 17, 2026';
+$date_es = '17 de noviembre de 2026';
 // The privacy policy changed on its own: the similar services log.
 $privacy_en = 'October 23, 2026';
 $privacy_es = '23 de octubre de 2026';

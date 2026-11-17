@@ -46,6 +46,18 @@ $old_prefix = [
   'pt-br' => 'Uma compra de um vendedor terceiro é um contrato exclusivamente entre o Usuário e esse vendedor.',
 ];
 
+// The in-force date at the top of the page, as the seeds wrote it.
+$old_date = [
+  'en' => 'In force since October 13, 2026.',
+  'es' => 'Vigentes desde el 13 de octubre de 2026.',
+  'pt-br' => 'Em vigor desde 13 de outubro de 2026.',
+];
+$new_date = [
+  'en' => 'In force since November 17, 2026.',
+  'es' => 'Vigentes desde el 17 de noviembre de 2026.',
+  'pt-br' => 'Em vigor desde 17 de novembro de 2026.',
+];
+
 $nodes = \Drupal::entityTypeManager()->getStorage('node');
 $path = \Drupal::service('path_alias.repository')->lookupByAlias('/terms', 'en');
 if (!$path) {
@@ -79,7 +91,13 @@ foreach ($old_opener as $langcode => $needle) {
     echo "$langcode: the paragraph does not start as expected; left as it is\n";
     continue;
   }
-  $t->set('body', ['value' => substr_replace($body, '<p>' . $new_paragraph[$langcode] . '</p>', $start, $end + 4 - $start), 'format' => 'full_html']);
+  $body = substr_replace($body, '<p>' . $new_paragraph[$langcode] . '</p>', $start, $end + 4 - $start);
+  // Section 10 says the date at the top tells when the terms changed.
+  $body = str_replace($old_date[$langcode], $new_date[$langcode], $body, $dated);
+  if (!$dated) {
+    echo "$langcode: in-force date not found; change it by hand\n";
+  }
+  $t->set('body', ['value' => $body, 'format' => $t->get('body')->format ?: 'full_html']);
   $t->save();
   $fixed++;
   echo "$langcode: third-party paragraph of the terms fixed\n";

@@ -27,7 +27,8 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **Blog:** the home page (`/blog`, and `/blog.md` for agents), posts in three languages seeded from `scripts/blog/`.
 - **By wallet:** `/market?wallet[]=0x…` and `/market.json?wallet=0x…` list what is paid to a wallet; it is a facet too (the wallets with most listings), and every listing links to the other services paid to its wallet.
 - **Stop switch:** `drush ombu:stop on "reason"` pauses payments, then makes the whole site read-only with no wallet shown and 503 instead of 402, and publishes a blog post in three languages; `off` brings it back. See [The stop switch](#the-stop-switch).
-- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only. A listing keeps the wallet it came in with: one that later answers with another is retired until staff accept it (`drush ombu:wallet-changes`), and every check is repeated after a week. What a listing offered before each change is kept, dated (`field_past_accepts`): a review needs a purchase paid to the wallet, and at the price, of the day it was made, and one purchase backs one review on the whole site.
+- **Dashboard:** `/admin/ombu` shows the site's vitals (stop switch, sales, search, cron, imports, screening lists, changed wallets, errors, moderation and blog) and links to the actions that change it: stop or resume, block or unblock a wallet, accept a changed wallet. The page itself is read-only. See [The dashboard](#the-dashboard).
+- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only. A listing keeps the wallet it came in with: one that later answers with another is retired until staff accept it (`drush ombu:wallet-changes`, or the dashboard), and every check is repeated after a week. What a listing offered before each change is kept, dated (`field_past_accepts`): a review needs a purchase paid to the wallet, and at the price, of the day it was made, and one purchase backs one review on the whole site.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces
@@ -254,7 +255,8 @@ ddev drush ombu:stop off "All clear"
 ```
 
 The same at `/admin/config/services/ombu-stop` (permission *Stop and resume
-Ombú*, given to no role by the module).
+Ombú*, given to no role by the module), also linked from the dashboard's stop
+card.
 
 - **Order.** Stopping pauses payments first with `x402_pay`'s switch (the
   library's flag file, `Quebracho\X402\Stop`, then the module's state), and
@@ -283,6 +285,38 @@ Ombú*, given to no role by the module).
 Not covered: pages a visitor's browser or Cloudflare cached before the stop,
 and anything a buyer already signed.
 
+## The dashboard
+
+`/admin/ombu` (permission *View the Ombú dashboard*) is the site's vitals:
+one card per vital, read-only. The cards are the stop switch, sales, search,
+cron and queues, catalogue imports, the screening lists, changed wallets,
+errors from dblog, moderation and the blog. Each card highlights its main
+number or state; errors and the blog span the width, and a strip above the
+grid links to every card in attention. It works in Gin, in dark mode and on a
+phone, with no JavaScript of its own.
+
+The actions are not forms in the page: each card links to its own form.
+
+- **Stop or resume Ombú** opens the existing
+  `/admin/config/services/ombu-stop` (permission *Stop and resume Ombú*).
+- **Blocked wallets** opens `/admin/ombu/screening` (permission *Manage the
+  Ombú screening lists*): the deny list with a remove link per address and a
+  field to block another. Both adding and removing ask for confirmation; the
+  allow list is shown read-only (it is managed with `drush ombu:screen
+  allow`). It is the same service as `drush ombu:screen`.
+- **Changed wallets** lists each listing retired because its seller answers
+  with another wallet, with the old and new address (a `0x…` shortened, the
+  full value in its `title`) and a *Review and accept* button. The
+  confirmation shows both wallets; accepting runs every check again and
+  prints the verifier's verdicts. It is the same service as `drush
+  ombu:wallet-changes <source> --accept=<id>`, with its own permission
+  (*Accept changed wallets on Ombú listings*).
+- **Blog, comments and contact** are links to Drupal's own screens; the
+  dashboard has no editor or moderation form of its own.
+
+Every action is a Drupal form (so it carries CSRF protection) and leaves a
+line in the `ombu` logger with the user, what changed and the target.
+
 ## Wallets we refuse
 
 `drush ombu:screen deny <address>` puts a wallet on our own deny list: it buys
@@ -293,7 +327,9 @@ every sale, after OFAC's list (which `x402_pay` already asks). With
 `CHAINALYSIS_API_KEY` in the environment the wallets on neither list are also
 asked to Chainalysis' sanctions API; if it does not answer, the sale goes on.
 The lists are two text files under the private files directory
-(`ombu/screening`), or where `$settings['ombu_screening_dir']` says.
+(`ombu/screening`), or where `$settings['ombu_screening_dir']` says. Staff with
+*Manage the Ombú screening lists* can also see the deny list and block or
+unblock a wallet at `/admin/ombu/screening`, with a confirmation each time.
 
 ## Legal, reports, purchases
 

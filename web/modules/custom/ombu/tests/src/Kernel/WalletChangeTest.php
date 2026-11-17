@@ -36,9 +36,7 @@ final class WalletChangeTest extends CommerceKernelTestBase {
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
     'link', 'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image',
-    'views', 'search_api', 'search_api_db', 'facets', 'better_exposed_filters',
-    'facets_exposed_filters', 'language', 'mcp_server', 'node', 'datetime',
-    'path', 'path_alias',
+    'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
   ];
 
   /**
@@ -48,7 +46,14 @@ final class WalletChangeTest extends CommerceKernelTestBase {
     parent::setUp();
     $this->installEntitySchema('commerce_product');
     $this->installEntitySchema('commerce_product_variation');
-    $this->installConfig(['commerce_product', 'ombu']);
+    // ombu's config adds a comment field to listings: comment's own config
+    // (the comment_body storage) goes in first.
+    $this->installEntitySchema('comment');
+    $this->installEntitySchema('taxonomy_term');
+    $this->installSchema('comment', ['comment_entity_statistics']);
+    $this->installEntitySchema('file');
+    $this->installSchema('file', ['file_usage']);
+    $this->installConfig(['commerce_product', 'comment', 'ombu']);
   }
 
   /**
@@ -57,12 +62,16 @@ final class WalletChangeTest extends CommerceKernelTestBase {
   public function testTheServiceReadsAndAccepts(): void {
     $state = $this->createMock(StateInterface::class);
     $state->method('get')->willReturnMap([
-      ['ombu.catalog.wallet_changed.bazaar', [], [
-        10 => ['url' => 'https://seller.example/a', 'old' => [self::OLD], 'new' => [self::NEW], 'time' => 100],
-      ]],
-      ['ombu.catalog.wallet_changed.payai', [], [
-        11 => ['url' => 'https://seller.example/b', 'old' => [], 'new' => [self::NEW], 'time' => 200],
-      ]],
+      [
+        'ombu.catalog.wallet_changed.bazaar',
+        [],
+        [10 => ['url' => 'https://seller.example/a', 'old' => [self::OLD], 'new' => [self::NEW], 'time' => 100]],
+      ],
+      [
+        'ombu.catalog.wallet_changed.payai',
+        [],
+        [11 => ['url' => 'https://seller.example/b', 'old' => [], 'new' => [self::NEW], 'time' => 200]],
+      ],
     ]);
 
     $product = Product::create(['type' => 'listing', 'field_source' => 'bazaar']);
@@ -151,7 +160,9 @@ final class WalletChangeTest extends CommerceKernelTestBase {
 
     $route = $this->createMock(RouteMatchInterface::class);
     $route->method('getParameter')->with('commerce_product')->willReturn('7');
-    $form = new WalletChangeForm($changes, $route);
+    // The form reads the listing from the current route, as FormBase does.
+    $this->container->set('current_route_match', $route);
+    $form = new WalletChangeForm($changes);
     \Drupal::messenger()->deleteAll();
     $state = new FormState();
     $built = $form->buildForm([], $state);

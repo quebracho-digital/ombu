@@ -6,14 +6,13 @@ namespace Drupal\ombu\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\ombu\ResourceVerifier;
 use Drupal\ombu\WalletChanges;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * /admin/ombu/wallet-changes/{id}/accept: the new wallet of one listing.
+ * Accepts the new wallet of one listing (/admin/ombu/wallet-changes/ID/accept).
  *
  * The confirmation shows the wallet on file and the one the seller answers
  * with now. Accepting asks the endpoint again with the same verifier the
@@ -23,7 +22,6 @@ final class WalletChangeForm extends ConfirmFormBase {
 
   public function __construct(
     private readonly WalletChanges $changes,
-    private readonly RouteMatchInterface $routeMatch,
   ) {}
 
   /**
@@ -32,7 +30,6 @@ final class WalletChangeForm extends ConfirmFormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('ombu.wallet_changes'),
-      $container->get('current_route_match'),
     );
   }
 
@@ -47,7 +44,7 @@ final class WalletChangeForm extends ConfirmFormBase {
    * The listing id in the route.
    */
   private function id(): int {
-    return (int) $this->routeMatch->getParameter('commerce_product');
+    return (int) $this->getRouteMatch()->getParameter('commerce_product');
   }
 
   /**

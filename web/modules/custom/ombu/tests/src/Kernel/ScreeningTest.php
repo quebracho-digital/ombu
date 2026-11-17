@@ -34,9 +34,7 @@ final class ScreeningTest extends CommerceKernelTestBase {
     'commerce_product', 'commerce_order', 'commerce_cart', 'commerce_number_pattern',
     'state_machine', 'profile', 'entity_reference_revisions', 'comment', 'taxonomy',
     'link', 'text', 'filter', 'options', 'key', 'x402_pay', 'ombu', 'file', 'image',
-    'views', 'search_api', 'search_api_db', 'facets', 'better_exposed_filters',
-    'facets_exposed_filters', 'language', 'mcp_server', 'node', 'datetime',
-    'path', 'path_alias',
+    'node', 'ai', 'ai_provider_universal', 'ai_provider_universal_factcheck',
   ];
 
   /**
@@ -46,7 +44,14 @@ final class ScreeningTest extends CommerceKernelTestBase {
     parent::setUp();
     $this->installEntitySchema('commerce_product');
     $this->installEntitySchema('commerce_product_variation');
-    $this->installConfig(['commerce_product', 'ombu']);
+    // ombu's config adds a comment field to listings: comment's own config
+    // (the comment_body storage) goes in first.
+    $this->installEntitySchema('comment');
+    $this->installEntitySchema('taxonomy_term');
+    $this->installSchema('comment', ['comment_entity_statistics']);
+    $this->installEntitySchema('file');
+    $this->installSchema('file', ['file_usage']);
+    $this->installConfig(['commerce_product', 'comment', 'ombu']);
   }
 
   /**
@@ -117,7 +122,7 @@ final class ScreeningTest extends CommerceKernelTestBase {
 
     $this->assertSame(strtolower(self::EVM), $state->get('confirm_address'));
     $this->assertTrue($state->isRebuilding());
-    $this->assertNull($state->getRedirect(), 'Nothing is written before the confirmation.');
+    $this->assertEmpty($state->getRedirect(), 'Nothing is written before the confirmation.');
 
     $confirm = (new FormState())->set('confirm_address', strtolower(self::EVM));
     $confirmation = $form->buildForm([], $confirm);
@@ -140,7 +145,9 @@ final class ScreeningTest extends CommerceKernelTestBase {
     $route = $this->createMock(RouteMatchInterface::class);
     $route->method('getParameter')->with('address')->willReturn(self::EVM);
 
-    $form = new ScreeningRemoveForm($lists, $route);
+    // The form reads the address from the current route, as FormBase does.
+    $this->container->set('current_route_match', $route);
+    $form = new ScreeningRemoveForm($lists);
     $state = new FormState();
     $built = $form->buildForm([], $state);
     $this->assertStringContainsString(self::EVM, (string) $built['#title']);

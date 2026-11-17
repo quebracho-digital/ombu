@@ -137,7 +137,7 @@ final class DashboardTest extends CommerceKernelTestBase {
     $this->assertStringContainsString('Something failed', $facts["errors.error_$wid"]['value']);
     $error = $facts["errors.error_$wid"];
     $this->assertSame('entry', $error['kind']);
-    $this->assertStringContainsString("/admin/reports/dblog/event/$wid", (string) $error['url']);
+    $this->assertStringContainsString("/admin/reports/dblog/event/$wid", $error['url']->toString());
     $this->assertStringContainsString('<code title="0x', (string) $error['value_html']);
     $this->assertStringContainsString('0xaaaa…aaaa', (string) $error['value_html']);
     $this->assertSame('1', $facts['wallet_changes.wallet_bazaar']['value']);
@@ -155,7 +155,7 @@ final class DashboardTest extends CommerceKernelTestBase {
     $this->assertTrue($blog['wide']);
     $this->assertSame($node->label(), $blog['posts'][0]['title']);
     $this->assertTrue($blog['posts'][0]['published']);
-    $this->assertStringContainsString("/node/{$node->id()}/edit", (string) $blog['posts'][0]['edit']);
+    $this->assertStringContainsString("/node/{$node->id()}/edit", $blog['posts'][0]['edit']->toString());
 
     $changed = $vitals->block('wallet_changes')['changes'];
     $this->assertCount(1, $changed);

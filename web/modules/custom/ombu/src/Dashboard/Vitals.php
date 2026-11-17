@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ombu\Dashboard;
 
 use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Component\Render\Markup;
+use Drupal\Core\Render\Markup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
@@ -782,9 +782,8 @@ final class Vitals {
    *   The block's heading.
    * @param array<int, array<string, mixed>> $facts
    *   The facts, as fact() builds them.
-   * @param array<int, array{title: mixed, url: \Drupal\Core\Url,
-   *   primary: bool}> $links
-   *   Where the block's action lives.
+   * @param array $links
+   *   Where the block's action lives: title, url (a Url) and primary.
    * @param mixed $note
    *   An optional line under the facts.
    * @param bool $wide

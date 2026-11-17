@@ -11,7 +11,7 @@ use Drupal\ombu\Screening\ScreeningLists;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * /admin/ombu/screening: the deny list, with add and remove.
+ * The deny list at /admin/ombu/screening, with add and remove.
  *
  * The panel only links here; this form is where a wallet is blocked. Nothing
  * is written until the address is confirmed, and every change goes through

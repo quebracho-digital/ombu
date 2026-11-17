@@ -6,7 +6,6 @@ namespace Drupal\ombu\Form;
 
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\ombu\Screening\ScreeningLists;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +20,6 @@ final class ScreeningRemoveForm extends ConfirmFormBase {
 
   public function __construct(
     private readonly ScreeningLists $lists,
-    private readonly RouteMatchInterface $routeMatch,
   ) {}
 
   /**
@@ -30,7 +28,6 @@ final class ScreeningRemoveForm extends ConfirmFormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('ombu.screening_lists'),
-      $container->get('current_route_match'),
     );
   }
 
@@ -45,7 +42,7 @@ final class ScreeningRemoveForm extends ConfirmFormBase {
    * The address in the route.
    */
   private function address(): string {
-    return (string) $this->routeMatch->getParameter('address');
+    return (string) $this->getRouteMatch()->getParameter('address');
   }
 
   /**

@@ -428,3 +428,11 @@ The actions live in their own Drupal forms; the dashboard only links to them. Ev
 Errors and the blog span the full grid; the other cards keep a compact grid. Text is left-aligned, numbers right-aligned, `0x…` values are shortened in the middle with the full value in `title`, and the page works in Gin, in dark mode and on a phone without JavaScript. The dashboard templates are split into the page, the summary, one card and the changed-wallet list, each part in one file.
 
 Tests for the two services and each form (403 without permission, confirmation before the write, service called once with the right arguments) ran in DDEV on 2026-11-17 after four fixes: the two confirmation forms redeclared FormBase's `$routeMatch` as readonly (a fatal error on every cache rebuild), `Vitals` imported `Markup` from the wrong namespace (the errors card always showed "no data"), and the new kernel tests installed ombu's config before comment's and cast `Url` objects to strings. Dashboard, screening, wallet-change and importer suites: 40 tests, OK.
+
+### Deployed 2026-11-18: dashboard, price-match imports, SubQ and Drupal core 11.4.13
+
+Decidido por Leo (2026-11-18): "deploya", after asking to update Drupal for the critical core advisory (SA-CORE-2026-017, installer RCE).
+
+SER5 went from `a348e51` to `6429954`: the admin dashboard and its forms, the import options, the SubQ backend (`ai_provider_universal` at `f5c81fc`) and core 11.4.10 → 11.4.13. Database dump taken first (`pre-6429954-20261118.sql.gz`). `composer install --no-dev`, `drush deploy` (no pending updates or deploy hooks) and `drush cr` ran clean; `drush status` shows 11.4.13. The post `/blog/whats-new-2026-11-18` is seeded, published and carries the advisory in en, es and pt-br.
+
+Checked on production: 200 on `/`, `/es/`, `/pt-br/`, the post in en and es, `/market.json` and `/mcp`; `/admin/ombu` gives 403 logged out; `drush ombu:screen list` and `drush ombu:stop status` answer (site and payments running). The core fix was applied with `composer update --no-cooldown` once; the two-day cooldown stays in composer.json.

@@ -5,7 +5,7 @@
  * The "What's new" of the deploy of 2026-11-18: the admin dashboard and its
  * actions, the catalogue import narrowed and matched to the price of the
  * day, and the SubQ backend in ai_provider_universal. Every claim is in the
- * commits a348e51..0769ef7.
+ * commits a348e51..0769ef7, plus the core update to 11.4.13 (SA-CORE-2026-017).
  *
  * Seeded with the deploy, published: every deploy goes with its post. The
  * pt-br needs a native review.
@@ -82,6 +82,9 @@ $figEn
 <h2>SubQ, in our AI module</h2>
 <p>Our AI provider for Drupal, <a href="https://www.drupal.org/project/ai_provider_universal">ai_provider_universal</a>, now speaks to SubQ Snap: models that answer typed questions (yes or no, a choice, a score) with calibrated probabilities instead of text. We use it, for now in development, as a judge of our "similar services": for each pair, is the second an alternative to the first, does it work with it, or neither.</p>
 
+<h2>Drupal 11.4.13, the same day</h2>
+<p>This morning Drupal published <a href="https://www.drupal.org/sa-core-2026-017">SA-CORE-2026-017</a>, a critical flaw in core: under specific conditions, an attacker can use the installer to attempt to reinstall the site, which can end in a takeover or remote code execution. The fix is in 11.4.13. We were on 11.4.10, so we updated Drupal core to 11.4.13 and it goes out in this deploy, together with the rest. Our two-day wait before adopting new package versions was skipped on purpose for this one release.</p>
+
 <h2>What is not done</h2>
 <p>The dashboard is a first version: its permissions are given to no role yet, so only administrators see it. The importers of the public catalogues still run by hand, not on their own.</p>
 HTML, 'An admin dashboard with one card per vital of the market, imports that check the price of the day, and SubQ in our AI module.'],
@@ -120,6 +123,9 @@ $figEs
 <h2>SubQ, en nuestro módulo de IA</h2>
 <p>Nuestro proveedor de IA para Drupal, <a href="https://www.drupal.org/project/ai_provider_universal">ai_provider_universal</a>, ahora habla con SubQ Snap: modelos que responden preguntas tipadas (sí o no, una opción, un puntaje) con probabilidades calibradas en lugar de texto. Lo usamos, por ahora en desarrollo, como juez de nuestros "servicios similares": para cada par, ¿el segundo es una alternativa al primero, funciona junto a él, o ninguna de las dos?</p>
 
+<h2>Drupal 11.4.13, el mismo día</h2>
+<p>Esta mañana Drupal publicó <a href="https://www.drupal.org/sa-core-2026-017">SA-CORE-2026-017</a>, una falla crítica en el core: en ciertas condiciones, un atacante puede usar el instalador para intentar reinstalar el sitio, lo que puede terminar en toma de control o ejecución remota de código. El arreglo está en la 11.4.13. Estábamos en la 11.4.10, así que actualizamos el core de Drupal a la 11.4.13 y sale en este deploy, junto con el resto. La espera de dos días que nos damos antes de adoptar versiones nuevas de paquetes la saltamos a propósito para esta única versión.</p>
+
 <h2>Lo que no está hecho</h2>
 <p>El panel es una primera versión: sus permisos todavía no están asignados a ningún rol, así que solo lo ven los administradores. Los importadores de los catálogos públicos siguen corriendo a mano, no solos.</p>
 HTML, 'Un panel de administración con una tarjeta por cada signo vital del mercado, imports que miran el precio del día, y SubQ en nuestro módulo de IA.'],
@@ -157,6 +163,9 @@ $figPt
 
 <h2>SubQ, no nosso módulo de IA</h2>
 <p>Nosso provedor de IA para Drupal, <a href="https://www.drupal.org/project/ai_provider_universal">ai_provider_universal</a>, agora fala com o SubQ Snap: modelos que respondem perguntas tipadas (sim ou não, uma opção, uma nota) com probabilidades calibradas em vez de texto. Usamos, por enquanto em desenvolvimento, como juiz dos nossos "serviços similares": para cada par, o segundo é uma alternativa ao primeiro, funciona junto com ele, ou nenhum dos dois?</p>
+
+<h2>Drupal 11.4.13, no mesmo dia</h2>
+<p>Esta manhã o Drupal publicou o <a href="https://www.drupal.org/sa-core-2026-017">SA-CORE-2026-017</a>, uma falha crítica no core: em certas condições, um atacante pode usar o instalador para tentar reinstalar o site, o que pode terminar em tomada de controle ou execução remota de código. A correção está na 11.4.13. Estávamos na 11.4.10, então atualizamos o core do Drupal para a 11.4.13 e ele sai neste deploy, junto com o resto. A espera de dois dias que nos damos antes de adotar versões novas de pacotes foi pulada de propósito para esta única versão.</p>
 
 <h2>O que não está feito</h2>
 <p>O painel é uma primeira versão: suas permissões ainda não estão atribuídas a nenhum papel, então só os administradores o veem. Os importadores dos catálogos públicos continuam rodando à mão, não sozinhos.</p>

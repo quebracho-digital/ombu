@@ -464,3 +464,9 @@ Decidido por Leo (2026-11-22): "si me sirve tu propuesta", after "quizas crear u
 - **The page draws the card** by posting its messages to `/ombu/a2ui/render` (`access content`, POST only, nothing kept): the same renderer and allowlist as the form, answered with headers that make the HTML inert (`default-src 'none'; sandbox`, `nosniff`, `no-store`). The browser never draws A2UI itself.
 - **Not done:** the seller key. `seed-listings.php` needs `SELLER_KEY_SELLERCHECK` and a run on production for the listing to exist there; it was only seeded in dev. A paid call and the click on "Pay" were not tried: dev has no gas key and Chrome was not connected.
 
+
+### Feeds support for the catalogue importers
+
+Decidido por Leo (2026-11-22 13:24): "me gustaria usar feeds para los importers para quien ya lo use, le agrega mucha flexibilidad, puede ser eso o pulir los importers de bazaar o payai".
+
+The catalogue importers (`CircleCatalogImporter`, and `DiscoveryCatalogImporter` for Bazaar and PayAI) get a Feeds integration, aimed at sites that already run Feeds, because it adds a lot of flexibility. The other task Leo named for the same slot, polishing the Bazaar and PayAI importers, stays on the table. Nothing is built yet: the first step is reading both importers to see how fetch, parse and process map onto Feeds plugins, which version of Feeds fits `^11.1 || ^12`, and what happens to the rule that only a complete run retires listings.

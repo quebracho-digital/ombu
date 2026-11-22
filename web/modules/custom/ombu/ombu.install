@@ -680,8 +680,8 @@ function ombu_update_10038(): void {
  */
 function ombu_update_10039(): void {
   \Drupal::service('module_installer')->install(['feeds']);
-  _ombu_config('optional', ['feeds.feed_type.ombu_bazaar', 'feeds.feed_type.ombu_payai']);
-  foreach (['bazaar', 'payai'] as $source) {
+  _ombu_config('optional', ['feeds.feed_type.ombu_bazaar', 'feeds.feed_type.ombu_payai', 'feeds.feed_type.ombu_circle']);
+  foreach (['bazaar', 'payai', 'circle'] as $source) {
     \Drupal::service('ombu.catalog_feeds')->feed($source);
   }
 }

@@ -523,3 +523,9 @@ Decidido por Leo (2026-11-22): "dejemos el importer actual para testing cuando h
 | A run spread over many requests (Feeds' cron queue or batch) keeps the rules | `CatalogRun` (a Feeds state), the clean list, the keys read in the key-value store | `testCronRunInStepsKeepsTheRules` |
 
 Without an equivalent in the feeds yet, on purpose: `SellForm` (a third party listing a service) still writes through `CircleCatalogImporter::upsert()`, since it is not a catalogue run; `WalletChanges::accept()`, `drush ombu:wallet-changes` and the dashboard's accept form still call the importers' `acceptWallet()` (same state keys as the processor's); Circle's cron (`ListingHooks::cron()`) still runs its importer; the feeds do not implement `CatalogImporterInterface` (Feeds' `import()` is the run). `drush ombu:catalog-survey` is read-only and stays as it is. Switching these over and removing the importers is the next step, Leo's call.
+
+### Review first, then Feeds tampers for the content fields
+
+Decidido por Leo (2026-11-22): "ok, revision y luego paso 2, commit y actualiza documentacion", answering the proposal to keep the security checks inside the processor, make the content fields (name, description, categories, tags) mappable with `feeds_tamper`, and review the new code before wiring anything.
+
+The order is fixed: an independent review of the Feeds code (Drupal review and a security audit) comes first, then the tamper work for the content fields with the review's findings fixed, then commit and documentation. The checks that decide whether a listing enters (verification, OFAC and freeze lists, wallets, allow and deny lists) stay in the processor and no feed configuration can turn them off. Sanitization is applied when the listing is written, whatever a tamper did to the value.

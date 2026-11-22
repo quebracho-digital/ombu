@@ -34,6 +34,16 @@ final class Renderer {
   private const MAX_DEPTH = 24;
 
   /**
+   * Most items a template draws from a list.
+   */
+  private const MAX_TEMPLATE_ITEMS = 100;
+
+  /**
+   * Deepest function call inside another.
+   */
+  private const MAX_CALL_DEPTH = 6;
+
+  /**
    * Component types that were skipped, with why.
    *
    * @var string[]
@@ -44,6 +54,18 @@ final class Renderer {
    * Nodes drawn so far in this build.
    */
   private int $nodes = 0;
+
+  /**
+   * The template items being drawn, innermost last: item and index.
+   *
+   * @var array<int, array{item: mixed, index: int}>
+   */
+  private array $scopes = [];
+
+  /**
+   * How many function calls are open: a seller's nesting stops at a few.
+   */
+  private int $callDepth = 0;
 
   /**
    * The surface being drawn.
@@ -79,6 +101,8 @@ final class Renderer {
     $this->surface = $surface;
     $this->unsupported = [];
     $this->nodes = 0;
+    $this->scopes = [];
+    $this->callDepth = 0;
     $build = [
       '#type' => 'html_tag',
       '#tag' => 'div',
@@ -140,6 +164,7 @@ final class Renderer {
       'Text' => $this->text($component),
       'Row' => $this->flex($component, 'row', $trail),
       'Column' => $this->flex($component, 'column', $trail),
+      'List' => $this->flex($component, ($component['direction'] ?? NULL) === 'horizontal' ? 'row' : 'column', $trail, 'a2ui-list'),
       'Card' => $this->tag('div', ['a2ui-card'], ['child' => $this->child($component['child'] ?? NULL, $trail)]),
       'Divider' => $this->tag('hr', ['a2ui-divider']),
       'Image' => $this->image($component),
@@ -202,21 +227,80 @@ final class Renderer {
   }
 
   /**
-   * Resolves a dynamic value: a literal or an `{"@path": …}` binding.
-   *
-   * Function calls (`@call`) are not run: they read as missing.
+   * Resolves a dynamic value: a literal, a `{"@path": …}` or a `{"@call": …}`.
    */
   private function value(mixed $raw): mixed {
-    if (is_array($raw) && isset($raw['@path']) && is_string($raw['@path'])) {
-      return Pointer::get($this->surface->dataModel(), $raw['@path']);
+    if (!is_array($raw) || array_is_list($raw)) {
+      // A literal, or a literal list (the picker's chosen values).
+      return $raw;
     }
-    if (is_array($raw)) {
-      if (isset($raw['@call'])) {
-        $this->unsupported[] = 'call';
-      }
+    if (isset($raw['@path']) && is_string($raw['@path'])) {
+      return $this->read($raw['@path']);
+    }
+    if (isset($raw['@call']) && is_string($raw['@call'])) {
+      return $this->call($raw);
+    }
+    return NULL;
+  }
+
+  /**
+   * Reads a path from the data model or from a template's item.
+   *
+   * Absolute paths read the data model; relative ones read the item the
+   * template is drawing ("" or "." is the item itself).
+   */
+  private function read(string $path): mixed {
+    if ($path !== '' && $path[0] === '/') {
+      return Pointer::get($this->surface->dataModel(), $path);
+    }
+    $scope = end($this->scopes);
+    if ($scope === FALSE) {
       return NULL;
     }
-    return $raw;
+    if ($path === '' || $path === '.') {
+      return $scope['item'];
+    }
+    return is_array($scope['item']) ? Pointer::get($scope['item'], '/' . $path) : NULL;
+  }
+
+  /**
+   * Runs a catalog function that only computes; any other reads as missing.
+   *
+   * @param array<string, mixed> $raw
+   *   The `{"@call": …, "args": …}` object.
+   */
+  private function call(array $raw): mixed {
+    $name = (string) $raw['@call'];
+    $args = is_array($raw['args'] ?? NULL) ? $raw['args'] : [];
+    if ($this->callDepth >= self::MAX_CALL_DEPTH) {
+      $this->unsupported[] = 'call-depth';
+      return NULL;
+    }
+    $this->callDepth++;
+    try {
+      if ($name === 'formatString') {
+        $skipped = [];
+        $template = $this->value($args['value'] ?? NULL);
+        $text = is_string($template) ? Functions::interpolate($template, fn (string $path): mixed => $this->read($path), $skipped) : NULL;
+        foreach ($skipped as $why) {
+          $this->unsupported[] = 'call:' . $why;
+        }
+        return $text;
+      }
+      if (!in_array($name, Functions::NAMES, TRUE)) {
+        $this->unsupported[] = 'call:' . mb_substr(preg_replace('/[^A-Za-z0-9@_-]/', '', $name) ?? '', 0, 40);
+        return NULL;
+      }
+      $resolved = [];
+      foreach ($args as $key => $arg) {
+        $resolved[(string) $key] = $this->value($arg);
+      }
+      $scope = end($this->scopes);
+      return Functions::call($name, $resolved, $scope === FALSE ? NULL : $scope['index']);
+    }
+    finally {
+      $this->callDepth--;
+    }
   }
 
   /**
@@ -237,7 +321,9 @@ final class Renderer {
    *   The attribute, or none.
    */
   private function binding(mixed $raw): array {
-    if (is_array($raw) && isset($raw['@path']) && is_string($raw['@path']) && strlen($raw['@path']) <= 256) {
+    // Only absolute: a path relative to a template's item has no place in the
+    // data model the page sends back.
+    if (is_array($raw) && isset($raw['@path']) && is_string($raw['@path']) && strlen($raw['@path']) <= 256 && str_starts_with($raw['@path'], '/')) {
       return ['data-a2ui-path' => $raw['@path']];
     }
     return [];
@@ -277,25 +363,61 @@ final class Renderer {
    *   Row or column, in lower case.
    * @param string[] $trail
    *   The ids above it.
+   * @param string $kind
+   *   An extra class from this class's own list, such as the List's.
    *
    * @return array<string, mixed>
    *   A render array.
    */
-  private function flex(array $component, string $direction, array $trail): array {
+  private function flex(array $component, string $direction, array $trail, string $kind = ''): array {
     $justify = in_array($component['justify'] ?? NULL, self::JUSTIFY, TRUE) ? $component['justify'] : 'start';
     $align = in_array($component['align'] ?? NULL, self::ALIGN, TRUE) ? $component['align'] : 'stretch';
+    $classes = ['a2ui-' . $direction, 'a2ui-justify-' . $justify, 'a2ui-align-' . $align];
+    if ($kind !== '') {
+      $classes[] = $kind;
+    }
+    return $this->tag('div', $classes, $this->children($component['children'] ?? [], $trail));
+  }
+
+  /**
+   * The children of a container: a list of ids, or a template over a list.
+   *
+   * @param mixed $list
+   *   The component's children property.
+   * @param string[] $trail
+   *   The ids above it.
+   *
+   * @return array<int, array<string, mixed>>
+   *   Render arrays.
+   */
+  private function children(mixed $list, array $trail): array {
+    if (!is_array($list)) {
+      return [];
+    }
     $children = [];
-    $list = $component['children'] ?? [];
-    if (is_array($list) && array_is_list($list)) {
+    if (array_is_list($list)) {
       foreach ($list as $child) {
         $children[] = $this->child($child, $trail);
       }
+      return $children;
     }
-    elseif (is_array($list)) {
-      // A template over a list in the data model: not in this first cut.
+    if (!is_string($list['componentId'] ?? NULL) || !is_string($list['path'] ?? NULL)) {
       $this->unsupported[] = 'template';
+      return [];
     }
-    return $this->tag('div', ['a2ui-' . $direction, 'a2ui-justify-' . $justify, 'a2ui-align-' . $align], $children);
+    // The template component once for each item of the list, with the item
+    // as the scope that relative paths and @index read from.
+    $items = $this->read($list['path']);
+    foreach (array_slice(is_array($items) ? array_values($items) : [], 0, self::MAX_TEMPLATE_ITEMS) as $index => $item) {
+      $this->scopes[] = ['item' => $item, 'index' => $index];
+      try {
+        $children[] = $this->node($list['componentId'], $trail);
+      }
+      finally {
+        array_pop($this->scopes);
+      }
+    }
+    return $children;
   }
 
   /**

@@ -177,14 +177,116 @@ final class A2uiRendererTest extends KernelTestBase {
   }
 
   /**
-   * Tests that function calls in a binding are not run.
+   * A component, short.
+   *
+   * @param string $id
+   *   Its id.
+   * @param string $type
+   *   Its type.
+   * @param array<string, mixed> $props
+   *   Its properties.
+   *
+   * @return array<string, mixed>
+   *   The component.
    */
-  public function testFunctionCallsAreNotRun(): void {
+  private static function c(string $id, string $type, array $props = []): array {
+    return ['id' => $id, 'component' => $type] + $props;
+  }
+
+  /**
+   * A function call, short.
+   *
+   * @param string $name
+   *   The function.
+   * @param array<string, mixed> $args
+   *   Its arguments.
+   *
+   * @return array<string, mixed>
+   *   The call.
+   */
+  private static function fnCall(string $name, array $args = []): array {
+    return ['@call' => $name, 'args' => $args];
+  }
+
+  /**
+   * Tests that functions that act (open, call out) are never run.
+   */
+  public function testFunctionsThatActAreNotRun(): void {
     $html = $this->html($this->payload([
-      ['id' => 'root', 'component' => 'Text', 'text' => ['@call' => 'formatString', 'args' => ['value' => 'x']]],
+      self::c('root', 'Text', ['text' => self::fnCall('openUrl', ['url' => 'https://example.com'])]),
     ]), FALSE, $renderer);
-    $this->assertSame(['call'], $renderer->unsupported());
-    $this->assertStringNotContainsString('formatString', $html);
+    $this->assertSame(['call:openUrl'], $renderer->unsupported());
+    $this->assertStringNotContainsString('example.com', $html);
+  }
+
+  /**
+   * Tests formatString, formatCurrency, pluralize and a template.
+   */
+  public function testTemplatesAndFunctions(): void {
+    $data = [
+      'verdict' => 'Hire',
+      'budget' => 1234.5,
+      'reasons' => [
+        ['text' => 'Rated 4.8 by paying wallets'],
+        ['text' => '<b>Answers in time</b>'],
+      ],
+    ];
+    $price = ['value' => ['@path' => '/budget'], 'currency' => 'USDC'];
+    $count = ['value' => 2, 'one' => 'one reason', 'other' => 'many reasons'];
+    $html = $this->html($this->payload([
+      self::c('root', 'Column', ['children' => ['title', 'price', 'count', 'list']]),
+      self::c('title', 'Text', ['text' => self::fnCall('formatString', ['value' => 'Verdict: ${/verdict} \\${kept}'])]),
+      self::c('price', 'Text', ['text' => self::fnCall('formatCurrency', $price)]),
+      self::c('count', 'Text', ['text' => self::fnCall('pluralize', $count)]),
+      self::c('list', 'List', ['children' => ['componentId' => 'item', 'path' => '/reasons']]),
+      self::c('item', 'Text', ['text' => self::fnCall('formatString', ['value' => 'Why: ${text}'])]),
+    ], $data));
+    $this->assertStringContainsString('Verdict: Hire ${kept}', $html);
+    $this->assertStringContainsString('1,234.50 USDC', $html);
+    $this->assertStringContainsString('many reasons', $html);
+    $this->assertStringContainsString('a2ui-list', $html);
+    $this->assertStringContainsString('Why: Rated 4.8 by paying wallets', $html);
+    $this->assertStringContainsString('Why: &lt;b&gt;Answers in time&lt;/b&gt;', $html);
+  }
+
+  /**
+   * Tests that each template item reads its own fields, escaped, with @index.
+   */
+  public function testTemplateItemsReadTheirOwnFields(): void {
+    $html = $this->html($this->payload([
+      self::c('root', 'List', ['children' => ['componentId' => 'row', 'path' => '/reasons']]),
+      self::c('row', 'Row', ['children' => ['n', 't']]),
+      self::c('n', 'Text', ['text' => self::fnCall('@index', ['offset' => 1])]),
+      self::c('t', 'Text', ['text' => ['@path' => 'text']]),
+    ], ['reasons' => [['text' => 'first'], ['text' => '<script>alert(1)</script>']]]));
+    $this->assertStringContainsString('>1<', $html);
+    $this->assertStringContainsString('>2<', $html);
+    $this->assertStringContainsString('first', $html);
+    $this->assertStringContainsString('&lt;script&gt;', $html);
+    $this->assertStringNotContainsString('<script', $html);
+  }
+
+  /**
+   * Tests that a template over a huge list stops at its limit.
+   */
+  public function testTemplateItemsAreCapped(): void {
+    $items = array_fill(0, 500, ['text' => 'x']);
+    $html = $this->html($this->payload([
+      self::c('root', 'List', ['children' => ['componentId' => 't', 'path' => '/items']]),
+      self::c('t', 'Text', ['text' => ['@path' => 'text']]),
+    ], ['items' => $items]));
+    $this->assertSame(100, substr_count($html, 'a2ui-text'));
+  }
+
+  /**
+   * Tests that a relative path outside a template reads as missing.
+   */
+  public function testRelativePathOutsideTemplateIsEmpty(): void {
+    $html = $this->html($this->payload([
+      self::c('root', 'Text', ['text' => ['@path' => 'secret']]),
+    ], ['secret' => 'nope']));
+    // The text is empty; the model still travels in its attribute.
+    $this->assertStringContainsString('<p class="a2ui-text"></p>', $html);
   }
 
   /**

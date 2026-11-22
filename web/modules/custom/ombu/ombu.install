@@ -649,3 +649,16 @@ function ombu_update_10036(): void {
       ->removeComponent('field_a2ui')->save();
   }
 }
+
+/**
+ * A service of ours: the seller check, hire / reject / ask a human.
+ */
+function ombu_update_10037(): void {
+  $storage = \Drupal\field\Entity\FieldStorageConfig::loadByName('commerce_product', 'field_service');
+  // The setting reads as a map of value to label.
+  $allowed = $storage->getSetting('allowed_values');
+  if (!isset($allowed['sellercheck'])) {
+    $allowed['sellercheck'] = 'Seller check: hire, reject or ask a human';
+    $storage->setSetting('allowed_values', $allowed)->save();
+  }
+}

@@ -29,6 +29,9 @@ settings:
     -
       value: plagiarism
       label: 'Plagiarism: verbatim web matches'
+    -
+      value: sellercheck
+      label: 'Seller check: hire, reject or ask a human'
   allowed_values_function: ''
 module: options
 locked: false

@@ -323,6 +323,67 @@ final class SellersTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that the seller check answers with a verdict and an A2UI card.
+   */
+  public function testSellerCheckAnswersWithAVerdictAndACard(): void {
+    $target = $this->listing('ping', 'seller_ping', '0.02');
+    $check = $this->listing('sellercheck', 'seller_ping', '0.005');
+    $response = $this->buy($check, ['listing' => (string) $target->id(), 'budget' => 0.05]);
+    $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+    $answer = json_decode($response->getContent(), TRUE);
+    // Unrated: not enough to hire, and the reason says so.
+    $this->assertSame('ask_human', $answer['verdict']);
+    $this->assertSame('No verified reviews yet: nobody who paid has rated it.', $answer['reasons'][1]['text']);
+    $this->assertSame(['id' => (int) $target->id(), 'title' => 'Ping', 'price' => 0.02], $answer['listing']);
+    $this->assertSame('settled', $this->logged());
+
+    // The card draws from the same answer: what an agent reads, a person sees.
+    $surface = \Drupal\ombu\A2ui\Surface::fromJson(json_encode($answer['a2ui']));
+    $renderer = new \Drupal\ombu\A2ui\Renderer();
+    $html = (string) $this->container->get('renderer')->renderInIsolation($renderer->build($surface));
+    $this->assertStringContainsString('Verdict: Ask a human', $html);
+    $this->assertStringContainsString('<h2', $html);
+    $this->assertStringContainsString('0.020 USDC', $html);
+    $this->assertStringContainsString('3 reasons', $html);
+    $this->assertStringContainsString('No verified reviews yet', $html);
+    $this->assertSame([], $renderer->unsupported());
+  }
+
+  /**
+   * Tests that a listing over budget, or retired, is rejected.
+   */
+  public function testSellerCheckRejectsOverBudgetAndRetired(): void {
+    $target = $this->listing('ping', 'seller_ping', '0.02');
+    $check = $this->listing('sellercheck', 'seller_ping', '0.005');
+    $over = json_decode($this->buy($check, ['listing' => $target->id(), 'budget' => 0.01])->getContent(), TRUE);
+    $this->assertSame('reject', $over['verdict']);
+    $this->assertSame('Do not hire', $over['verdictLabel']);
+    $target->set('field_retired', TRUE)->save();
+    $retired = json_decode($this->buy($check, ['listing' => $target->id()])->getContent(), TRUE);
+    $this->assertSame('reject', $retired['verdict']);
+    $this->assertSame('retired', $retired['reasons'][0]['kind']);
+  }
+
+  /**
+   * Tests that an unknown listing or a bad budget is not charged.
+   */
+  public function testSellerCheckWithBadInputIsNotCharged(): void {
+    $target = $this->listing('ping', 'seller_ping', '0.02');
+    $check = $this->listing('sellercheck', 'seller_ping', '0.005');
+    foreach ([
+      ['listing' => '99999'],
+      ['listing' => 'not an id'],
+      ['listing' => (string) $target->id(), 'budget' => 'lots'],
+      ['listing' => (string) $target->id(), 'budget' => -1],
+      [],
+    ] as $input) {
+      $response = $this->buy($check, $input);
+      $this->assertSame(400, $response->getStatusCode(), json_encode($input));
+      $this->assertSame('not_settled', $this->logged());
+    }
+  }
+
+  /**
    * Tests that markdown without a url is not charged.
    */
   public function testMarkdownWithoutUrlIsNotCharged(): void {

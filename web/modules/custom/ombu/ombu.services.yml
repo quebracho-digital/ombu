@@ -53,6 +53,7 @@ services:
       - '@?Drupal\ai_provider_universal_factcheck\Service\FactChecker'
       - '@http_client'
       - '@cache.default'
+      - '@entity_type.manager'
   ombu.seller_subscriber:
     class: Drupal\ombu\EventSubscriber\SellerSubscriber
     arguments: ['@ombu.sellers']

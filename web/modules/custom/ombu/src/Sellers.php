@@ -10,6 +10,7 @@ use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
 use Drupal\ai_provider_universal_terms\Service\TermsAnalyzer;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\key\KeyRepositoryInterface;
 use Drupal\x402_pay\Eip712;
@@ -51,6 +52,7 @@ class Sellers {
     private readonly ?FactChecker $factChecker = NULL,
     private readonly ?ClientInterface $http = NULL,
     private readonly ?CacheBackendInterface $cache = NULL,
+    private readonly ?EntityTypeManagerInterface $entities = NULL,
   ) {}
 
   /**
@@ -117,6 +119,7 @@ class Sellers {
         'names' => $this->names($input),
         'terms' => $this->terms($input),
         'factcheck' => $this->factcheck($input),
+        'sellercheck' => $this->sellerCheck($input),
         'aitext' => $this->remote('ai', $this->text($input)),
         'plagiarism' => $this->remote('plagiarism', $this->text($input)),
         default => new JsonResponse(['error' => "Unknown service: $service"], 503),
@@ -129,6 +132,58 @@ class Sellers {
       $this->logger->error('Seller @service failed: @message', ['@service' => $service, '@message' => $e->getMessage()]);
       return new JsonResponse(['error' => 'The seller failed; nothing was charged.'], 502);
     }
+  }
+
+  /**
+   * Whether to hire a listing: the market's check, with its A2UI card.
+   *
+   * 400 (no charge) for a listing it cannot find or a budget that is not a
+   * positive number.
+   */
+  private function sellerCheck(array $input): Response {
+    $budget = $input['budget'] ?? NULL;
+    if ($budget !== NULL && (!is_numeric($budget) || (float) $budget <= 0)) {
+      return new JsonResponse(['error' => 'The budget must be a positive number of USDC.'], 400);
+    }
+    $listing = $this->listing($input['listing'] ?? NULL);
+    if (!$listing) {
+      return new JsonResponse(['error' => 'No listing for sale with that id or endpoint URL.'], 400);
+    }
+    $facts = SellerCheck::facts($listing);
+    $answer = SellerCheck::decide($facts, $budget === NULL ? NULL : (float) $budget);
+    $result = [
+      'verdict' => $answer['verdict'],
+      'verdictLabel' => $answer['verdictLabel'],
+      'listing' => ['id' => $facts['id'], 'title' => $facts['title'], 'price' => $facts['price']],
+      'budget' => $budget === NULL ? NULL : (float) $budget,
+      'reasons' => $answer['reasons'],
+    ];
+    return new JsonResponse($result + ['a2ui' => SellerCheckSurface::result($result)]);
+  }
+
+  /**
+   * A published listing by its id, or by the URL of its endpoint.
+   */
+  private function listing(mixed $reference): ?ProductInterface {
+    if (!is_int($reference) && !is_string($reference)) {
+      return NULL;
+    }
+    $reference = trim((string) $reference);
+    if (!$this->entities) {
+      return NULL;
+    }
+    $storage = $this->entities->getStorage('commerce_product');
+    if (ctype_digit($reference)) {
+      $found = [$storage->load((int) $reference)];
+    }
+    elseif (preg_match('#^https?://#i', $reference)) {
+      $found = $storage->loadByProperties(['type' => 'listing', 'field_endpoint' => $reference]);
+    }
+    else {
+      return NULL;
+    }
+    $listing = reset($found);
+    return $listing instanceof ProductInterface && $listing->bundle() === 'listing' && $listing->isPublished() ? $listing : NULL;
   }
 
   /**

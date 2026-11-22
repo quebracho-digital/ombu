@@ -28,14 +28,16 @@ repo is a DDEV project (the whole site); on the roadmap it becomes a
 - **By wallet:** `/market?wallet[]=0x…` and `/market.json?wallet=0x…` list what is paid to a wallet; it is a facet too (the wallets with most listings), and every listing links to the other services paid to its wallet.
 - **Stop switch:** `drush ombu:stop on "reason"` pauses payments, then makes the whole site read-only with no wallet shown and 503 instead of 402, and publishes a blog post in three languages; `off` brings it back. See [The stop switch](#the-stop-switch).
 - **Dashboard:** `/admin/ombu` shows the site's vitals (stop switch, sales, search, cron, imports, screening lists, changed wallets, errors, moderation and blog) and links to the actions that change it: stop or resume, block or unblock a wallet, accept a changed wallet. The page itself is read-only. See [The dashboard](#the-dashboard).
-- **Importing from the x402 catalogues:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only. A listing keeps the wallet it came in with: one that later answers with another is retired until staff accept it (`drush ombu:wallet-changes`, or the dashboard), and every check is repeated after a week. What a listing offered before each change is kept, dated (`field_past_accepts`): a review needs a purchase paid to the wallet, and at the price, of the day it was made, and one purchase backs one review on the whole site.
+- **Importing from the x402 catalogues, on Feeds:** Circle's Agent Marketplace, CDP Bazaar and PayAI are each a [Feeds](https://www.drupal.org/project/feeds) feed type with Ombú's own fetcher, parser and processor (`drush ombu:feed-import circle|bazaar|payai`, `drush ombu:feed-report`); only a whole run retires, and a catalogue that answers empty, broken or with less than half of the last run retires nothing. The importers that came before stay, untouched, as the reference the feeds are compared with, and Circle's cron still runs its importer. How it works, what changed and how to add a catalogue: [CATALOGUE_FEEDS.md](web/modules/custom/ombu/CATALOGUE_FEEDS.md).
+- **Checking what the catalogues hold:** `drush ombu:catalog-survey` measures CDP Bazaar and PayAI with the importers' checks (live 402 matching the catalogue, USDC freeze list); read-only. A listing keeps the wallet it came in with: one that later answers with another is retired until staff accept it (`drush ombu:wallet-changes`, or the dashboard), and every check is repeated after a week. What a listing offered before each change is kept, dated (`field_past_accepts`): a review needs a purchase paid to the wallet, and at the price, of the day it was made, and one purchase backs one review on the whole site.
 - **Status and plan:** [ROADMAP.md](ROADMAP.md); what we chose and why: [DECISIONS.md](DECISIONS.md).
 
 ## Pieces
 
 - **This repo**: the site (Drupal 11 + Commerce, DDEV), the `ombu` module
-  (`web/modules/custom/ombu`: listings, reviews, the Circle catalogue
-  import, `/market` and `/market.json`), the seed script and the plan.
+  (`web/modules/custom/ombu`: listings, reviews, the catalogue feeds
+  for Circle, Bazaar and PayAI, `/market` and `/market.json`), the seed
+  script and the plan.
 - **[`x402_pay`](https://www.drupal.org/project/x402_pay)**: x402
   payments on Arc (its own facilitator, or Circle's), every payment in a
   log that Views can list, and the Drupal Commerce gateway (planned).
@@ -381,7 +383,7 @@ ddev drush si standard --site-name=Ombú -y
 ddev drush en ombu search_api search_api_db ai_provider_universal_terms ai_provider_universal_factcheck -y
 ddev drush php:script ../scripts/sellers-llm.php    # the model behind two sellers
 ddev drush php:script ../scripts/seed-listings.php  # our five listings
-ddev drush ombu:import-circle && ddev drush sapi-i
+ddev drush ombu:import-circle && ddev drush sapi-i # or its feed: ombu:feed-import circle
 ddev drush php:script ../scripts/seed-pages.php     # the guide: how it works, for agents, for sellers
 ddev exec env OMBU_LEGAL_NAME='…' OMBU_LEGAL_EMAIL='…' OMBU_LEGAL_ADDRESS='…' \
   drush php:script ../scripts/seed-legal.php        # terms, privacy, report and withdrawal forms

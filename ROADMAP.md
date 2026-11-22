@@ -17,6 +17,12 @@ the cut line moves as we go.
 - 🎯 **Full marketplace**, after the hackathon (Circle Developer Grants).
 - 🔭 **Later.**
 
+## Where we left off — 2026-11-22
+
+**The catalogue importers are on Feeds** (DECISIONS.md, *The catalogue importers are built on Feeds*). Feeds 3.2.0 is a dependency; Bazaar, PayAI and Circle are each a feed type with Ombú's fetcher, parser and processor, and every check of the importers has its place and its test there (the table is in DECISIONS.md). The feeds and the importers give the same counts and the same listings on the same fixtures (`testTheFeedAndTheImporterLeaveTheSame`), and on partial runs against the real Circle and Bazaar catalogues in dev. Circle's feed has the guards its importer lacked (an empty or broken answer, a catalogue that shrinks by half). How to run, compare and add a catalogue: `web/modules/custom/ombu/CATALOGUE_FEEDS.md`.
+
+Next, Leo's call: switch Circle's cron from its importer to its feed (import period 6 hours), point `WalletChanges` and `SellForm` at the processors, then remove the importers. Not on production yet (update 10039 installs Feeds and the feeds).
+
 ## Where we left off — 2026-11-08
 
 Done since 2026-11-06 (see DECISIONS.md for each): Meilisearch and the blog in production; the importers of Bazaar and PayAI, which list only what Ombú verifies on chain (by hand, not in production yet); Metatag with links for agents; the home as a Layout Builder page; the share block; Symfony 7.4.23. Next: the importers' contract (the checks in `CatalogImporterInterface`, Circle included), re-verifying a listing after a maximum age, flood limits, injection quarantine, the allowlist of payTo; then a module for the home, for humans and for agents (Canvas to evaluate), and a better product edit form.
@@ -959,6 +965,12 @@ in). Draft answers and video script kept outside the repo.
     a course by someone else is sold on Arc, the author's wallet gets the
     USDC, and the buyer reviews it.
 - [ ] **Importers set up from the admin, not in code** (asked 2026-10-14).
+  *Partly done 2026-11-22 with Feeds:* each catalogue is a feed type in the
+  admin (address, key, budget, tags, coherence filters, schedule), and a
+  catalogue with the discovery shape is one more feed type, no code. Still
+  in code: filters by category, network, price range, provider or regex
+  (Feeds' tampers act on mapped fields, and listings are not mapped; see
+  CATALOGUE_FEEDS.md).
   Today `CircleCatalogImporter` has Circle's URL, its shape and "take it
   all" hardcoded. Instead, each source is configured: the catalogue URL,
   its market value (`field_markets`), how often, and filters that pick what

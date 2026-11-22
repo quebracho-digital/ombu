@@ -152,3 +152,34 @@ Not done yet; it is Leo's call (see the todo):
 2. Point `WalletChanges::accept()` and `SellForm` (which writes through
    `CircleCatalogImporter::upsert()`) at the processors.
 3. Remove the importers, their commands and tests; keep the feeds' tests.
+
+## Review of 2026-11-22: known gaps and how to close them
+
+A Drupal review read the feeds against the real Feeds 3.2.0 code. The first three highs and M3 were checked again by hand against the code; A2 was not run as a test. A security audit with the `security-audit-quebracho` method was still running when this was written, so its findings are not here yet. No finding is critical. Nothing below is fixed yet.
+
+Fix before the feeds replace the importers (cheap, and each one can break a run or let a third party's data through):
+
+| Id | Problem | Fix | Test to add |
+|---|---|---|---|
+| A1 | `DiscoveryParser::normalize()` runs without a guard. An entry with `"accepts": "x"` throws a `TypeError`; Feeds catches only `\Exception`, so the feed can stay locked on every later run. Circle checks `is_array`, Discovery does not. | Wrap `normalize()` in `try { } catch (\Throwable)` inside `CatalogParserBase::parse()` and count the entry as unusable. Check the type of `accepts`, `extensions`, `serviceName`, `method` and `description` in `DiscoveryParser`. | Entries with `accepts` as a string and `extensions` malformed |
+| A3 | A short page, or a catalogue with no `pagination.total`, is taken as the whole catalogue, and that allows retiring everything not read. The pointer also moves by `page_size` even when the server returned fewer items. | Move the pointer by `count($items)`. Finish only on an empty page, or when `offset + count >= total` and `total` is known. Without a `total`, go on while pages come full, with a cap on pages; at the cap the run is not whole. | A server that clips `limit`; an answer with no `pagination` |
+| M3 | The Circle parser takes any string as `resource` (no `https://`) and does not check `amount`. | Same `https` rule as Discovery. Accept only digits as `amount`, and a known network and asset; anything else is `unsupported`. | `http://`, `file:` and `amount` as `"abc"` or negative |
+| M4 | The fetcher follows up to 3 redirects, and the configurable header (an API key) can leave for another host. | `allow_redirects => FALSE`: a discovery catalogue has no reason to redirect. If one does, an `on_redirect` callback that accepts only the same host. | A redirect to another host |
+| M5 | `max_bytes` is applied after Guzzle downloaded the whole body. | `stream => TRUE` and a bounded read, plus an `on_headers` that refuses by `Content-Length`. | A body above the limit |
+
+Fix soon:
+
+- **M2, one failing item blocks retirement.** Keep the rule: a run with an error never retires, because it fails safe. Remove the cause instead: the validation of A1 and M3 turns the entries that fail today into `unsupported`. Add one line to the run report naming the failing entry, so a blocked retirement is visible.
+- **M1, offset paging shifts when the catalogue changes during a run.** Retire a listing only after it is missing from two whole runs in a row (a counter in state). It also covers what is left of A3.
+- **M6, an exception while drawing logos runs `finishImport()` twice and leaves the feed locked.** Wrap the work after a whole run in `try/catch` inside `postProcess()`, log it and go on. Better: move `logos()` to its own cron step.
+- **A2, "Delete items" of Feeds.** The review feared it would delete the listings of a source. By reading, it does not: `ListingProcessorBase` extends `ProcessorBase`, does not implement `ClearableInterface` and has no `clear()`, and Feeds skips plugins that are not clearable. Write the test that runs it and shows that the listings stay.
+- **M7, M8, M9.** Inject the services instead of the container. Collect the wallet notes in memory and write them once in `postProcess()` (today each item rewrites the whole array). Keep the OpenAPI specs in `cache.default` with a short TTL, not in the plugin instance.
+
+Later, with the importers retired:
+
+- L1 log a failed or skipped retirement as `warning` or `error`, not `info`. L2 a drush option to accept a catalogue that really shrank (`ombu.{source}_read` never moves while the guard holds). L3 take the run's errors from the report, not from comparing the messenger before and after. L4 normalise dedupe keys (host in lower case, no fragment, no trailing slash); do it after the importers go, because the keys are shared with them. L5 cap the keys of `reasons`. L6 hash in the parser and carry only the hash. L7 write the provider term description as `plain_text`. L8 an atomic lock per source if a second feed of the same source is ever created. Add `feeds` to the dependencies of `config/optional/*`, a `^https://` constraint to the fetcher's `url` in the schema, and say in the docs that update 10039 does not reverse.
+
+Wallet screening, a decision for the owner:
+
+- The OFAC check in `ResourceVerifier` covers EVM addresses only (Chainalysis oracle). A Solana `payTo` has no OFAC check, before and after this change. The fix is to screen against the SDN list file for the chains the oracle does not cover; check first that the list carries Solana addresses.
+- Neither the Circle importer nor the Circle feed screens a wallet when it imports. The cheap fix is to run the local allow and deny lists (`ScreeningLists`) for every source. Running the full verifier for Circle too costs network calls per listing.

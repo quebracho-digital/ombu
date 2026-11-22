@@ -529,3 +529,7 @@ Without an equivalent in the feeds yet, on purpose: `SellForm` (a third party li
 Decidido por Leo (2026-11-22): "ok, revision y luego paso 2, commit y actualiza documentacion", answering the proposal to keep the security checks inside the processor, make the content fields (name, description, categories, tags) mappable with `feeds_tamper`, and review the new code before wiring anything.
 
 The order is fixed: an independent review of the Feeds code (Drupal review and a security audit) comes first, then the tamper work for the content fields with the review's findings fixed, then commit and documentation. The checks that decide whether a listing enters (verification, OFAC and freeze lists, wallets, allow and deny lists) stay in the processor and no feed configuration can turn them off. Sanitization is applied when the listing is written, whatever a tamper did to the value.
+
+### Where the Feeds work stands (2026-11-22, end of day)
+
+Done in dev: the Bazaar, PayAI and Circle feeds, with the full module suite passing (331 tests). The importers are untouched and are the reference for tests. Not done: wiring (`SellForm`, `WalletChanges`, the Circle cron, the dashboard form still use the importers), the tampers for the content fields, and the fixes of the review, which are listed in `web/modules/custom/ombu/CATALOGUE_FEEDS.md`. The security audit of the new code had not reported. Nothing was run on production. Work continues the next day: review findings first (A1, A3, M3, M4, M5), then the tampers for the content fields, then the wiring.

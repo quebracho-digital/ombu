@@ -130,3 +130,14 @@ ombu.stop:
     _title: 'Stop Ombú'
   requirements:
     _permission: 'stop and resume ombu'
+
+# A paid answer can carry an A2UI card; the page has it drawn here.
+ombu.a2ui_render:
+  path: '/ombu/a2ui/render'
+  defaults:
+    _controller: '\Drupal\ombu\Controller\A2uiRenderController'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: TRUE

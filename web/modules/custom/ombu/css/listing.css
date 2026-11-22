@@ -201,6 +201,9 @@ article:has(h1.listing-title) .indented .comment::before {
 article:has(h1.listing-title) .ombu-buy textarea {
   margin-bottom: .75rem;
 }
+article:has(h1.listing-title) .ombu-buy__card {
+  margin-top: .75rem;
+}
 article:has(h1.listing-title) .ombu-buy__result:empty {
   display: none;
 }

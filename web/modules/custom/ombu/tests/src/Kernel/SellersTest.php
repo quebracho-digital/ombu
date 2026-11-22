@@ -384,6 +384,51 @@ final class SellersTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Posts to the page's card renderer as an anonymous visitor.
+   */
+  private function renderCard(string $method, string $body): Response {
+    Role::load(AccountInterface::ANONYMOUS_ROLE)->grantPermission('access content')->save();
+    $request = Request::create('/ombu/a2ui/render', $method, content: $body);
+    $request->headers->set('Content-Type', 'application/json');
+    return $this->container->get('http_kernel')->handle($request);
+  }
+
+  /**
+   * Tests that the page can have a paid answer's card drawn, safely.
+   */
+  public function testTheCardOfAnAnswerIsDrawnForThePage(): void {
+    $answer = [
+      'verdict' => 'hire',
+      'verdictLabel' => 'Hire',
+      'listing' => ['id' => 3, 'title' => '<script>alert(1)</script> Fact-check', 'price' => 0.02],
+      'budget' => 0.05,
+      'reasons' => [['kind' => 'rating', 'text' => 'Rated 4.8 out of 5 by 12 wallets that paid.']],
+    ];
+    $response = $this->renderCard('POST', json_encode(\Drupal\ombu\SellerCheckSurface::result($answer)));
+    $this->assertSame(200, $response->getStatusCode(), $response->getContent());
+    $html = $response->getContent();
+    $this->assertStringContainsString('Verdict: Hire', $html);
+    $this->assertStringContainsString('Rated 4.8 out of 5 by 12 wallets that paid.', $html);
+    $this->assertStringContainsString('1 reason', $html);
+    // The seller's title is text, never markup.
+    $this->assertStringNotContainsString('<script', $html);
+    $this->assertStringContainsString('&lt;script&gt;', $html);
+    // Inert even if opened on its own.
+    $this->assertSame("default-src 'none'; sandbox", $response->headers->get('Content-Security-Policy'));
+    $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+  }
+
+  /**
+   * Tests that the card renderer refuses what it cannot draw, and GET.
+   */
+  public function testTheCardRendererRefusesWhatItCannotDraw(): void {
+    $this->assertSame(400, $this->renderCard('POST', 'not json')->getStatusCode());
+    $this->assertSame(400, $this->renderCard('POST', '{"version":"1.0","createSurface":{"surfaceId":"s","catalogId":"evil"}}')->getStatusCode());
+    $this->assertSame(405, $this->renderCard('GET', '')->getStatusCode());
+  }
+
+  /**
    * Tests that markdown without a url is not charged.
    */
   public function testMarkdownWithoutUrlIsNotCharged(): void {

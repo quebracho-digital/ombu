@@ -452,3 +452,15 @@ Decidido por Leo (2026-11-22 10:12): "porque ombu deberia generar a2ui si no exi
 Checked: `opis/json-schema` 2.6.0 rejects the official example's own components (`unevaluatedProperties`) that upstream's ajv suite accepts, so that one check is skipped in `A2uiConformanceTest` with the reason. No PHP or Drupal renderer is listed on a2ui.org.
 
 Decidido por Leo (2026-11-22): "empecemos con nuestros servicios, quizas crear un servicio nuevo que pueda aprovechar a2ui en su totalidad? luego soportar los otros catalogos". Third-party sellers and catalogs beyond the basic one come after a service of ours uses A2UI end to end.
+
+### The seller check: a service of ours that uses A2UI at both ends
+
+Decidido por Leo (2026-11-22): "si me sirve tu propuesta", after "quizas crear un servicio nuevo que pueda aprovechar a2ui en su totalidad?".
+
+`sellercheck` (0.005 USDC) says whether to hire a listing: hire, reject or ask a human, with the reasons. It is `SellerCheck`: no model, so the answer is the same every time, and it reads only what Ombú holds (price against the budget, retired, the rating of verified reviews, at least three of them before an average counts). It is the same three verdicts the buyer agent reaches with a model.
+
+- **Input** is a listing's id or its endpoint URL and an optional budget; "Try it" is an A2UI form stored on the listing (`field_a2ui`).
+- **Answer** is plain JSON for agents (`verdict`, `verdictLabel`, `listing`, `budget`, `reasons`) with an A2UI card under `a2ui` for people: a template over the reasons, `formatString`, `formatCurrency`, `pluralize` and `@index`. Agents ignore the key.
+- **The page draws the card** by posting its messages to `/ombu/a2ui/render` (`access content`, POST only, nothing kept): the same renderer and allowlist as the form, answered with headers that make the HTML inert (`default-src 'none'; sandbox`, `nosniff`, `no-store`). The browser never draws A2UI itself.
+- **Not done:** the seller key. `seed-listings.php` needs `SELLER_KEY_SELLERCHECK` and a run on production for the listing to exist there; it was only seeded in dev. A paid call and the click on "Pay" were not tried: dev has no gas key and Chrome was not connected.
+

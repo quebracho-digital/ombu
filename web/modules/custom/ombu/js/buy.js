@@ -174,6 +174,24 @@
     return JSON.stringify(model);
   }
 
+  // The card an answer carries (A2UI), drawn by the site: the browser sends
+  // the messages and gets HTML that the site escaped and filtered.
+  async function drawCard(form, messages) {
+    form.querySelector('.ombu-buy__card')?.remove();
+    const response = await fetch(form.dataset.ombuRender, {
+      method: 'POST',
+      body: JSON.stringify(messages),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      return;
+    }
+    const card = document.createElement('div');
+    card.className = 'ombu-buy__card';
+    card.innerHTML = await response.text();
+    form.querySelector('.ombu-buy__result').before(card);
+  }
+
   Drupal.behaviors.ombuBuy = {
     attach(context) {
       once('ombu-buy', '[data-ombu-buy]', context).forEach((form) => {
@@ -189,8 +207,15 @@
             JSON.parse(input);
             const result = await buy(form, input, status);
             let body = result.body;
+            form.querySelector('.ombu-buy__card')?.remove();
             try {
-              body = JSON.stringify(JSON.parse(body), null, 2);
+              const data = JSON.parse(body);
+              if (result.status === 200 && Array.isArray(data.a2ui) && form.dataset.ombuRender) {
+                // The card says it for people; the data stays below it.
+                await drawCard(form, data.a2ui);
+                delete data.a2ui;
+              }
+              body = JSON.stringify(data, null, 2);
             }
             catch (e) {
               // Not JSON: shown as it came.

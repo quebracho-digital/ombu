@@ -146,6 +146,8 @@ final class ListingHooks {
               'view_mode' => 'full',
             ])->toString(),
             'data-ombu-solana' => Url::fromRoute('x402_pay.solana_transaction')->toString(),
+            // Where a card in the answer (A2UI) is drawn.
+            'data-ombu-render' => Url::fromRoute('ombu.a2ui_render')->toString(),
           ],
           'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2>' . ($surface ? '' : '<label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>')],
           'input' => $surface ?? [
@@ -166,7 +168,7 @@ final class ListingHooks {
             : $this->t('One signature in your wallet (MetaMask), no gas; USDC on Arc. Charged only if the seller answers.')) . '</small></p>',
           ],
           'result' => ['#markup' => '<pre class="ombu-buy__result" aria-live="polite"></pre>'],
-          '#attached' => ['library' => ['ombu/buy']],
+          '#attached' => ['library' => ['ombu/buy', 'ombu/a2ui']],
           '#weight' => 11.4,
         ];
       }

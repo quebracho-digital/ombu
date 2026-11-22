@@ -8,7 +8,9 @@
  * Each listing has its own seller wallet: a key `seller_<sku>` read from the
  * environment variable SELLER_KEY_<SKU> (in the git-ignored .ddev/.env).
  * Sales go to OMBU_SELLER_ADDRESS when set (a cold wallet; the key then
- * only signs ping), else to that key. The network is the price field's.
+ * only signs ping), else to that key. With OMBU_SELLER_ADDRESS set, a
+ * service that does not sign anything needs no key at all. The network is
+ * the price field's.
  * Price, payTo and the agent door come from x402_pay, never typed here.
  *
  * Run: ddev drush php:script ../scripts/seed-listings.php [sku]
@@ -64,10 +66,10 @@ foreach ($listings as [$sku, $title, $price, $desc, $cat, $schema, $tags]) {
     continue;
   }
   $env = 'SELLER_KEY_' . strtoupper($sku);
-  if (!getenv($env)) {
-    throw new \RuntimeException("Set $env to the seller's private key.");
+  if (!getenv($env) && !getenv('OMBU_SELLER_ADDRESS')) {
+    throw new \RuntimeException("Set $env to the seller's private key, or OMBU_SELLER_ADDRESS to the wallet that is paid.");
   }
-  if (!Key::load("seller_$sku")) {
+  if (getenv($env) && !Key::load("seller_$sku")) {
     Key::create(['id' => "seller_$sku", 'label' => "Seller: $title", 'key_type' => 'authentication', 'key_provider' => 'env', 'key_provider_settings' => ['env_variable' => $env, 'base64_encoded' => FALSE, 'strip_line_breaks' => TRUE]])->save();
   }
   $found = $variations->loadByProperties(['sku' => "ours-$sku"]);

@@ -32,6 +32,7 @@ The same market as an MCP server (Streamable HTTP, no sign-in): `POST [site:url]
 - Terms of service and privacy analysis (0.01 USDC): what matters in a policy, each point quoting its clause. Input `{"url": …}` or `{"text": …}`.
 - Fact-check a claim (0.02 USDC): supported, refuted or not enough information; says when the model judged without web sources. Input `{"claim": "…"}`.
 - Name check (0.005 USDC): which of a name's domains are free (any TLD, from the registry) and the live trademarks that contain it in Argentina (INPI) and the US (USPTO). Input `{"name": "acme", "tlds": ["com", "com.ar"], "countries": ["ar", "us"], "classes": [35, 42]}`; only name is required.
+- Seller check (0.005 USDC): hire, reject or ask a human for a listing, from its price against your budget and the rating of its verified reviews; no model, the same answer each time. Input `{"listing": 3, "budget": 0.05}`; the answer carries an A2UI card under `a2ui`.
 
 Their URLs and payment requirements: [our sellers in the catalogue]([site:url]market.json?seller=ours).
 

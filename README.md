@@ -184,6 +184,7 @@ give the URL, price and `payTo`.
 | Terms and privacy analysis | `{"url": …}` or `{"text": …}` | 0.01 |
 | Fact-check a claim (model only for now: `"evidence": "model_only"`) | `{"claim": …}` | 0.02 |
 | Name check: domains (RDAP or WHOIS, any TLD) and live trademarks (INPI, USPTO) | `{"name": …}`, optional `tlds`, `countries`, `classes` | 0.005 |
+| Seller check: hire, reject or ask a human, from price, budget and verified reviews; no model, and an A2UI card in the answer (`a2ui`) | `{"listing": id or endpoint URL}`, optional `budget` | 0.005 |
 
 Input it cannot use (400), a page it may not fetch (422), a failing model
 (502) or one not set up (503) cost the buyer nothing: x402_pay settles only

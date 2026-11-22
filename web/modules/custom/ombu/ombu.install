@@ -662,3 +662,11 @@ function ombu_update_10037(): void {
     $storage->setSetting('allowed_values', $allowed)->save();
   }
 }
+
+/**
+ * /llms.txt lists the seller check.
+ */
+function ombu_update_10038(): void {
+  _ombu_llms_txt();
+}
+

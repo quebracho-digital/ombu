@@ -489,7 +489,12 @@ final class Renderer {
         'obscured' => 'password',
         default => 'text',
       };
-      $field = $this->tag('input', ['form-control'], [], ['id' => $dom_id, 'type' => $type, 'value' => $value] + $binding);
+      $attributes = ['id' => $dom_id, 'type' => $type, 'value' => $value] + $binding;
+      if ($type === 'number') {
+        // The browser would refuse 0.05 with its default step of 1.
+        $attributes['step'] = 'any';
+      }
+      $field = $this->tag('input', ['form-control'], [], $attributes);
     }
     return $this->tag('div', ['a2ui-field'], ['label' => $label, 'field' => $field]);
   }

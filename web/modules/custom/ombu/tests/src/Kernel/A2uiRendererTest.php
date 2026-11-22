@@ -90,6 +90,18 @@ final class A2uiRendererTest extends KernelTestBase {
   }
 
   /**
+   * Tests that a number field takes fractions.
+   */
+  public function testNumberFieldsTakeFractions(): void {
+    $html = $this->html($this->payload([
+      self::c('root', 'TextField', ['label' => 'Budget', 'variant' => 'number', 'value' => ['@path' => '/budget']]),
+    ], ['budget' => 0.05]));
+    $this->assertStringContainsString('type="number"', $html);
+    $this->assertStringContainsString('step="any"', $html);
+    $this->assertStringContainsString('value="0.05"', $html);
+  }
+
+  /**
    * Tests that a binding path cannot break out of its attribute.
    */
   public function testBindingPathIsEscaped(): void {

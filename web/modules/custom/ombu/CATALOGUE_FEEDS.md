@@ -155,7 +155,7 @@ Not done yet; it is Leo's call (see the todo):
 
 ## Review of 2026-11-22: known gaps and how to close them
 
-A Drupal review read the feeds against the real Feeds 3.2.0 code. The first three highs and M3 were checked again by hand against the code; A2 was not run as a test. A security audit with the `security-audit-quebracho` method was still running when this was written, so its findings are not here yet. No finding is critical. Nothing below is fixed yet.
+A Drupal review read the feeds against the real Feeds 3.2.0 code. The first three highs and M3 were checked again by hand against the code; A2 was not run as a test. A security audit with the `security-audit-quebracho` method (one pass, each finding reproduced with a minimal test and checked by a second agent) came back afterwards; its findings are in the next section. No finding is critical or high. Nothing below is fixed yet.
 
 Fix before the feeds replace the importers (cheap, and each one can break a run or let a third party's data through):
 
@@ -183,3 +183,29 @@ Wallet screening, a decision for the owner:
 
 - The OFAC check in `ResourceVerifier` covers EVM addresses only (Chainalysis oracle). A Solana `payTo` has no OFAC check, before and after this change. The fix is to screen against the SDN list file for the chains the oracle does not cover; check first that the list carries Solana addresses.
 - Neither the Circle importer nor the Circle feed screens a wallet when it imports. The cheap fix is to run the local allow and deny lists (`ScreeningLists`) for every source. Running the full verifier for Circle too costs network calls per listing.
+
+## Security audit of 2026-11-22: seven findings and their fixes
+
+The audit assumed the seller who writes the catalogue is hostile. It found no XSS and no SSRF that a seller can reach, and nothing that makes Ombú pay a wallet that is not the one verified: Ombú does not pay the listings it imports, and the x402 payment comes from the endpoint's own 402. Most findings already existed in the importers; two are new with the feeds (the Feeds lock that stays taken after a fatal error, and the retirement guard now applied to Circle too). It was one pass, which by the method finds about half of what a full run would. The two I read in the code myself are marked.
+
+| # | Severity | Finding | Fix |
+|---|---|---|---|
+| 1 | Medium | **`$ref` fan-out in Circle's OpenAPI** (`OpenApi::inline()`, read by hand). It limits depth (6) but not nodes, so a schema with K properties that each point back to it grows as K^6. A spec of about 700 bytes exhausted a 1 GB memory limit; one of 463 bytes left a 5 MB `field_openapi`. A fatal is not caught, so the Circle import never ends and the lock stays taken. YAML anchors make it worse. | Cap nodes or bytes in `inline()` (past the cap, return the `$ref` unexpanded). Do not download the spec again when the entry did not change. |
+| 2 | Medium | **A poisoned Bazaar or PayAI entry locks the feed** (`DiscoveryParser.php:38`; same as A1 of the review). Feeds catches only `\Exception`, so `finishImport()` is not called and the lock stays (12 hours by default, freed with `drush feeds:unlock`). | `is_array` as Circle does, and `normalize()` inside `catch (\Throwable)`, counted as `unsupported`. |
+| 3 | Medium | **Circle: an entry with another seller's URL and method rewrites that listing.** The first entry wins the dedupe, and the processor writes without checking. The victim's listing kept its id and its reviews but got the attacker's `payTo` and title. The importer let the last entry win. | If an entry carries a `payTo` different from the existing Circle listing, do not update: note it for staff, as `wallet_changed` does for Discovery. |
+| 4 | Medium | **Circle: any seller rewrites another seller's provider term** (`CircleListingProcessor::provider()` and `ListingProcessorBase::term()`, read by hand). The term is found by name in a vocabulary shared with Bazaar, PayAI and Ombú's own sales, and its site, docs, OpenAPI URL and description are overwritten. The victim's "full OpenAPI" link then points to the attacker, and the logo fetched from that site stays. | Identify the term by source and host, or let Circle fill only empty fields, as Discovery does. |
+| 5 | Medium | **Bazaar and PayAI: an earlier duplicate entry retires another seller's verified listing** (`DiscoveryListingProcessor.php:146-147`, `:190`). Result seen: `rejected 1, retired 1`. A cheaper variant uses an `accepts` on a token Ombú does not verify: `unsupported`, and the victim is retired with no request made. The importer did the same. | Dedupe after processing, or keep an entry that is not the listing's owner from taking it off the kept list. |
+| 6 | Low | **Circle: one entry that fails processing stops all retirement for the source** (`amount: "abc"`, a `network` that is not a string). It fails safe, and it is the M2 of the review. | Validate in `CircleParser` (https, digits in `amount`, string fields) and count the entry as `skipped`. |
+| 7 | Low | **The "less than half" guard works as a ratchet.** `ombu.{source}_read` moves only on runs that could retire: after a run of 8 entries, three runs of 2, 1 and 1 read less than half and retired nothing. It is L2 of the review. | Compare against a median or against accepted entries, and give staff a command to reset the baseline. |
+
+What the audit checked and found sound: only the admin can edit a feed (no role has Feeds permissions in `config/sync`) and the fetcher ignores the feed's own `source`; "Delete items" does not delete listings (the processor is not `ClearableInterface`, which closes A2 of the review by reading, still without its test); `SellerProbe` goes only to a public IPv4, pins the resolved IP, follows no redirects and reads 64 KB; the OpenAPI goes through `PageFetcher`, which checks the IP at each hop and cuts at 5 MB; logos go to a fixed Google host with a sanitised file name; title and body are `plain_text`, schemas render in `<pre>` as plain text, and the docs link is built only for `^https?://`; in Bazaar and PayAI a new wallet is rejected and the listing retired until staff accept it, and a `payTo` that is not EVM stays `unchecked` and is not imported, so it fails closed.
+
+Not covered: whether CDP Bazaar, PayAI and Circle validate their entries, which decides how likely findings 2 to 5 are; the production `memory_limit` and how the Feeds cron queue behaves after a fatal; the rest of the module (purchases, MCP, review verification). Circle's feed makes no wallet check at all, like the importer, so its listings stay `field_verified = FALSE`.
+
+### Order of work
+
+1. Findings 2, 1 and 6 with A3, M3, M4 and M5 of the review: they break or stall a run and take little code.
+2. Findings 3, 4 and 5: one seller changes another seller's listing. Add a test for each with the same entries the audit used.
+3. Finding 7 and the rest of the review's list.
+
+The audit's files (`findings.json`, the coverage ledger and the proof scripts) are outside the repository, in the owner's `security-audits/ombu/run-1/`.

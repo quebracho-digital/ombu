@@ -1,0 +1,19 @@
+uuid: aadf3d76-e35e-47a7-a7ba-04bdb4e76088
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_a2ui
+id: commerce_product.listing.field_a2ui
+field_name: field_a2ui
+entity_type: commerce_product
+bundle: listing
+label: 'A2UI surface (JSON)'
+description: 'A2UI v1.0 messages (a JSON array or JSON Lines) that draw the "Try it" form. Its data model is what is sent to the service.'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

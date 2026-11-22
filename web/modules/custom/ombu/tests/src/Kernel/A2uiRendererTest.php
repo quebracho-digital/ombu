@@ -214,6 +214,24 @@ final class A2uiRendererTest extends KernelTestBase {
   }
 
   /**
+   * Tests that buttons can be left out, and the data model starts the page.
+   */
+  public function testButtonsCanBeLeftOutAndTheModelTravels(): void {
+    $payload = $this->payload([
+      ['id' => 'root', 'component' => 'Column', 'children' => ['f', 'b']],
+      ['id' => 'f', 'component' => 'TextField', 'label' => 'Name', 'value' => ['@path' => '/name']],
+      ['id' => 'b', 'component' => 'Button', 'child' => 'l', 'action' => ['event' => ['name' => 'go']]],
+      ['id' => 'l', 'component' => 'Text', 'text' => 'Go'],
+    ], ['name' => 'Ann']);
+    $with = (string) $this->container->get('renderer')->renderInIsolation((new Renderer())->build(Surface::fromJson($payload)));
+    $without = (string) $this->container->get('renderer')->renderInIsolation((new Renderer(FALSE, FALSE))->build(Surface::fromJson($payload)));
+    $this->assertStringContainsString('<button', $with);
+    $this->assertStringNotContainsString('<button', $without);
+    $this->assertStringContainsString('data-a2ui-path="/name"', $without);
+    $this->assertStringContainsString('data-a2ui-model="{&quot;name&quot;:&quot;Ann&quot;}"', $without);
+  }
+
+  /**
    * Tests that a deleted surface draws nothing.
    */
   public function testDeletedSurfaceDrawsNothing(): void {

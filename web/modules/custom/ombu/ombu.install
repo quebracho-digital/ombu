@@ -635,3 +635,17 @@ function ombu_update_10034(): void {
 function ombu_update_10035(): void {
   _ombu_llms_txt();
 }
+
+/**
+ * Listings can carry an A2UI surface that draws their "Try it" form.
+ */
+function ombu_update_10036(): void {
+  _ombu_config('install', ['field.storage.commerce_product.field_a2ui', 'field.field.commerce_product.listing.field_a2ui']);
+  \Drupal::service('entity_display.repository')->getFormDisplay('commerce_product', 'listing')
+    ->setComponent('field_a2ui', ['type' => 'string_textarea', 'weight' => 20, 'settings' => ['rows' => 12, 'placeholder' => '']])->save();
+  // Drawn by the page itself (ListingHooks), never as a field.
+  foreach (['default', 'teaser'] as $mode) {
+    \Drupal::service('entity_display.repository')->getViewDisplay('commerce_product', 'listing', $mode)
+      ->removeComponent('field_a2ui')->save();
+  }
+}

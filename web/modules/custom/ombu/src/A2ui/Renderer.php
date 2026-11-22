@@ -56,8 +56,14 @@ final class Renderer {
    * @param bool $allowRemoteImages
    *   Whether an Image component loads its URL. Off by default: a remote
    *   image tells its host who is looking, and a seller could use that.
+   * @param bool $drawButtons
+   *   Whether Button components are drawn. A page that has its own action
+   *   (Ombú's pay button) turns them off, so the seller's do not compete.
    */
-  public function __construct(private readonly bool $allowRemoteImages = FALSE) {
+  public function __construct(
+    private readonly bool $allowRemoteImages = FALSE,
+    private readonly bool $drawButtons = TRUE,
+  ) {
   }
 
   /**
@@ -76,7 +82,13 @@ final class Renderer {
     $build = [
       '#type' => 'html_tag',
       '#tag' => 'div',
-      '#attributes' => ['class' => ['a2ui'], 'data-a2ui-surface' => $surface->id()],
+      // The data model as it starts: a page's script overwrites the bound
+      // paths with what the person typed and sends the whole.
+      '#attributes' => [
+        'class' => ['a2ui'],
+        'data-a2ui-surface' => $surface->id(),
+        'data-a2ui-model' => json_encode($surface->dataModel() ?: new \stdClass(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+      ],
       '#attached' => ['library' => ['ombu/a2ui']],
     ];
     if (!$surface->isDeleted()) {
@@ -135,7 +147,7 @@ final class Renderer {
       'TextField' => $this->textField($component, $id),
       'CheckBox' => $this->checkBox($component, $id),
       'ChoicePicker' => $this->choicePicker($component, $id),
-      'Button' => $this->button($component, $trail),
+      'Button' => $this->drawButtons ? $this->button($component, $trail) : [],
       default => $this->skip((string) $component['component']),
     };
   }

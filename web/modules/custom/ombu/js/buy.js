@@ -132,6 +132,48 @@
     return { status: paid.status, body: await paid.text(), tx, link };
   }
 
+  // A seller's A2UI form: its data model as it began, with what the person
+  // typed written at the paths the fields are bound to. The paths are the
+  // seller's, so a token that reaches an object's prototype is refused.
+  const UNSAFE = new Set(['__proto__', 'constructor', 'prototype']);
+  function surfaceInput(surface) {
+    const model = JSON.parse(surface.dataset.a2uiModel || '{}');
+    surface.querySelectorAll('[data-a2ui-path]').forEach((field) => {
+      const tokens = field.dataset.a2uiPath.split('/').slice(1).map((t) => t.replace(/~1/g, '/').replace(/~0/g, '~'));
+      if (!tokens.length || tokens.some((t) => UNSAFE.has(t))) {
+        return;
+      }
+      let value;
+      if (field.matches('fieldset')) {
+        value = Array.from(field.querySelectorAll('input:checked'), (input) => input.value);
+      }
+      else if (field.type === 'checkbox') {
+        value = field.checked;
+      }
+      else if (field.type === 'number') {
+        value = field.value === '' ? undefined : Number(field.value);
+      }
+      else {
+        value = field.value;
+      }
+      let node = model;
+      tokens.slice(0, -1).forEach((token) => {
+        if (node[token] === null || typeof node[token] !== 'object') {
+          node[token] = {};
+        }
+        node = node[token];
+      });
+      const last = tokens[tokens.length - 1];
+      if (value === undefined) {
+        delete node[last];
+      }
+      else {
+        node[last] = value;
+      }
+    });
+    return JSON.stringify(model);
+  }
+
   Drupal.behaviors.ombuBuy = {
     attach(context) {
       once('ombu-buy', '[data-ombu-buy]', context).forEach((form) => {
@@ -142,7 +184,8 @@
           const button = form.querySelector('button');
           button.disabled = true;
           try {
-            const input = form.querySelector('textarea').value;
+            const surface = form.querySelector('.a2ui');
+            const input = surface ? surfaceInput(surface) : form.querySelector('textarea').value;
             JSON.parse(input);
             const result = await buy(form, input, status);
             let body = result.body;

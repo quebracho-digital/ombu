@@ -6,6 +6,7 @@ dependencies:
     - commerce_product.commerce_product_type.listing
     - core.entity_view_display.comment.review.default
     - field.field.commerce_product.listing.body
+    - field.field.commerce_product.listing.field_a2ui
     - field.field.commerce_product.listing.field_accepts
     - field.field.commerce_product.listing.field_category
     - field.field.commerce_product.listing.field_docs_url
@@ -237,6 +238,7 @@ content:
     region: content
 hidden:
   created: true
+  field_a2ui: true
   field_accepts: true
   field_openapi: true
   field_output_schema: true

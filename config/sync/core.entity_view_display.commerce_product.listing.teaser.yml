@@ -6,6 +6,7 @@ dependencies:
     - commerce_product.commerce_product_type.listing
     - core.entity_view_mode.commerce_product.teaser
     - field.field.commerce_product.listing.body
+    - field.field.commerce_product.listing.field_a2ui
     - field.field.commerce_product.listing.field_accepts
     - field.field.commerce_product.listing.field_category
     - field.field.commerce_product.listing.field_docs_url
@@ -108,6 +109,7 @@ content:
     region: content
 hidden:
   created: true
+  field_a2ui: true
   field_accepts: true
   field_docs_url: true
   field_endpoint: true

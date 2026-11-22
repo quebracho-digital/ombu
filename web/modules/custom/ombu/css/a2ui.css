@@ -28,3 +28,5 @@
 .a2ui .a2ui-text--caption { opacity: 0.75; }
 .a2ui .a2ui-image { max-width: 100%; height: auto; }
 .a2ui .a2ui-button[disabled] { opacity: 0.6; cursor: not-allowed; }
+/* Inside Try it: room before the pay button. */
+.ombu-buy .a2ui { margin-bottom: .75rem; }

@@ -13,6 +13,8 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ombu\A2ui\A2uiException;
+use Drupal\ombu\A2ui\ListingSurface;
 use Drupal\ombu\Cards;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
@@ -129,6 +131,9 @@ final class ListingHooks {
       $service = (string) ($product->hasField('field_service') ? $product->get('field_service')->value : '');
       $price = $product->hasField('field_x402_price') ? $product->get('field_x402_price')->first() : NULL;
       if (isset($examples[$service]) && $price?->get('enabled')->getValue()) {
+        // The seller's own form, when the listing carries an A2UI surface
+        // (its data model is what is sent); the JSON textarea otherwise.
+        $surface = $this->surface($product);
         $build['buy'] = [
           '#type' => 'html_tag',
           '#tag' => 'form',
@@ -141,8 +146,8 @@ final class ListingHooks {
             ])->toString(),
             'data-ombu-solana' => Url::fromRoute('x402_pay.solana_transaction')->toString(),
           ],
-          'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2><label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>'],
-          'input' => [
+          'title' => ['#markup' => '<h2>' . $this->t('Try it') . '</h2>' . ($surface ? '' : '<label for="ombu-buy-input">' . $this->t('Input (JSON)') . '</label>')],
+          'input' => $surface ?? [
             '#type' => 'html_tag',
             '#tag' => 'textarea',
             '#value' => $examples[$service],
@@ -319,6 +324,37 @@ final class ListingHooks {
     if ($about !== '' && isset($form['message']['widget'][0]['value'])) {
       $form['message']['widget'][0]['value']['#default_value'] = $about . "\n\n";
     }
+  }
+
+  /**
+   * The listing's A2UI surface as a render array, or NULL to use the textarea.
+   *
+   * @return array<string, mixed>|null
+   *   A render array, NULL if there is none or it cannot be drawn.
+   */
+  private function surface(ProductInterface $product): ?array {
+    $json = $product->hasField('field_a2ui') ? trim((string) $product->get('field_a2ui')->value) : '';
+    if ($json === '') {
+      return NULL;
+    }
+    try {
+      [$build, $skipped] = ListingSurface::build($json);
+    }
+    catch (A2uiException $e) {
+      // Saved before a rule got stricter: the textarea still works.
+      \Drupal::logger('ombu')->warning('Listing @id has an A2UI surface that cannot be drawn: @reason', [
+        '@id' => $product->id(),
+        '@reason' => $e->getMessage(),
+      ]);
+      return NULL;
+    }
+    if ($skipped) {
+      \Drupal::logger('ombu')->notice('Listing @id: A2UI parts not drawn: @parts', [
+        '@id' => $product->id(),
+        '@parts' => implode(', ', $skipped),
+      ]);
+    }
+    return $build;
   }
 
 }

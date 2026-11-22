@@ -1,0 +1,19 @@
+uuid: fd52488f-6901-48fe-868f-3beba6c2ea12
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+id: commerce_product.field_a2ui
+field_name: field_a2ui
+entity_type: commerce_product
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

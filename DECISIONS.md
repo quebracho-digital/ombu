@@ -465,8 +465,10 @@ Decidido por Leo (2026-11-22): "si me sirve tu propuesta", after "quizas crear u
 - **Not done:** the seller key. `seed-listings.php` needs `SELLER_KEY_SELLERCHECK` and a run on production for the listing to exist there; it was only seeded in dev. A paid call and the click on "Pay" were not tried: dev has no gas key and Chrome was not connected.
 
 
-### Feeds support for the catalogue importers
+### The catalogue importers are built on Feeds
 
 Decidido por Leo (2026-11-22 13:24): "me gustaria usar feeds para los importers para quien ya lo use, le agrega mucha flexibilidad, puede ser eso o pulir los importers de bazaar o payai".
 
-The catalogue importers (`CircleCatalogImporter`, and `DiscoveryCatalogImporter` for Bazaar and PayAI) get a Feeds integration, aimed at sites that already run Feeds, because it adds a lot of flexibility. The other task Leo named for the same slot, polishing the Bazaar and PayAI importers, stays on the table. Nothing is built yet: the first step is reading both importers to see how fetch, parse and process map onto Feeds plugins, which version of Feeds fits `^11.1 || ^12`, and what happens to the rule that only a complete run retires listings.
+Decidido por Leo (2026-11-22, minutes later), which replaces the first reading ("for sites that already run Feeds", an integration next to the importers): "creo que los importers deberian haber sido en feeds desde un inicio, es mas drupal way y ya resuelven un monton de cosas como para extender otros catalogos como autenticacion, plugins, tampers, eventos, batch process, es como reinventar la rueda".
+
+The catalogue importers (`CircleCatalogImporter`, and `DiscoveryCatalogImporter` for Bazaar and PayAI) move onto Feeds: a fetcher, a parser and a processor per catalogue, with tampers, events, batch processing and authentication coming from Feeds instead of from our own code. It is not an adapter beside the current classes, and Feeds is a dependency of Ombú, not an option. Nothing is built yet. The first step is installing Feeds in dev and reading its API to see which version fits `^11.1 || ^12`, where the seller verification, the wallet checks and the budget of `DiscoveryCatalogImporter` live as processor, tamper or event code, and how the rule that only a complete run retires listings (and the guard against a catalogue that shrinks by half) is kept.

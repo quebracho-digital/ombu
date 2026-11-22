@@ -436,3 +436,17 @@ Decidido por Leo (2026-11-18): "deploya", after asking to update Drupal for the 
 SER5 went from `a348e51` to `6429954`: the admin dashboard and its forms, the import options, the SubQ backend (`ai_provider_universal` at `f5c81fc`) and core 11.4.10 → 11.4.13. Database dump taken first (`pre-6429954-20261118.sql.gz`). `composer install --no-dev`, `drush deploy` (no pending updates or deploy hooks) and `drush cr` ran clean; `drush status` shows 11.4.13. The post `/blog/whats-new-2026-11-18` is seeded, published and carries the advisory in en, es and pt-br.
 
 Checked on production: 200 on `/`, `/es/`, `/pt-br/`, the post in en and es, `/market.json` and `/mcp`; `/admin/ombu` gives 403 logged out; `drush ombu:screen list` and `drush ombu:stop status` answer (site and payments running). The core fix was applied with `composer update --no-cooldown` once; the two-day cooldown stays in composer.json.
+
+### A2UI: the seller draws the UI, Ombú renders it with Drupal's own elements
+
+Decidido por Leo (2026-11-22 10:12): "porque ombu deberia generar a2ui si no existe? no es algo que debe definir el vendedor?", "no se puede mapear el render de google a componenetes de drupal?", "yo prefiero empezar con x402 que es mas lo nuestro" and, on the plan below, "ok, arranca con el spike".
+
+[A2UI](https://a2ui.org/specification/v1.0-a2ui/) (v1.0, the current spec) is Google's open protocol for an agent to send a UI as JSON instead of code. Today a listing's "Try it" is a textarea of JSON. The plan:
+
+- **The seller defines the UI.** Ombú never invents one from the input schema; a listing without A2UI keeps the textarea.
+- **Drupal elements, not Google's JavaScript renderers.** `src/A2ui/` reads the messages (`Surface`, `Pointer`) and draws a subset of the basic catalog as render arrays (`Renderer`). The list of components is the allowlist: what is not in it is skipped and logged, text is always escaped, an image loads only if the caller allows it, `@call` functions are never run, and a button only names its action. Paying stays Ombú's flow; a payload cannot start it.
+- **Not wired yet.** The first cut has no field, route or config; it is a library with tests (`A2uiSurfaceTest`, `A2uiPointerTest`, `A2uiRendererTest`, and the official contact form as a fixture).
+- **x402 comes next, then MCP.** The seller would declare the UI in an `extensions.a2ui` of the 402 and the discovery item, as `bazaar` does for schemas. There is no official A2UI extension for x402, so that shape is ours to propose. It needs a small change in `quebracho/x402` (`X402Middleware` builds the 402 body without extensions today), then `x402_pay`. MCP has an official binding (`application/a2ui+json` resources and tool results); `ombu_get_service` could return it.
+
+Checked: `opis/json-schema` 2.6.0 rejects the official example's own components (`unevaluatedProperties`) that upstream's ajv suite accepts, so that one check is skipped in `A2uiConformanceTest` with the reason. No PHP or Drupal renderer is listed on a2ui.org.
+

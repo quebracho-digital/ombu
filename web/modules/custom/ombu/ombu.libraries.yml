@@ -90,3 +90,8 @@ share:
   dependencies:
     - core/drupal
     - core/once
+# An A2UI surface a seller published (src/A2ui/Renderer.php).
+a2ui:
+  css:
+    theme:
+      css/a2ui.css: {}

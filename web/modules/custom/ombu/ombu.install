@@ -670,3 +670,18 @@ function ombu_update_10038(): void {
   _ombu_llms_txt();
 }
 
+
+/**
+ * The catalogue importers on Feeds: the module, a feed type and a feed each.
+ *
+ * The importers stay and keep running (Circle's cron included); the feed
+ * types are created not scheduled, so nothing runs twice until the feeds
+ * replace them.
+ */
+function ombu_update_10039(): void {
+  \Drupal::service('module_installer')->install(['feeds']);
+  _ombu_config('optional', ['feeds.feed_type.ombu_bazaar', 'feeds.feed_type.ombu_payai']);
+  foreach (['bazaar', 'payai'] as $source) {
+    \Drupal::service('ombu.catalog_feeds')->feed($source);
+  }
+}

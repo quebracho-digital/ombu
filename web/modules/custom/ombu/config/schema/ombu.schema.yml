@@ -66,3 +66,74 @@ ombu.stop:
           no_reason:
             type: label
             label: 'The reason, when none is given'
+
+# The catalogue feeds (Feeds): fetcher, parsers and processors.
+feeds.fetcher.ombu_catalog:
+  type: mapping
+  label: 'x402 discovery catalogue fetcher'
+  mapping:
+    url:
+      type: uri
+      label: 'Catalogue address (https)'
+    page_size:
+      type: integer
+      label: 'Resources per page'
+    timeout:
+      type: integer
+      label: 'Timeout, in seconds'
+    max_bytes:
+      type: integer
+      label: 'Largest page, in bytes'
+    auth_header:
+      type: string
+      label: 'Header that carries the key'
+    auth_key:
+      type: string
+      label: 'Key (Key module) that holds the header value'
+
+feeds.parser.ombu_discovery:
+  type: mapping
+  label: 'x402 discovery parser (no settings)'
+
+feeds.parser.ombu_circle:
+  type: mapping
+  label: 'Circle parser (no settings)'
+
+# Any processor but ours keeps the entity processor's settings: Feeds types
+# them all as that one, CatalogFeedHooks types them by the processor's id.
+feeds.processor.*:
+  type: feeds.processor.entity
+
+feeds.processor.ombu_circle_listing:
+  type: mapping
+  label: 'Circle listing processor'
+  mapping:
+    source:
+      type: string
+      label: 'Source and market of its listings'
+
+feeds.processor.ombu_discovery_listing:
+  type: mapping
+  label: 'Verified x402 listing processor'
+  mapping:
+    source:
+      type: string
+      label: 'Source and market of its listings'
+    budget:
+      type: integer
+      label: 'Resources to verify per run (0 = no limit)'
+    min_transfers:
+      type: integer
+      label: 'Incoming USDC transfers payTo must have received'
+    only_tags:
+      type: sequence
+      label: 'Only resources carrying one of these tags'
+      sequence:
+        type: string
+        label: 'Tag'
+    price_match:
+      type: boolean
+      label: "A transfer of exactly the listing's price"
+    max_age_days:
+      type: integer
+      label: 'Newest incoming transfer no older than this many days (0 = any)'

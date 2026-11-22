@@ -38,6 +38,15 @@ services:
       - '@ombu.resource_verifier'
       - '@state'
       - '@datetime.time'
+  # The catalogue feeds (Feeds): one feed type and one feed per catalogue.
+  ombu.catalog_feeds:
+    class: Drupal\ombu\Catalog\CatalogFeeds
+    arguments: ['@entity_type.manager', '@messenger', '@keyvalue']
+  Drupal\ombu\Catalog\CatalogFeeds: '@ombu.catalog_feeds'
+  ombu.catalog_feed_subscriber:
+    class: Drupal\ombu\EventSubscriber\CatalogFeedSubscriber
+    tags:
+      - { name: event_subscriber }
   logger.channel.ombu:
     parent: logger.channel_base
     arguments: ['ombu']

@@ -17,6 +17,7 @@ dependencies:
   - drupal:text
   - drupal:views
   - facets:facets_exposed_filters
+  - feeds:feeds
   - llms_txt:llms_txt
   - key:key
   - x402_pay:x402_pay

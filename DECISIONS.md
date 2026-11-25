@@ -36,7 +36,13 @@ Before it, an independent audit of the 21 commits and a rehearsal on a copy of t
 
 Run on SER5: `git pull --ff-only`, `composer install --no-dev`, `drush deploy` (updates 10036-10039, `cim`), `seed-listings.php sellercheck` with only `OMBU_SELLER_ADDRESS`, `seed-blog.php`. The feeds are installed and not scheduled: the old importers still run; switching is a later decision. A Circle listing whose wallet changes is now retired and kept for `drush ombu:wallet-changes circle` (`9d16980`).
 
-Checked live: the pages and the post in three languages answer 200, `sellercheck` answers 402 on Arc mainnet (5000 atomic to the cold address), and a real purchase of 0.005 USDC (tx `0x80bb7399…12dba`) returned the verdict and the card. OFAC's list was refreshed by cron the same day (published 2026-11-23). `/core/install.php` still answers 200 with "already installed"; blocking it in Apache was offered and not decided.
+Checked live: the pages and the post in three languages answer 200, `sellercheck` answers 402 on Arc mainnet (5000 atomic to the cold address), and a real purchase of 0.005 USDC (tx `0x80bb7399…12dba`) returned the verdict and the card. OFAC's list was refreshed by cron the same day (published 2026-11-23). `/core/install.php` still answered 200 with "already installed"; blocking it in Apache was offered, and Leo decided it right after (next entry).
+
+### Apache refuses `/core/install.php` in production
+
+Decidido por Leo (2026-11-25): "Bloquea el install en apache". A site that is installed has no use for the installer, and SA-CORE-2026-019 was a bypass in it; core 11.4.14 closes the hole and this closes the door. `deploy/apache-block-install.conf` (a `LocationMatch` on `^/core/install\.php` with `Require all denied`) is copied into the image by `deploy/Dockerfile`. It went live without downtime by copying the file into the running `ombu-web-1` and a graceful reload; checked: `/core/install.php`, with path-info and with `?rewrite=ok`, answers 403, the home and `/market.json` 200. A rebuild of the image (`docker compose up -d --build web`) makes it permanent; until then a recreated container loses it. To reinstall, remove the file on purpose. Commit 0f6f092, pushed.
+
+A second real purchase the same day, 0.005 USDC on Arc mainnet (`sellercheck` over listing 1, verdict "Ask a human": 2 verified reviews, 3 needed), tx `0x174c9308…a51b`.
 
 ## 2026-11-17
 

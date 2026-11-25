@@ -1,0 +1,32 @@
+uuid: d403951c-8de1-4294-9d0a-bfbb0a18da50
+langcode: en
+status: true
+dependencies:
+  module:
+    - ombu
+label: 'CDP Bazaar catalogue'
+id: ombu_bazaar
+description: "Coinbase's x402 discovery (CDP Bazaar): only the resources Ombú verified itself are listed."
+help: ''
+import_period: -1
+import_period_per_feed: false
+fetcher: ombu_catalog
+fetcher_configuration:
+  url: 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources'
+  page_size: 100
+  timeout: 30
+  max_bytes: 10485760
+  auth_header: ''
+  auth_key: ''
+parser: ombu_discovery
+parser_configuration: {  }
+processor: ombu_discovery_listing
+processor_configuration:
+  source: bazaar
+  budget: 200
+  min_transfers: 1
+  only_tags: {  }
+  price_match: false
+  max_age_days: 0
+custom_sources: {  }
+mappings: {  }

@@ -45,7 +45,7 @@ final class CatalogImportCommands extends DrushCommands {
    * The budget and the minimum transfer count stay the service's (200, 1).
    */
   #[CLI\Command(name: 'ombu:import-catalog')]
-  #[CLI\Argument(name: 'source', description: 'bazaar or payai.')]
+  #[CLI\Argument(name: 'source', description: 'bazaar, payai or circle.')]
   #[CLI\Option(name: 'max', description: 'Stop after reading this many resources (0 = all). A partial run retires nothing.')]
   #[CLI\Option(name: 'only-tags', description: 'Comma-separated tags: import only resources carrying one of them.')]
   #[CLI\Option(name: 'price-match', description: 'payTo must have received a transfer of exactly the price the listing had on that day.')]
@@ -61,8 +61,8 @@ final class CatalogImportCommands extends DrushCommands {
       'max-age-days' => 0,
     ],
   ): void {
-    if (!in_array($source, ['bazaar', 'payai'], TRUE)) {
-      throw new \InvalidArgumentException("Unknown source: $source (bazaar or payai).");
+    if (!in_array($source, ['bazaar', 'payai', 'circle'], TRUE)) {
+      throw new \InvalidArgumentException("Unknown source: $source (bazaar, payai or circle).");
     }
     $importer = $this->narrow($source, $options);
     $counts = $importer->import((int) $options['max']);
@@ -109,18 +109,16 @@ final class CatalogImportCommands extends DrushCommands {
    * Lists the listings whose seller now names another wallet, or accepts one.
    */
   #[CLI\Command(name: 'ombu:wallet-changes')]
-  #[CLI\Argument(name: 'source', description: 'bazaar or payai.')]
+  #[CLI\Argument(name: 'source', description: 'bazaar, payai or circle.')]
   #[CLI\Option(name: 'accept', description: 'The id of a listing whose new wallet you looked at and accept.')]
   #[CLI\Usage(name: 'drush ombu:wallet-changes bazaar', description: 'The listings retired because they pay a wallet they never declared.')]
   #[CLI\Usage(name: 'drush ombu:wallet-changes bazaar --accept=123', description: 'Check listing 123 again and keep the wallet it answers with now.')]
   public function walletChanges(string $source, array $options = ['accept' => 0]): int {
-    if (!in_array($source, ['bazaar', 'payai'], TRUE)) {
-      throw new \InvalidArgumentException("Unknown source: $source (bazaar or payai).");
+    if (!in_array($source, ['bazaar', 'payai', 'circle'], TRUE)) {
+      throw new \InvalidArgumentException("Unknown source: $source (bazaar, payai or circle).");
     }
-    /** @var \Drupal\ombu\DiscoveryCatalogImporter $importer */
-    $importer = $this->container->get("ombu.{$source}_importer");
     if (!$options['accept']) {
-      foreach ($importer->walletChanges() as $id => $change) {
+      foreach (array_filter($this->walletChangeService->waiting(), fn($c) => $c['source'] === $source) as $id => $change) {
         $this->io()->writeln(sprintf('%d  %s  %s -> %s  (%s)', $id, $change['url'], implode(',', $change['old']), implode(',', $change['new']), date('Y-m-d', $change['time'])));
       }
       return self::EXIT_SUCCESS;

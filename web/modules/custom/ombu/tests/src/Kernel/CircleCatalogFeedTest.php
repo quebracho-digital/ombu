@@ -190,6 +190,42 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that a changed wallet is refused, kept for staff, and acceptable.
+   */
+  public function testAChangedWalletIsRefusedAndStaffMayAcceptIt(): void {
+    $this->import([$this->item('/v1/weather')]);
+    $before = $this->listing('/v1/weather');
+    $wallet = (string) $before->get('field_pay_to')->value;
+
+    $moved = $this->item('/v1/weather');
+    $moved['lastUpdated'] = '2026-10-02T00:00:00Z';
+    $moved['accepts'][0]['payTo'] = '0x1111111111111111111111111111111111111111';
+    // The listing is not kept in the run, so the clean stage retires it.
+    $this->assertSame(['wallet_changed' => 1, 'retired' => 1], array_filter($this->import([$moved])));
+
+    // Nothing was overwritten, and the listing is off until staff decide.
+    $kept = $this->listing('/v1/weather');
+    $this->assertSame($wallet, $kept->get('field_pay_to')->value);
+    $this->assertStringNotContainsString('1111111111', (string) $kept->get('field_accepts')->value);
+    $this->assertTrue((bool) $kept->get('field_retired')->value);
+    // The same answer next time is refused again, not slipped in.
+    $this->assertSame(1, $this->import([$moved])['wallet_changed']);
+    $this->assertSame($wallet, $this->listing('/v1/weather')->get('field_pay_to')->value);
+
+    // Staff see it, and accepting takes it and brings the listing back.
+    $changes = $this->container->get('ombu.wallet_changes');
+    $waiting = $changes->waiting();
+    $this->assertSame('circle', $waiting[(int) $kept->id()]['source']);
+    $this->assertSame([$wallet], array_slice($waiting[(int) $kept->id()]['old'], 0, 1));
+    $this->assertSame('pass', $changes->accept((int) $kept->id(), 'circle')['verdict']);
+    $this->assertSame([], $changes->waiting());
+    $this->import([$moved]);
+    $back = $this->listing('/v1/weather');
+    $this->assertSame('0x1111111111111111111111111111111111111111', $back->get('field_pay_to')->value);
+    $this->assertFalse((bool) $back->get('field_retired')->value);
+  }
+
+  /**
    * Tests that a deleted listing is not imported again.
    */
   public function testDeletedListingIsNotImportedAgain(): void {
@@ -387,6 +423,11 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
       [$items, $options] = $run;
       $this->fetches = 0;
       $counts = $importer ? $this->importer($items, max: $options['max'] ?? 0) : $this->import($items, options: $options);
+      // The feed also counts wallet changes, which the old importer never
+      // refused: a zero is the same answer.
+      if (($counts['wallet_changed'] ?? NULL) === 0) {
+        unset($counts['wallet_changed']);
+      }
       ksort($counts);
       $out[] = ['counts' => $counts, 'fetches' => $this->fetches, 'listings' => $this->snapshot()];
     }

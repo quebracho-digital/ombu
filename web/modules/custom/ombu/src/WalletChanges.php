@@ -22,7 +22,7 @@ class WalletChanges {
   /**
    * The catalogues whose importers can note a changed wallet.
    */
-  public const SOURCES = ['bazaar', 'payai'];
+  public const SOURCES = ['bazaar', 'payai', 'circle'];
 
   public function __construct(
     private readonly StateInterface $state,
@@ -100,11 +100,41 @@ class WalletChanges {
     if ($actual !== $source) {
       throw new \InvalidArgumentException("Listing $id is not from $source.");
     }
+    if ($source === 'circle') {
+      return $this->acceptCircle($product);
+    }
     $importer = $this->container->get("ombu.{$source}_importer");
     if (!is_object($importer) || !method_exists($importer, 'acceptWallet')) {
       throw new \RuntimeException("No wallet-change importer for $source.");
     }
     return $importer->acceptWallet($product);
+  }
+
+  /**
+   * Takes the wallets Circle's catalogue names now, for a Circle listing.
+   *
+   * Circle has no endpoint check of ours to repeat: staff looked at the old
+   * and new wallets (drush ombu:wallet-changes circle) and decide. The run
+   * after this one writes the listing back.
+   *
+   * @return array
+   *   A report shaped like the verifier's: a pass, or a fail that says why.
+   */
+  private function acceptCircle(ProductInterface $product): array {
+    $key = 'ombu.catalog.wallet_changed.circle';
+    $all = $this->state->get($key, []);
+    $accepts = $all[(int) $product->id()]['accepts'] ?? NULL;
+    if (!is_array($accepts) || !$accepts || !is_string($accepts[0]['payTo'] ?? NULL)) {
+      return ['verdict' => 'fail', 'checks' => ['wallet' => ['fail', 'no new wallet is noted for this listing']]];
+    }
+    $product->set('field_pay_to', $accepts[0]['payTo']);
+    $product->set('field_accepts', json_encode($accepts, JSON_UNESCAPED_SLASHES));
+    // No hash: the next run writes the listing back against this wallet.
+    $product->set('field_source_hash', NULL);
+    $product->save();
+    unset($all[(int) $product->id()]);
+    $this->state->set($key, $all);
+    return ['verdict' => 'pass', 'checks' => ['wallet' => ['pass', 'accepted by staff']]];
   }
 
 }

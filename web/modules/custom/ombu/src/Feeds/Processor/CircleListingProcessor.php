@@ -74,7 +74,7 @@ final class CircleListingProcessor extends ListingProcessorBase {
    * {@inheritdoc}
    */
   protected function outcomes(): array {
-    return ['created', 'updated', 'unchanged', 'skipped', 'ours', 'blocked', 'retired'];
+    return ['created', 'updated', 'unchanged', 'skipped', 'ours', 'blocked', 'wallet_changed', 'retired'];
   }
 
   /**
@@ -134,6 +134,26 @@ final class CircleListingProcessor extends ListingProcessorBase {
       (int) $a['amount'],
     ] <=> [!str_starts_with($b['network'], 'eip155:5042'), (int) $b['amount']]);
     $best = $exact[0];
+
+    // A listing pays only the wallets it declared when it came in. Circle
+    // answering with another one is refused and kept for staff, who may
+    // accept it (drush ombu:wallet-changes circle --accept=ID): a changed
+    // wallet is also what a tampered catalogue looks like.
+    if ($product) {
+      $declared = self::payees($product);
+      $offered = array_values(array_unique(array_filter(array_column($accepts, 'payTo'))));
+      if ($declared && array_diff($offered, $declared)) {
+        $this->note('wallet_changed', (int) $product->id(), [
+          'url' => $r['url'],
+          'old' => $declared,
+          'new' => $offered,
+          'accepts' => $accepts,
+          'time' => $this->time->getCurrentTime(),
+        ]);
+        return ['wallet_changed', NULL];
+      }
+      $this->note('wallet_changed', (int) $product->id(), NULL);
+    }
     // Assumes every asset is USDC (6 decimals), as the importer does: true
     // for the whole catalogue today.
     $price = new Price(Calculator::divide((string) $best['amount'], '1000000', 6), 'USD');

@@ -201,20 +201,6 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
   }
 
   /**
-   * The wallets a listing declared when it came in: the only ones it may pay.
-   *
-   * @return string[]
-   *   Its payTo and the payTo of each requirement kept with it.
-   */
-  private static function payees(ProductInterface $product): array {
-    $payees = [(string) $product->get('field_pay_to')->value];
-    foreach (json_decode((string) $product->get('field_accepts')->value, TRUE) ?: [] as $accept) {
-      $payees[] = (string) ($accept['payTo'] ?? '');
-    }
-    return array_values(array_unique(array_filter($payees)));
-  }
-
-  /**
    * Do payTo's incoming transfers look like real sales of this listing?
    *
    * With the detail the transfer index answered (per checked requirement,
@@ -371,28 +357,6 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
   private function stale(ProductInterface $product): bool {
     $checked = $this->drupalState->get("ombu.catalog.checked.{$this->source()}", [])[(int) $product->id()] ?? 0;
     return $this->time->getCurrentTime() - (int) $checked > self::MAX_AGE;
-  }
-
-  /**
-   * Notes something about a listing in the state, by its id; NULL forgets it.
-   *
-   * The lists are `checked` (when it was last asked) and `wallet_changed`
-   * (refused because it pays a wallet it never declared). They are the
-   * importer's keys: WalletChanges and the dashboard read them.
-   */
-  private function note(string $list, int $id, mixed $value): void {
-    $key = "ombu.catalog.$list.{$this->source()}";
-    $all = $this->drupalState->get($key, []);
-    if ($value === NULL) {
-      if (!isset($all[$id])) {
-        return;
-      }
-      unset($all[$id]);
-    }
-    else {
-      $all[$id] = $value;
-    }
-    $this->drupalState->set($key, $all);
   }
 
   /**

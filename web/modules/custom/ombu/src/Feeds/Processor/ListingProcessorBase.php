@@ -532,4 +532,40 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
     $this->setConfiguration(['source' => (string) $form_state->getValue('source')] + $this->configuration);
   }
 
+  /**
+   * Notes something about a listing in the state, by its id; NULL forgets it.
+   *
+   * The lists are `checked` (when it was last asked) and `wallet_changed`
+   * (refused because it pays a wallet it never declared). They are the
+   * importer's keys: WalletChanges and the dashboard read them.
+   */
+  protected function note(string $list, int $id, mixed $value): void {
+    $key = "ombu.catalog.$list.{$this->source()}";
+    $all = $this->drupalState->get($key, []);
+    if ($value === NULL) {
+      if (!isset($all[$id])) {
+        return;
+      }
+      unset($all[$id]);
+    }
+    else {
+      $all[$id] = $value;
+    }
+    $this->drupalState->set($key, $all);
+  }
+
+  /**
+   * The wallets a listing declared when it came in: the only ones it may pay.
+   *
+   * @return string[]
+   *   Its payTo and the payTo of each requirement kept with it.
+   */
+  protected static function payees(ProductInterface $product): array {
+    $payees = [(string) $product->get('field_pay_to')->value];
+    foreach (json_decode((string) $product->get('field_accepts')->value, TRUE) ?: [] as $accept) {
+      $payees[] = (string) ($accept['payTo'] ?? '');
+    }
+    return array_values(array_unique(array_filter($payees)));
+  }
+
 }

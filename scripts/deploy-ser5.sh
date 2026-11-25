@@ -5,14 +5,23 @@
 # Run only after Leo says "deploya":  scripts/deploy-ser5.sh
 #
 # Order (Leo, 2026-11-25): commit - push - ssh - backup - cex - git pull -
-# composer install - updb/cim - cr. Any problem stops it and leaves the site
-# in maintenance mode, so Claude tells Leo before anything else is touched.
+# composer install - updb/cim - cr. Any problem stops it; up to and including
+# the git pull nothing has changed, so the maintenance mode goes back as it was
+# and Claude tells Leo before anything else is touched.
 set -euo pipefail
 
 HOST=${SER5_HOST:-quebracho@192.168.1.66}
 SRC=/data/docker/ombu/src/ombu
 STAMP=$(date +%Y%m%d-%H%M)
 say() { printf '\n== %s\n' "$*"; }
+MAINT_WAS=
+restore() {
+  if [ -n "$MAINT_WAS" ] && [ "$MAINT_WAS" != "$MAINT_NOW" ]; then
+    drush "state:set system.maintenance_mode $MAINT_WAS -y" >/dev/null 2>&1 || true
+    echo "Stopped before the pull finished: maintenance mode back to $MAINT_WAS, nothing was changed." >&2
+  fi
+}
+MAINT_NOW=
 remote() { ssh "$HOST" "cd $SRC/deploy && $*"; }
 drush() { remote "docker compose exec -T web drush $*"; }
 
@@ -46,6 +55,9 @@ remote "mkdir -p /data/docker/ombu/backups && docker compose exec -T db sh -c 'm
 remote "ls -lh /data/docker/ombu/pre-$NEW-$STAMP*"
 
 say "4. Config on SER5 against config/sync (drift) before pulling"
+MAINT_WAS=$(drush "state:get system.maintenance_mode" | tr -dc '01'); MAINT_WAS=${MAINT_WAS:-0}
+trap restore ERR
+MAINT_NOW=1
 drush "state:set system.maintenance_mode 1 -y"
 drush "config:export --destination=/tmp/prod-cex-$STAMP -y" | tail -3
 remote "docker compose exec -T web diff -rq /tmp/prod-cex-$STAMP ../config/sync | head -30 || true"
@@ -53,6 +65,8 @@ remote "docker compose exec -T web rm -rf /tmp/prod-cex-$STAMP"
 
 say "5. git pull --ff-only"
 remote "git pull --ff-only"
+trap - ERR
+echo "Pulled: from here a failure leaves the site in maintenance mode."
 
 say "6. composer install (checks the git packages really moved)"
 remote "docker compose exec -T -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' web composer install --no-dev --no-interaction"

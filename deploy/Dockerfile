@@ -24,5 +24,8 @@ COPY apache-logs-vhost.conf /etc/apache2/ombu-vhost-logs.inc
 RUN a2enmod setenvif && mkdir -p /var/log/ombu \
  && sed -ri 's#^(\s*)CustomLog \$\{APACHE_LOG_DIR\}/access.log combined#&\n\1Include /etc/apache2/ombu-vhost-logs.inc#' /etc/apache2/sites-available/000-default.conf
 
+# The installer is closed in production (apache-block-install.conf).
+COPY apache-block-install.conf /etc/apache2/conf-enabled/ombu-block-install.conf
+
 ENV PATH=/var/www/html/vendor/bin:$PATH
 WORKDIR /var/www/html

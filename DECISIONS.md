@@ -26,6 +26,18 @@
 6. **Leo decides** scope, releases, and what is published (pushes to this
    public repo, drupal.org). Claude proposes, with a recommendation.
 
+## 2026-11-25
+
+### The deploy of f425492: A2UI, the seller check, imports on Feeds, core 11.4.14
+
+Decidido por Leo (2026-11-25): "deploya", after "puedes pushear" and "0x5b6A5611A91305f6b468491467b1244521fe73Bb es la billetera". Core 11.4.14 closes SA-CORE-2026-019 (an access bypass around `install.php`; 11.4.13 was affected); it went in with one `--no-cooldown` run limited to `drupal/core-*`, the only package that moved. `quebracho/x402` stays at 0.5.1: 0.6.0 needs `x402_pay` to widen its `^0.5.1`, a release of its own.
+
+Before it, an independent audit of the 21 commits and a rehearsal on a copy of the production database. They found three things a green suite did not: `config/sync` lacked `feeds` in `core.extension`; the config that updates 10036 and 10039 create had no `uuid`, so `cim` deleted and recreated `field_a2ui` and the feed types (the delete is refused while their feeds exist); and Feeds' own settings, view and actions were not in `config/sync`. All fixed (`f425492`) and guarded by `DeployConfigTest`. Backup `pre-f425492-20261125-1723.sql.gz` on SER5.
+
+Run on SER5: `git pull --ff-only`, `composer install --no-dev`, `drush deploy` (updates 10036-10039, `cim`), `seed-listings.php sellercheck` with only `OMBU_SELLER_ADDRESS`, `seed-blog.php`. The feeds are installed and not scheduled: the old importers still run; switching is a later decision. A Circle listing whose wallet changes is now retired and kept for `drush ombu:wallet-changes circle` (`9d16980`).
+
+Checked live: the pages and the post in three languages answer 200, `sellercheck` answers 402 on Arc mainnet (5000 atomic to the cold address), and a real purchase of 0.005 USDC (tx `0x80bb7399…12dba`) returned the verdict and the card. OFAC's list was refreshed by cron the same day (published 2026-11-23). `/core/install.php` still answers 200 with "already installed"; blocking it in Apache was offered and not decided.
+
 ## 2026-11-17
 
 ### SubQ goes upstream; composer takes ai_provider_universal from 1.0.x-dev

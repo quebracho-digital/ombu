@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ombu\Feeds\Parser;
 
 use Drupal\ombu\Catalog\CatalogRun;
+use Drupal\ombu\Chains;
 
 /**
  * Parses a page of the Circle Agent Marketplace's Discovery API.
@@ -36,17 +37,43 @@ final class CircleParser extends CatalogParserBase {
    *   (those of the exact scheme) and item (the entry as Circle sent it).
    */
   public static function normalize(array $item): ?array {
-    // Every way it is paid, whatever the scheme (upto, batch-settlement):
-    // its chains are all of theirs. The price is the exact ones'.
-    $accepts = array_values(array_filter(is_array($item['accepts'] ?? NULL) ? $item['accepts'] : [], fn($a) => is_array($a) && isset($a['scheme'], $a['network'], $a['amount'], $a['payTo'])));
-    $exact = array_values(array_filter($accepts, fn($a) => $a['scheme'] === 'exact'));
-    if (!$exact || empty($item['resource']) || !is_string($item['resource'])) {
+    $resource = $item['resource'] ?? NULL;
+    if (!is_string($resource) || !preg_match('#^https://[^/\s]+#i', $resource)) {
       return NULL;
     }
-    $method = strtoupper((string) ($item['metadata']['method'] ?? 'GET'));
+    $announced = $item['accepts'] ?? NULL;
+    if (!is_array($announced)) {
+      return NULL;
+    }
+    // Circle's v1 endpoint answers `maxAmountRequired`, v2 answers `amount`:
+    // read both, with `amount` as the one the price comes from (the feed
+    // reads v2 today). A poisoned entry must not reach the processor: a
+    // non-numeric amount throws in Calculator::divide and the whole run stops
+    // retiring. Validate here and count the entry as skipped; run->fail()
+    // stays for real errors.
+    $announced = array_map(static function ($a) {
+      if (is_array($a) && !isset($a['amount']) && isset($a['maxAmountRequired'])) {
+        $a['amount'] = $a['maxAmountRequired'];
+      }
+      return $a;
+    }, $announced);
+    $accepts = array_values(array_filter($announced, fn($a) => is_array($a)
+      && isset($a['scheme'], $a['network'], $a['amount'], $a['payTo'])
+      && is_string($a['scheme']) && is_string($a['network']) && is_string($a['payTo'])
+      && is_string($a['amount']) && ctype_digit($a['amount'])
+      && isset(Chains::NAMES[$a['network']])
+      && isset($a['asset']) && is_string($a['asset']) && $a['asset'] !== ''));
+    $exact = array_values(array_filter($accepts, fn($a) => $a['scheme'] === 'exact'));
+    if (!$exact) {
+      return NULL;
+    }
+    $metadata = $item['metadata'] ?? NULL;
+    $method = is_array($metadata) && isset($metadata['method']) && is_string($metadata['method'])
+      ? strtoupper($metadata['method'])
+      : 'GET';
     return [
-      'key' => $method . ' ' . $item['resource'],
-      'url' => $item['resource'],
+      'key' => $method . ' ' . $resource,
+      'url' => $resource,
       'method' => $method,
       'accepts' => $accepts,
       'exact' => $exact,

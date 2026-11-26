@@ -7,6 +7,7 @@ namespace Drupal\ombu\Feeds\Processor;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\ai_provider_universal_factcheck\Service\PageFetcher;
@@ -121,8 +122,7 @@ final class CircleListingProcessor extends ListingProcessorBase {
     }
     $keep = $product ? (int) $product->id() : NULL;
     $openApiUrl = $provider['openApiUrl'] ?? NULL;
-    $spec = is_string($openApiUrl) && $openApiUrl !== '' ? $this->spec($openApiUrl) : NULL;
-    $operation = $spec ? OpenApi::operation($spec, $r['url'], $method) : NULL;
+    $operation = is_string($openApiUrl) && $openApiUrl !== '' ? $this->operation($openApiUrl, $entry, $r['url'], $method) : NULL;
     $hash = hash('sha256', json_encode([self::FORMAT, $entry, $operation]));
     if ($product && $product->get('field_source_hash')->value === $hash && !$product->get('field_retired')->value) {
       return ['unchanged', $keep];
@@ -138,7 +138,10 @@ final class CircleListingProcessor extends ListingProcessorBase {
     // A listing pays only the wallets it declared when it came in. Circle
     // answering with another one is refused and kept for staff, who may
     // accept it (drush ombu:wallet-changes circle --accept=ID): a changed
-    // wallet is also what a tampered catalogue looks like.
+    // wallet is also what a tampered catalogue looks like. The listing is
+    // not kept in the run, so the clean stage retires it: off sale (the
+    // wallet it came in with may be abandoned, or someone else's) until
+    // staff decide, with nothing overwritten.
     if ($product) {
       $declared = self::payees($product);
       $offered = array_values(array_unique(array_filter(array_column($accepts, 'payTo'))));
@@ -171,7 +174,7 @@ final class CircleListingProcessor extends ListingProcessorBase {
       'field_output_schema' => isset($meta['output']) ? json_encode($meta['output'], JSON_UNESCAPED_SLASHES) : NULL,
       'field_provider' => mb_substr((string) ($provider['name'] ?? ''), 0, 255),
       'field_provider_term' => $this->provider($provider),
-      'field_openapi' => $operation ? json_encode($operation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : NULL,
+      'field_openapi' => $this->openapiJson($operation),
       'field_rails' => array_keys(array_filter([
         'vanilla' => $meta['supportsVanillax402'] ?? TRUE,
         'gateway' => $meta['supportsCircleGateway'] ?? FALSE,
@@ -211,22 +214,44 @@ final class CircleListingProcessor extends ListingProcessorBase {
   }
 
   /**
-   * The provider's term, created or updated from what Circle says of it.
+   * The provider's term, created or completed from what Circle says of it.
+   *
+   * The vocabulary is shared with Bazaar and PayAI and a term is found by
+   * name alone, so an entry may name another seller's provider. Nothing a
+   * term already holds is overwritten (a first writer wins) and a term that
+   * already points to another site is not touched nor linked: otherwise any
+   * entry could rewrite a provider's description, docs and OpenAPI URL, and
+   * its listings would show under that provider.
    */
   private function provider(array $provider): ?int {
     if (!$tid = $this->term('listing_provider', (string) ($provider['name'] ?? ''))) {
       return NULL;
     }
     $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($tid);
+    $website = (string) ($provider['website'] ?? '');
+    if (!preg_match('#^https?://#i', $website) && preg_match('#^https?://#i', (string) ($provider['openApiUrl'] ?? ''))) {
+      $website = (string) $provider['openApiUrl'];
+    }
+    $own = strtolower((string) parse_url($website, PHP_URL_HOST));
+    $held = strtolower((string) parse_url((string) $term->get('field_website')->value, PHP_URL_HOST));
+    if ($held !== '' && $own !== '' && $held !== $own) {
+      $this->loggerFactory->get('ombu')->warning('Provider @name is another site\'s (@held, not @own): the entry keeps no provider.', [
+        '@name' => (string) ($provider['name'] ?? ''),
+        '@held' => $held,
+        '@own' => $own,
+      ]);
+      return NULL;
+    }
     $values = [
       'description' => $provider['description'] ?? '',
-      'field_website' => $provider['website'] ?? NULL,
+      'field_website' => $website !== '' ? $website : NULL,
       'field_docs_url' => $provider['docsUrl'] ?? NULL,
       'field_openapi_url' => $provider['openApiUrl'] ?? NULL,
     ];
     $changed = FALSE;
     foreach ($values as $field => $value) {
-      if ((string) $term->get($field)->value !== (string) $value) {
+      // Only fills what is empty: an existing value (from any source) stands.
+      if ((string) $value !== '' && (string) $term->get($field)->value === '') {
         $term->set($field, $value);
         $changed = TRUE;
       }
@@ -235,6 +260,46 @@ final class CircleListingProcessor extends ListingProcessorBase {
       $term->save();
     }
     return $tid;
+  }
+
+  /**
+   * The operation as JSON, or NULL when it grew past 256 KB.
+   */
+  private function openapiJson(?array $operation): ?string {
+    if (!$operation) {
+      return NULL;
+    }
+    $json = json_encode($operation, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if (!is_string($json) || strlen($json) > 262144) {
+      $this->loggerFactory->get('ombu')->warning('OpenAPI operation skipped: over 256 KB after inlining.');
+      return NULL;
+    }
+    return $json;
+  }
+
+  /**
+   * The operation of a provider's spec, cached by the entry's hash.
+   *
+   * An unchanged entry hashes to the same key, so the spec is not downloaded
+   * again: a hostile catalogue cannot make every run fetch its spec. The
+   * cache is keyed by the entry, so a changed entry asks for the spec again.
+   */
+  private function operation(string $openApiUrl, array $entry, string $url, string $method): ?array {
+    $cache = $this->container->get('cache.default');
+    $key = 'ombu:openapi:' . hash('sha256', json_encode([
+      $openApiUrl,
+      hash('sha256', json_encode([self::FORMAT, $entry])),
+      $url,
+      $method,
+    ]));
+    $cached = $cache->get($key);
+    if ($cached !== FALSE) {
+      return is_array($cached->data) ? $cached->data : NULL;
+    }
+    $spec = $this->spec($openApiUrl);
+    $operation = $spec ? OpenApi::operation($spec, $url, $method) : NULL;
+    $cache->set($key, $operation, $operation === NULL ? 3600 : CacheBackendInterface::CACHE_PERMANENT);
+    return $operation;
   }
 
   /**

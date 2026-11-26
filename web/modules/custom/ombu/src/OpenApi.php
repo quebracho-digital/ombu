@@ -17,6 +17,15 @@ final class OpenApi {
   private const DEPTH = 6;
 
   /**
+   * How many nodes one operation may expand to.
+   *
+   * A schema with K properties that each point back to it grows as K^6; a
+   * spec of a few hundred bytes can exhaust memory. Past this budget the
+   * $ref is returned unexpanded instead of inlined.
+   */
+  private const MAX_NODES = 10000;
+
+  /**
    * A spec as an array, from JSON or YAML; NULL if it is neither.
    */
   public static function parse(string $body): ?array {
@@ -61,15 +70,21 @@ final class OpenApi {
     if (is_array($shared) && $shared) {
       $operation['parameters'] = array_merge($shared, $operation['parameters'] ?? []);
     }
-    return ['path' => $found] + self::inline($operation, $spec, self::DEPTH);
+    $nodes = 0;
+    return ['path' => $found] + self::inline($operation, $spec, self::DEPTH, $nodes);
   }
 
   /**
    * Replaces local $refs ("#/components/...") with what they point to.
    */
-  private static function inline(mixed $node, array $spec, int $depth): mixed {
+  private static function inline(mixed $node, array $spec, int $depth, int &$nodes): mixed {
     if (!is_array($node)) {
       return $node;
+    }
+    if (++$nodes > self::MAX_NODES) {
+      // Past the budget: return the reference (or the raw subtree) without
+      // expanding it. The caller keeps a bounded operation, not a fan-out.
+      return isset($node['$ref']) && is_string($node['$ref']) ? ['$ref' => $node['$ref']] : $node;
     }
     if (isset($node['$ref']) && is_string($node['$ref']) && str_starts_with($node['$ref'], '#/')) {
       if ($depth === 0) {
@@ -83,10 +98,10 @@ final class OpenApi {
         }
         $target = $target[$key];
       }
-      return self::inline($target, $spec, $depth - 1);
+      return self::inline($target, $spec, $depth - 1, $nodes);
     }
     foreach ($node as $key => $value) {
-      $node[$key] = self::inline($value, $spec, $depth);
+      $node[$key] = self::inline($value, $spec, $depth, $nodes);
     }
     return $node;
   }

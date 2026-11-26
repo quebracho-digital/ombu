@@ -168,8 +168,15 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
    */
   public function upsert(array $item, string $source = 'circle'): string {
     // Every way it is paid, whatever the scheme (upto, batch-settlement):
-    // its chains are all of theirs. The price is the exact ones'.
-    $accepts = array_values(array_filter($item['accepts'] ?? [], fn($a) => isset($a['scheme'], $a['network'], $a['amount'], $a['payTo'])));
+    // its chains are all of theirs. The price is the exact ones'. Circle's
+    // v1 endpoint answers `maxAmountRequired`, v2 answers `amount`: read both.
+    $announced = array_map(static function ($a) {
+      if (is_array($a) && !isset($a['amount']) && isset($a['maxAmountRequired'])) {
+        $a['amount'] = $a['maxAmountRequired'];
+      }
+      return $a;
+    }, $item['accepts'] ?? []);
+    $accepts = array_values(array_filter($announced, fn($a) => isset($a['scheme'], $a['network'], $a['amount'], $a['payTo'])));
     $exact = array_values(array_filter($accepts, fn($a) => $a['scheme'] === 'exact'));
     if (!$exact || empty($item['resource'])) {
       return 'skipped';

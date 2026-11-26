@@ -35,17 +35,45 @@ final class DiscoveryParser extends CatalogParserBase {
     if (!is_string($url) || !preg_match('#^https://[^/\s]+#i', $url)) {
       return NULL;
     }
-    $accepts = array_values(array_filter($item['accepts'] ?? [], fn($a) => is_array($a)
+    // A poisoned entry must not throw: a string where a list belongs is a
+    // TypeError that escapes Feeds' \Exception handling and locks the feed.
+    $announced = $item['accepts'] ?? NULL;
+    if (!is_array($announced)) {
+      return NULL;
+    }
+    $accepts = array_values(array_filter($announced, fn($a) => is_array($a)
       && isset($a['scheme'], $a['network'], $a['payTo'])
       && (isset($a['amount']) || isset($a['maxAmountRequired']))));
     if (!$accepts) {
       return NULL;
     }
-    $info = $item['extensions']['bazaar']['info'] ?? [];
-    $method = strtoupper((string) ($info['input']['method'] ?? $item['method'] ?? 'GET'));
+    $extensions = $item['extensions'] ?? [];
+    if (!is_array($extensions)) {
+      return NULL;
+    }
+    $bazaar = $extensions['bazaar'] ?? [];
+    if (!is_array($bazaar)) {
+      return NULL;
+    }
+    $info = $bazaar['info'] ?? [];
+    if (!is_array($info)) {
+      return NULL;
+    }
+    $input = $info['input'] ?? [];
+    if (!is_array($input)) {
+      $input = [];
+    }
+    $infoMethod = $input['method'] ?? NULL;
+    $itemMethod = $item['method'] ?? NULL;
+    $method = strtoupper(is_string($infoMethod) ? $infoMethod : (is_string($itemMethod) ? $itemMethod : 'GET'));
     $host = (string) parse_url($url, PHP_URL_HOST);
-    $description = trim((string) ($item['description'] ?? ''));
-    $provider = trim((string) ($item['serviceName'] ?? '')) ?: $host;
+    $description = $item['description'] ?? '';
+    $description = is_scalar($description) ? trim((string) $description) : '';
+    $serviceName = $item['serviceName'] ?? '';
+    $serviceName = is_scalar($serviceName) ? trim((string) $serviceName) : '';
+    $provider = $serviceName ?: $host;
+    $lastUpdated = $item['lastUpdated'] ?? '';
+    $lastUpdated = is_scalar($lastUpdated) ? (string) $lastUpdated : '';
     // Volatile fields (quality counters, the clock) do not make it "changed".
     $stable = $item;
     unset($stable['quality'], $stable['lastUpdated']);
@@ -64,7 +92,7 @@ final class DiscoveryParser extends CatalogParserBase {
       ))), 0, 10),
       'input' => ($info['input'] ?? $item['inputSchema'] ?? NULL) ?: NULL,
       'output' => ($info['output'] ?? $item['outputSchema'] ?? NULL) ?: NULL,
-      'updated' => (string) ($item['lastUpdated'] ?? ''),
+      'updated' => $lastUpdated,
       'hash' => json_encode($stable),
     ];
   }

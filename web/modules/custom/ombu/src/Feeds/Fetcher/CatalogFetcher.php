@@ -16,6 +16,7 @@ use Drupal\key\KeyRepositoryInterface;
 use Drupal\ombu\Catalog\CatalogFeeds;
 use Drupal\ombu\Catalog\CatalogRun;
 use GuzzleHttp\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -25,10 +26,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * `{items: [...], pagination: {total}}`. Each call reads one page of
  * `page_size` and keeps the next offset in the fetch state, so Feeds parses
  * and processes that page before it asks for the next one (in a batch or a
- * cron queue each page is its own step). The last page is the one with
- * fewer items than a page, or the one that reaches `pagination.total`; an
- * answer without a total ends the run after the first page, as the
- * importers did.
+ * cron queue each page is its own step). The pointer moves by the number of
+ * items the server actually returned, not by the page size it asked for: a
+ * server that clips `limit` must not skip entries. A run finishes on an empty
+ * page, or when the offset reaches `pagination.total`; without a total it goes
+ * on until a page comes back empty, with a cap on pages so a broken catalogue
+ * cannot loop forever. Hitting the cap stops the run without retiring.
  *
  * The address is the feed type's configuration, not the feed's: only staff
  * who administer feed types can point it elsewhere, and it is exported and
@@ -46,6 +49,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 final class CatalogFetcher extends PluginBase implements FetcherInterface, ContainerFactoryPluginInterface, PluginFormInterface {
+
+  /**
+   * Pages read at most in one run, when the catalogue does not say its total.
+   *
+   * 100 per page is 1,000,000 resources; a server that clips the page to 20
+   * still reaches 200,000. Past this the run stops and retires nothing.
+   */
+  private const MAX_PAGES = 10000;
 
   /**
    * Builds the fetcher.
@@ -99,6 +110,8 @@ final class CatalogFetcher extends PluginBase implements FetcherInterface, Conta
     $run = CatalogRun::of($feed);
     $source = CatalogFeeds::sourceOf($feed->getType());
     $offset = (int) ($state->pointer ?? 0);
+    $pages = (int) ($state->pages ?? 0) + 1;
+    $state->pages = $pages;
     try {
       $body = $this->page($offset);
       $page = json_decode($body, TRUE);
@@ -112,17 +125,32 @@ final class CatalogFetcher extends PluginBase implements FetcherInterface, Conta
       $run->fail($e->getMessage());
       throw new \RuntimeException($e->getMessage(), 0, $e);
     }
-    $size = (int) $this->configuration['page_size'];
-    $next = $offset + $size;
-    $total = (int) ($page['pagination']['total'] ?? 0);
+    $count = count($page['items']);
+    $next = $offset + $count;
+    $total = isset($page['pagination']['total']) && is_numeric($page['pagination']['total'])
+      ? (int) $page['pagination']['total']
+      : NULL;
     $state->pointer = $next;
-    $state->total = $total;
-    if (count($page['items']) < $size || $next >= $total) {
+    if ($total !== NULL) {
+      $state->total = $total;
+    }
+    if ($count === 0 || ($total !== NULL && $next >= $total)) {
       $state->setCompleted();
       $run->complete = TRUE;
     }
-    else {
+    elseif ($pages >= self::MAX_PAGES) {
+      // Stop, but the run is not whole: it retires nothing.
+      $state->setCompleted();
+      $run->fail("The $source catalogue answered more than " . self::MAX_PAGES . ' pages without a total; the run is partial.');
+    }
+    elseif ($total !== NULL) {
       $state->progress($total, $next);
+    }
+    else {
+      // No total: keep the fetch state incomplete so Feeds asks for the next
+      // page. The progress is a guess that never reaches 1.0.
+      $state->total = $next + 1;
+      $state->progress = min(0.99, $next / ($next + 1));
     }
     return new RawFetcherResult($body);
   }
@@ -145,14 +173,39 @@ final class CatalogFetcher extends PluginBase implements FetcherInterface, Conta
       }
       $headers[(string) $this->configuration['auth_header']] = $value;
     }
+    $host = (string) parse_url($url, PHP_URL_HOST);
+    $max = (int) $this->configuration['max_bytes'];
     $response = $this->httpClient->request('GET', strtok($url, '?'), [
       'query' => ['limit' => (int) $this->configuration['page_size'], 'offset' => $offset] + $query,
       'timeout' => (int) $this->configuration['timeout'],
       'headers' => $headers,
-      'allow_redirects' => ['max' => 3, 'protocols' => ['https']],
+      // A discovery catalogue has no reason to redirect. A same-host redirect
+      // is allowed; another host is refused so the key header cannot travel.
+      'allow_redirects' => [
+        'max' => 3,
+        'protocols' => ['https'],
+        'strict' => TRUE,
+        'referer' => FALSE,
+        'on_redirect' => function ($request, $response, $uri) use ($host) {
+          if (strcasecmp($uri->getHost(), $host) !== 0) {
+            throw new \RuntimeException('The catalogue redirected to another host.');
+          }
+        },
+      ],
+      // Stream the body so max_bytes is enforced while reading, not after.
+      'stream' => TRUE,
+      'on_headers' => function (ResponseInterface $response) use ($max) {
+        $length = $response->getHeaderLine('Content-Length');
+        if ($length !== '' && (int) $length > $max) {
+          throw new \RuntimeException("The catalogue answered more than $max bytes for one page.");
+        }
+      },
     ]);
+    $status = $response->getStatusCode();
+    if ($status >= 300 && $status < 400) {
+      throw new \RuntimeException("The catalogue redirected ($status); redirects are not followed.");
+    }
     $stream = $response->getBody();
-    $max = (int) $this->configuration['max_bytes'];
     $body = '';
     while (!$stream->eof() && strlen($body) <= $max) {
       $body .= $stream->read(65536);

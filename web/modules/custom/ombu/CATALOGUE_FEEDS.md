@@ -87,6 +87,11 @@ its test):
   nothing. `CircleCatalogFeedTest` shows both, next to the importer doing
   the opposite on the same answer.
 - **Circle reads a resource listed twice once**, as Discovery did.
+- **Circle's v1 entries are read too.** The feed reads the v2 endpoint
+  (`amount`); v1 answers `maxAmountRequired` instead. Both paths read either
+  field now, with `amount` as what the price comes from
+  (`testTheV1AmountIsThePrice`), so a feed pointed at v1 does not import
+  nothing.
 - **An error in one item no longer aborts the run**: it is counted
   (`failed`), logged, and the run retires nothing.
 - **Feeds' entity events** (`feeds.process_entity_prevalidate`, `presave`,
@@ -155,7 +160,7 @@ Not done yet; it is Leo's call (see the todo):
 
 ## Review of 2026-11-22: known gaps and how to close them
 
-A Drupal review read the feeds against the real Feeds 3.2.0 code. The first three highs and M3 were checked again by hand against the code; A2 was not run as a test. A security audit with the `security-audit-quebracho` method (one pass, each finding reproduced with a minimal test and checked by a second agent) came back afterwards; its findings are in the next section. No finding is critical or high. Nothing below is fixed yet.
+A Drupal review read the feeds against the real Feeds 3.2.0 code. The first three highs and M3 were checked again by hand against the code; A2 was not run as a test. A security audit with the `security-audit-quebracho` method (one pass, each finding reproduced with a minimal test and checked by a second agent) came back afterwards; its findings are in the next section. No finding is critical or high. A1, A3, M3, M4 and M5 are fixed, and so are the audit's seven findings (see *Fixed on 2026-11-26*); M2, M6, M7 to M9 and the later list are not.
 
 Fix before the feeds replace the importers (cheap, and each one can break a run or let a third party's data through):
 
@@ -204,8 +209,22 @@ Not covered: whether CDP Bazaar, PayAI and Circle validate their entries, which 
 
 ### Order of work
 
-1. Findings 2, 1 and 6 with A3, M3, M4 and M5 of the review: they break or stall a run and take little code.
-2. Findings 3, 4 and 5: one seller changes another seller's listing. Add a test for each with the same entries the audit used.
-3. Finding 7 and the rest of the review's list.
+1. Findings 2, 1 and 6 with A3, M3, M4 and M5 of the review: they break or stall a run and take little code. **Done.**
+2. Findings 3, 4 and 5: one seller changes another seller's listing. Add a test for each with the same entries the audit used. **Done.**
+3. Finding 7 and the rest of the review's list. **Finding 7 done; the rest waits.**
+
+### Fixed on 2026-11-26
+
+| # | What changed |
+|---|---|
+| 1 | `OpenApi::inline()` keeps a budget of 10000 nodes (`OpenApi::MAX_NODES`): past it a `$ref` is left unexpanded, so a fan-out cannot grow the operation (test: `testRefFanOutIsBounded`). `CircleListingProcessor::operation()` caches it in `cache.default` by the entry's hash, so an unchanged entry does not download the spec again, and an operation over 256 KB is not stored. |
+| 2 | `CatalogParserBase::parse()` wraps `normalize()` in `catch (\Throwable)` and counts the entry as unusable, so nothing escapes Feeds' `\Exception` handling and leaves the feed locked. `DiscoveryParser` checks the type of `accepts`, `extensions`, `bazaar`, `info` and of every scalar it copies (tests: `testDiscoveryRefusesMalformedEntries`). |
+| 3 | A resource listed twice in one run with different wallets is a conflict, not a duplicate: neither entry is written (the first is dropped before it is processed when both are on the same page) and one marker item has the processor take down the listing the run itself wrote (tests: `testOneResourceWithTwoWalletsListsNeither`, `testAConflictOnALaterPageTakesDownWhatTheRunWrote`). The `wallet_changed` guard stays: an entry naming another wallet than the listing declared never updates it. |
+| 4 | Circle's provider term is filled, never overwritten, and a term that already points to another site is neither changed nor linked to the entry's listing (test: `testAnotherSellersProviderTermIsNotRewritten`). |
+| 5 | Same as 3 for Bazaar and PayAI: the pair is dropped instead of letting one entry retire the other's listing. What a genuine entry that fails now still does is retire (its own listing), as before (`testListingThatFailsTheChecksNowIsRetired`). |
+| 6 | `CircleParser` requires https, string fields, an amount of digits (`ctype_digit`), a known network and a non-empty asset; anything else is `skipped` and never reaches `Calculator::divide` (tests: `testCircleRefusesMalformedEntries`). |
+| 7 | A catalogue that reads less than half is trusted once it says the same twice in a row (`ombu.{source}_read_next`), so the reference can come down and retirement is not frozen for good (test: `testCatalogueThatShrinksByHalfRetiresNothing`). The importer got the same rule, so both leave the same state (`testTheFeedAndTheImporterLeaveTheSame`). |
+
+A3, M3, M4 and M5 of the review went in the same pass: the pointer moves by the items the server actually returned, the run completes only on an empty page or at `pagination.total` (a cap of 10000 pages leaves the run partial), a redirect is followed only to the same host, and `max_bytes` is enforced on the headers and while reading.
 
 The audit's files (`findings.json`, the coverage ledger and the proof scripts) are outside the repository, in the owner's `security-audits/ombu/run-1/`.

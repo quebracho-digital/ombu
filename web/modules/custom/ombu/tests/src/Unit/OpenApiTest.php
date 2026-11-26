@@ -82,4 +82,22 @@ final class OpenApiTest extends UnitTestCase {
     $this->assertNull(OpenApi::parse('<html>Not found</html>'));
   }
 
+  /**
+   * A ref fan-out is cut at the node budget instead of exhausting memory.
+   */
+  public function testRefFanOutIsBounded(): void {
+    $properties = [];
+    for ($i = 0; $i < 20; $i++) {
+      $properties["p$i"] = ['$ref' => '#/components/schemas/Self'];
+    }
+    $spec = [
+      'openapi' => '3.0.3',
+      'paths' => ['/x' => ['get' => ['responses' => ['200' => ['content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/Self']]]]]]]],
+      'components' => ['schemas' => ['Self' => ['type' => 'object', 'properties' => $properties]]],
+    ];
+    $operation = OpenApi::operation($spec, 'https://x.example/x', 'GET');
+    $this->assertNotNull($operation);
+    $this->assertLessThan(1024 * 1024, strlen(json_encode($operation)));
+  }
+
 }

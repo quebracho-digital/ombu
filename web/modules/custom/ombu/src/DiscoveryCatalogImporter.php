@@ -214,12 +214,26 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
     // Only a complete run knows what disappeared.
     if ($complete && !$max) {
       // A catalogue that suddenly lists far less than last time is more likely
-      // broken than emptied: keep what we have and say so.
+      // broken than emptied: keep what we have and say so, unless it says the
+      // same twice in a row (then it really shrank, and a reference that only
+      // ever moves up would freeze retirement for good).
       $lastRead = (int) $this->state->get("ombu.{$this->source}_read", 0);
+      $candidate = "ombu.{$this->source}_read_next";
       if ($read === 0 || ($lastRead && $read < $lastRead / 2)) {
-        $counts['retire_skipped'] = "read $read, the run before read $lastRead";
+        if ($read > 0 && (int) $this->state->get($candidate, 0) === $read) {
+          $this->state->set("ombu.{$this->source}_read", $read);
+          $this->state->delete($candidate);
+          $counts['retired'] = $this->retireMissing($seen);
+        }
+        else {
+          if ($read > 0) {
+            $this->state->set($candidate, $read);
+          }
+          $counts['retire_skipped'] = "read $read, the run before read $lastRead";
+        }
       }
       else {
+        $this->state->delete($candidate);
         $counts['retired'] = $this->retireMissing($seen);
         $this->state->set("ombu.{$this->source}_read", $read);
       }

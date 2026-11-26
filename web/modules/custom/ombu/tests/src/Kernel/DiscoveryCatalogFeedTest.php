@@ -356,6 +356,44 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that one resource listed with two wallets lists neither.
+   *
+   * The catalogue repeats the resource with another wallet, first: keeping
+   * the first would hand a seller's resource to the other wallet, and the
+   * second alone would retire the seller's listing. Neither entry lists, and
+   * the listing the seller already had stands.
+   */
+  public function testOneResourceWithTwoWalletsListsNeither(): void {
+    $this->feed([$this->item('/a')], fn() => ['pass', 3]);
+    $before = $this->listing('/a');
+
+    $other = $this->item('/a', ['accepts' => [$this->accept(['payTo' => '0x' . str_repeat('2', 40)])]]);
+    $counts = $this->feed([$other, $this->item('/a')], fn() => ['pass', 3]);
+    $this->assertSame(0, $counts['created'] + $counts['updated']);
+    $this->assertSame(1, $counts['skipped'], 'The conflict is counted once.');
+    $this->assertSame(0, $counts['retired']);
+    $kept = $this->listing('/a');
+    $this->assertSame((int) $before->id(), (int) $kept->id());
+    $this->assertSame(self::PAY_TO, $kept->get('field_pay_to')->value);
+    $this->assertFalse((bool) $kept->get('field_retired')->value);
+  }
+
+  /**
+   * Tests that a conflict on a later page takes down what the run wrote.
+   *
+   * The entries are on different pages: the first is written before the run
+   * reads the second, so the marker takes it down again.
+   */
+  public function testAConflictOnALaterPageTakesDownWhatTheRunWrote(): void {
+    $other = $this->item('/c', ['accepts' => [$this->accept(['payTo' => '0x' . str_repeat('2', 40)])]]);
+    $counts = $this->feed([], fn() => ['pass', 3], pages: [[$other], [$this->item('/c')]]);
+    $this->assertSame(1, $counts['created']);
+    $this->assertSame(1, $counts['retired']);
+    $listing = $this->listing('/c');
+    $this->assertTrue((bool) $listing->get('field_retired')->value, 'Not on sale under either wallet.');
+  }
+
+  /**
    * Tests that an unchanged entry is asked again once its check is old.
    */
   public function testAnUnchangedEntryIsAskedAgainWhenItsCheckIsOld(): void {
@@ -574,6 +612,13 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
     $this->assertSame('read 1, the run before read 4', $counts['retire_skipped']);
     $this->assertFalse((bool) $this->listing('/d')->get('field_retired')->value);
     $this->assertSame(4, $this->container->get('state')->get('ombu.bazaar_read'), 'The last trusted count stays.');
+
+    // The catalogue says the same twice in a row: it really shrank, so what
+    // it no longer lists is retired (a reference that only ever moves up
+    // would keep them for ever).
+    $counts = $this->feed([$this->item('/a')], fn() => ['pass', 3]);
+    $this->assertSame(3, $counts['retired']);
+    $this->assertSame(1, $this->container->get('state')->get('ombu.bazaar_read'));
   }
 
   /**
@@ -961,7 +1006,7 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
       $storage->delete($storage->loadMultiple());
     }
     $state = $this->container->get('state');
-    $state->deleteMultiple(['ombu.bazaar_read', 'ombu.bazaar_last', 'ombu.bazaar_blocked', 'ombu.catalog.checked.bazaar', 'ombu.catalog.wallet_changed.bazaar']);
+    $state->deleteMultiple(['ombu.bazaar_read', 'ombu.bazaar_read_next', 'ombu.bazaar_last', 'ombu.bazaar_blocked', 'ombu.catalog.checked.bazaar', 'ombu.catalog.wallet_changed.bazaar']);
   }
 
 }

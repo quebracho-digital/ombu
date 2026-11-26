@@ -69,6 +69,13 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
   protected array $terms = [];
 
   /**
+   * Listings this run wrote, by id: the only ones a conflict may take down.
+   *
+   * @var array<int, bool>
+   */
+  protected array $written = [];
+
+  /**
    * Builds the processor.
    *
    * The services are not readonly: Feeds serializes its plugins between the
@@ -162,6 +169,7 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
    */
   public function begin(FeedInterface $feed, CatalogRun $run): void {
     $run->started = TRUE;
+    $this->written = [];
     $store = $this->keyValue->get(CatalogRun::STORE);
     $run->options = (array) $store->get('options.' . $feed->id(), []);
     $store->delete('options.' . $feed->id());
@@ -232,10 +240,24 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
       return FALSE;
     }
     $lastRead = (int) $this->drupalState->get("ombu.{$this->source()}_read", 0);
+    $candidate = "ombu.{$this->source()}_read_next";
     if ($run->read === 0 || ($lastRead && $run->read < $lastRead / 2)) {
+      // A catalogue that suddenly lists far less is more likely broken than
+      // emptied, so the count the last whole run earned stands. Trusted once
+      // the catalogue says the same twice in a row: a reference that only
+      // ever moves up would freeze retirement for good after one such run.
+      if ($run->read > 0 && (int) $this->drupalState->get($candidate, 0) === $run->read) {
+        $this->drupalState->set("ombu.{$this->source()}_read", $run->read);
+        $this->drupalState->delete($candidate);
+        return TRUE;
+      }
+      if ($run->read > 0) {
+        $this->drupalState->set($candidate, $run->read);
+      }
       $run->retireSkipped = "read {$run->read}, the run before read $lastRead";
       return FALSE;
     }
+    $this->drupalState->delete($candidate);
     return TRUE;
   }
 
@@ -260,6 +282,11 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
    */
   public function process(FeedInterface $feed, ItemInterface $item, StateInterface $state) {
     $run = CatalogRun::of($feed);
+    if ($item->get('conflict')) {
+      $this->conflicted($feed, $item->toArray(), $run);
+      $state->report(StateType::SKIP, 'conflict', ['feed' => $feed, 'item' => $item]);
+      return;
+    }
     try {
       [$outcome, $keep] = $this->handle($feed, $item, $run);
     }
@@ -327,6 +354,7 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
     if ($run->whole()) {
       if ($run->retireAllowed) {
         $this->drupalState->set("ombu.{$source}_read", $run->read);
+        $this->drupalState->delete("ombu.{$source}_read_next");
       }
       $this->afterWholeRun($feed, $run);
       $this->drupalState->set("ombu.{$source}_last", $this->time->getRequestTime());
@@ -344,6 +372,44 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
       '@c' => json_encode($report),
     ]);
     parent::postProcess($feed, $state);
+  }
+
+  /**
+   * Takes down the listing a run wrote for a resource two entries claim.
+   *
+   * The parser saw one resource (method and URL) listed with different
+   * wallets and kept neither entry. The first of them may have been written
+   * earlier in this run (another page); it is taken down here, so a tampered
+   * catalogue cannot hand a seller's resource to a wallet of its choosing.
+   * A listing this run did not write stands: it was not made from either
+   * entry.
+   */
+  protected function conflicted(FeedInterface $feed, array $r, CatalogRun $run): void {
+    $product = isset($r['url'], $r['method']) ? $this->listing((string) $r['url'], (string) $r['method'], $this->source()) : NULL;
+    if ($product) {
+      // It stays: the clean stage would retire it, and neither entry is a
+      // reason to take the seller's listing down.
+      $clean = $feed->getState(StateInterface::CLEAN);
+      if ($clean instanceof CleanStateInterface) {
+        $clean->removeItem((int) $product->id());
+      }
+    }
+    if (!$product || empty($this->written[(int) $product->id()])) {
+      $run->count('skipped');
+      return;
+    }
+    if (!$product->get('field_retired')->value) {
+      $product->set('field_retired', TRUE)->save();
+      $run->count('retired');
+    }
+    else {
+      $run->count('skipped');
+    }
+    $this->loggerFactory->get('ombu')->warning('@source lists @url (@method) with two wallets: neither is listed.', [
+      '@source' => $this->source(),
+      '@url' => (string) $r['url'],
+      '@method' => (string) $r['method'],
+    ]);
   }
 
   /**
@@ -407,6 +473,7 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
     $feed->dispatchEntityEvent('feeds.process_entity_presave', $product, $item);
     $product->save();
     $feed->dispatchEntityEvent('feeds.process_entity_postsave', $product, $item);
+    $this->written[(int) $product->id()] = TRUE;
     $this->written($product);
     return $outcome;
   }

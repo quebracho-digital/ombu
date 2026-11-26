@@ -123,6 +123,26 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that Circle's x402 v1 amount (`maxAmountRequired`) is the price.
+   *
+   * The whole catalogue answers v1 now: an entry that is not read is an
+   * entry that never becomes a listing.
+   */
+  public function testTheV1AmountIsThePrice(): void {
+    $v1 = $this->item('/v1/old');
+    $v1['x402Version'] = 1;
+    foreach ($v1['accepts'] as $i => $accept) {
+      $v1['accepts'][$i]['maxAmountRequired'] = $accept['amount'];
+      unset($v1['accepts'][$i]['amount']);
+    }
+    $counts = $this->import([$v1]);
+    $this->assertSame(1, $counts['created']);
+    $listing = $this->listing('/v1/old');
+    $this->assertSame(0.001, (float) $listing->get('variations')->entity->getPrice()->getNumber());
+    $this->assertSame('1000', json_decode($listing->get('field_accepts')->value, TRUE)[0]['amount']);
+  }
+
+  /**
    * Tests that every chain it is paid on whatever the scheme.
    */
   public function testEveryChainItIsPaidOnWhateverTheScheme(): void {
@@ -223,6 +243,82 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
     $back = $this->listing('/v1/weather');
     $this->assertSame('0x1111111111111111111111111111111111111111', $back->get('field_pay_to')->value);
     $this->assertFalse((bool) $back->get('field_retired')->value);
+  }
+
+  /**
+   * Tests that one resource listed with two wallets lists neither.
+   *
+   * Circle does not check anything, so a duplicate entry that names the
+   * resource with another wallet, listed first, would otherwise take the
+   * listing (and its payTo) from its seller.
+   */
+  public function testOneResourceWithTwoWalletsListsNeither(): void {
+    $this->import([$this->item('/v1/weather')]);
+    $before = $this->listing('/v1/weather');
+    $wallet = (string) $before->get('field_pay_to')->value;
+
+    $other = $this->item('/v1/weather');
+    $other['accepts'][0]['payTo'] = '0x1111111111111111111111111111111111111111';
+    $counts = $this->import([$this->item('/v1/weather'), $other]);
+    $this->assertSame(0, $counts['created'] + $counts['updated']);
+    // A listing written before the run stands: only what the pair wrote, or
+    // would have written, is taken down.
+    $kept = $this->listing('/v1/weather');
+    $this->assertSame($wallet, $kept->get('field_pay_to')->value);
+    $this->assertFalse((bool) $kept->get('field_retired')->value);
+    $this->assertStringNotContainsString('1111111111', (string) $kept->get('field_accepts')->value);
+
+    // The other way round, on a resource nothing listed yet: neither entry
+    // is written at all, not even the first.
+    $evil = $this->item('/v1/forecast');
+    $evil['accepts'][0]['payTo'] = '0x2222222222222222222222222222222222222222';
+    $counts = $this->import([$evil, $this->item('/v1/forecast')]);
+    $this->assertSame(0, $counts['created'] + $counts['updated']);
+    $this->assertSame(1, $counts['skipped'], 'The conflict is counted once.');
+    $ids = $this->container->get('entity_type.manager')->getStorage('commerce_product')->getQuery()->accessCheck(FALSE)
+      ->condition('field_endpoint', 'https://api.example.com/v1/forecast')->execute();
+    $this->assertSame([], array_values($ids));
+  }
+
+  /**
+   * Tests that an entry cannot rewrite another seller's provider term.
+   *
+   * The vocabulary is shared with Bazaar and PayAI and a term is found by
+   * name alone: the description, the site and the OpenAPI URL of a provider
+   * are not the entry's to change, and a same-named provider of another site
+   * is not linked at all.
+   */
+  public function testAnotherSellersProviderTermIsNotRewritten(): void {
+    $this->import([$this->item('/v1/weather')]);
+    $tid = (int) $this->listing('/v1/weather')->get('field_provider_term')->target_id;
+
+    // The same seller, another description: the term keeps the first one.
+    $same = $this->item('/v1/forecast');
+    $same['metadata']['provider']['description'] = 'Rewritten';
+    $this->import([$same]);
+    $term = $this->term($tid);
+    $this->assertSame('Weather for agents', $term->get('description')->value);
+
+    // Another site under the same name: nothing of the term changes and the
+    // listing is left without a provider.
+    $evil = $this->item('/v1/radar');
+    $evil['metadata']['provider']['website'] = 'https://attacker.example';
+    $evil['metadata']['provider']['description'] = 'Evil';
+    $evil['metadata']['provider']['docsUrl'] = 'https://attacker.example/docs';
+    $evil['metadata']['provider']['openApiUrl'] = 'https://attacker.example/openapi.json';
+    $this->import([$evil]);
+    $term = $this->term($tid);
+    $this->assertSame('https://example.com', $term->get('field_website')->value);
+    $this->assertSame('Weather for agents', $term->get('description')->value);
+    $this->assertSame(self::SPEC_URL, $term->get('field_openapi_url')->value);
+    $this->assertTrue($this->listing('/v1/radar')->get('field_provider_term')->isEmpty());
+  }
+
+  /**
+   * A provider term, fresh from storage.
+   */
+  private function term(int $tid): \Drupal\taxonomy\TermInterface {
+    return $this->container->get('entity_type.manager')->getStorage('taxonomy_term')->loadUnchanged($tid);
   }
 
   /**
@@ -378,6 +474,13 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
     $byImporter = $this->sequence(TRUE);
     $this->wipe();
     $byFeed = $this->sequence(FALSE);
+    // The feed keeps the operation of an entry it has already seen (by the
+    // entry's hash, in cache.default), so it downloads a provider's spec no
+    // more often than the importer, which downloads it on every save.
+    foreach ($byImporter as $i => $run) {
+      $this->assertLessThanOrEqual($run['fetches'], $byFeed[$i]['fetches'], "Run $i downloaded more specs than the importer.");
+      unset($byImporter[$i]['fetches'], $byFeed[$i]['fetches']);
+    }
     $this->assertSame($byImporter, $byFeed);
     $totals = [];
     foreach ($byFeed as $run) {
@@ -480,7 +583,7 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
       $storage = $etm->getStorage($type);
       $storage->delete($storage->loadMultiple());
     }
-    $this->container->get('state')->deleteMultiple(['ombu.circle_read', 'ombu.circle_last', CircleCatalogImporter::BLOCKED]);
+    $this->container->get('state')->deleteMultiple(['ombu.circle_read', 'ombu.circle_read_next', 'ombu.circle_last', CircleCatalogImporter::BLOCKED]);
   }
 
   /**

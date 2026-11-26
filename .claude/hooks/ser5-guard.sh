@@ -14,7 +14,8 @@ case "$cmd" in *scripts/deploy-ser5.sh*) exit 0 ;; esac
 # Only what is about SER5 and Ombú's directory or containers.
 printf '%s' "$cmd" | grep -Eq 'ser5|192\.168\.1\.66|@quebracho' || exit 0
 printf '%s' "$cmd" | grep -Eq '/data/docker/ombu|ombu-(web|db|meilisearch)-1|docker[[:space:]]+compose' || exit 0
-# Reading is fine; these write.
+# Reading is fine (a redirect to /dev/null writes nothing); these write.
+cmd=${cmd//\/dev\/null/}
 if printf '%s' "$cmd" | grep -Eq '(^|[[:space:];&|])(scp|rsync|sftp)[[:space:]]|docker[[:space:]]+cp|docker[[:space:]]+compose[[:space:]]+(up|build|restart|down|cp)|tee[[:space:]]|sed[[:space:]]+-i|>>?[[:space:]]*/|git[[:space:]]+(commit|checkout|reset|stash|clean|apply|merge|rebase)|composer[[:space:]]+(require|update|remove)|apache2ctl|drush[^|]*(cim|config:import|updb|updatedb|deploy|config:set|cset|pmu)|(^|[[:space:]])(mv|cp|rm)[[:space:]]'; then
   echo "Blocked: Ombú reaches SER5 only by commit, push and scripts/deploy-ser5.sh (git pull), never by copying files in. (scp/rsync to other places are fine.)" >&2
   exit 2

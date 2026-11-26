@@ -256,6 +256,7 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
       'field_docs_url' => $provider['docsUrl'] ?? $provider['website'] ?? NULL,
       'field_source' => $source,
       'field_verified' => FALSE,
+      'field_activity' => 'unknown',
       'field_source_updated' => $updated,
       'field_category' => $this->term('listing_category', self::categoryLabel($provider['category'] ?? 'OTHER')),
       'field_tags' => array_map(fn($t) => $this->term('listing_tag', $t), array_slice($provider['tags'] ?? [], 0, 10)),

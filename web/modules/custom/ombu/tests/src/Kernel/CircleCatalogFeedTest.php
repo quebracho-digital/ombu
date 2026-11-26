@@ -116,6 +116,7 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
     $this->assertSame(['gateway'], array_column($listing->get('field_rails')->getValue(), 'value'));
     $this->assertTrue((bool) $listing->get('field_siwx')->value);
     $this->assertSame('Web search research', $listing->get('field_category')->entity->label());
+    $this->assertSame('unknown', $listing->get('field_activity')->value, 'Circle is not checked on chain.');
     $this->assertSame('listing_tag', $listing->get('field_tags')->entity->bundle());
     $operation = json_decode($listing->get('field_openapi')->value, TRUE);
     $this->assertSame('Weather now', $operation['summary']);
@@ -548,7 +549,7 @@ final class CircleCatalogFeedTest extends CommerceKernelTestBase {
     $out = [];
     foreach ($storage->loadMultiple() as $p) {
       $values = [];
-      foreach (['title', 'field_endpoint', 'field_http_method', 'field_pay_to', 'field_accepts', 'field_input_schema', 'field_output_schema', 'field_provider', 'field_openapi', 'field_retired', 'field_source_hash', 'field_source', 'field_verified', 'field_source_updated', 'field_siwx', 'field_docs_url', 'status'] as $field) {
+      foreach (['title', 'field_endpoint', 'field_http_method', 'field_pay_to', 'field_accepts', 'field_input_schema', 'field_output_schema', 'field_provider', 'field_openapi', 'field_retired', 'field_source_hash', 'field_source', 'field_verified', 'field_activity', 'field_source_updated', 'field_siwx', 'field_docs_url', 'status'] as $field) {
         $values[$field] = $p->get($field)->value;
       }
       $values['body'] = $p->get('body')->value;

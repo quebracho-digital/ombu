@@ -196,7 +196,7 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
     if (!$this->coherent($report, $product, $run)) {
       return ['inactive', NULL];
     }
-    $saved = $this->save($feed, $item, $product, $r, $report['accepts'], $hash);
+    $saved = $this->save($feed, $item, $product, $r, $report['accepts'], $hash, isset($report['activity']) ? (int) $report['activity'] : NULL);
     return [$saved, $product ? (int) $product->id() : NULL];
   }
 
@@ -301,7 +301,7 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
    * @return string
    *   `created` or `updated`.
    */
-  private function save(FeedInterface $feed, ItemInterface $item, ?ProductInterface $product, array $r, array $accepts, string $hash): string {
+  private function save(FeedInterface $feed, ItemInterface $item, ?ProductInterface $product, array $r, array $accepts, string $hash, ?int $activity = NULL): string {
     // The cheapest way to pay. Every verified asset is USDC (6 decimals).
     usort($accepts, fn($a, $b) => (int) ($a['amount'] ?? $a['maxAmountRequired']) <=> (int) ($b['amount'] ?? $b['maxAmountRequired']));
     $best = $accepts[0];
@@ -326,6 +326,9 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
       'field_source' => $source,
       'field_markets' => [$source],
       'field_verified' => FALSE,
+      // What the check saw, for the facet that filters by real transactions:
+      // a wallet the index could not answer for stays unknown.
+      'field_activity' => $activity === NULL ? 'unknown' : ($activity > 0 ? 'paid' : 'unpaid'),
       'field_source_updated' => $r['updated'],
       'field_tags' => array_map(fn($t) => $this->term('listing_tag', $t), $r['tags']),
       'status' => TRUE,

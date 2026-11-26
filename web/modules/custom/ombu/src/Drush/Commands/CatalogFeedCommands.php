@@ -42,7 +42,9 @@ final class CatalogFeedCommands extends DrushCommands {
   #[CLI\Option(name: 'only-tags', description: 'Comma-separated tags: import only resources carrying one of them (Bazaar, PayAI).')]
   #[CLI\Option(name: 'price-match', description: 'payTo must have received a transfer of exactly the price the listing had on that day (Bazaar, PayAI).')]
   #[CLI\Option(name: 'max-age-days', description: 'The newest incoming transfer no older than this many days, 0 = any (Bazaar, PayAI).')]
+  #[CLI\Option(name: 'min-transfers', description: 'Incoming USDC transfers payTo must have received, 0 = the feed type\'s (Bazaar, PayAI).')]
   #[CLI\Usage(name: 'drush ombu:feed-import bazaar --max=300', description: 'Read the first 300 resources of Bazaar and list the verified ones.')]
+  #[CLI\Usage(name: 'drush ombu:feed-import payai --price-match --max-age-days=30', description: 'Only resources whose wallet was paid this listing\'s price in the last 30 days.')]
   #[CLI\Usage(name: 'drush ombu:feed-import circle', description: "A whole run of Circle's catalogue.")]
   public function import(
     string $source,
@@ -51,6 +53,7 @@ final class CatalogFeedCommands extends DrushCommands {
       'only-tags' => '',
       'price-match' => FALSE,
       'max-age-days' => 0,
+      'min-transfers' => 0,
     ],
   ): void {
     $counts = $this->feeds->import($source, [
@@ -58,6 +61,7 @@ final class CatalogFeedCommands extends DrushCommands {
       'only_tags' => array_values(array_filter(array_map('trim', explode(',', (string) $options['only-tags'])))),
       'price_match' => $options['price-match'] ? TRUE : NULL,
       'max_age_days' => (int) $options['max-age-days'] ?: NULL,
+      'min_transfers' => (int) $options['min-transfers'] ?: NULL,
     ]);
     $this->logger()->success(json_encode($counts, JSON_UNESCAPED_SLASHES));
   }

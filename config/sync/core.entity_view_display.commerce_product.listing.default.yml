@@ -240,6 +240,7 @@ hidden:
   created: true
   field_a2ui: true
   field_accepts: true
+  field_activity: true
   field_openapi: true
   field_output_schema: true
   field_provider: true

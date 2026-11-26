@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.storage.commerce_product.field_activity
     - field.storage.commerce_product.body
     - field.storage.commerce_product.field_category
     - field.storage.commerce_product.field_network
@@ -25,6 +26,14 @@ name: Listings
 description: null
 read_only: false
 field_settings:
+  activity:
+    label: activity
+    datasource_id: 'entity:commerce_product'
+    property_path: field_activity
+    type: string
+    dependencies:
+      config:
+        - field.storage.commerce_product.field_activity
   body:
     label: body
     datasource_id: 'entity:commerce_product'

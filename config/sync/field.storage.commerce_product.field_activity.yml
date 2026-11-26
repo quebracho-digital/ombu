@@ -1,0 +1,30 @@
+uuid: 5b1c9a2e-7f4d-4a61-9c3e-2f0b8d5a41c7
+langcode: en
+status: true
+dependencies:
+  module:
+    - commerce_product
+    - options
+id: commerce_product.field_activity
+field_name: field_activity
+entity_type: commerce_product
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: paid
+      label: 'With transactions'
+    -
+      value: unpaid
+      label: 'No transactions'
+    -
+      value: unknown
+      label: 'Not checked'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

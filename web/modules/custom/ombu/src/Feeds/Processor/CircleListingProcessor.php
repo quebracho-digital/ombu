@@ -185,6 +185,8 @@ final class CircleListingProcessor extends ListingProcessorBase {
       'field_docs_url' => $provider['docsUrl'] ?? $provider['website'] ?? NULL,
       'field_source' => $this->source(),
       'field_verified' => FALSE,
+      // Circle is not checked on chain, as its importer never was.
+      'field_activity' => 'unknown',
       'field_source_updated' => $entry['lastUpdated'] ?? '',
       'field_category' => $this->term('listing_category', CircleCatalogImporter::categoryLabel((string) ($provider['category'] ?? 'OTHER'))),
       'field_tags' => array_map(fn($t) => $this->term('listing_tag', (string) $t), array_slice(is_array($provider['tags'] ?? NULL) ? $provider['tags'] : [], 0, 10)),

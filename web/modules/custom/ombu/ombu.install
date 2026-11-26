@@ -685,3 +685,79 @@ function ombu_update_10039(): void {
     \Drupal::service('ombu.catalog_feeds')->feed($source);
   }
 }
+
+/**
+ * On-chain activity: the field behind the facet that filters by transactions.
+ *
+ * A listing from Bazaar or PayAI had incoming USDC on its wallet when it came
+ * in (that is the check), so it starts as `paid`; Circle's listings were
+ * never checked, and neither was anything else, so they start as `unknown`
+ * until their next run says otherwise.
+ */
+function ombu_update_10040(): string {
+  _ombu_config('install', [
+    'field.storage.commerce_product.field_activity',
+    'field.field.commerce_product.listing.field_activity',
+  ]);
+  $db = \Drupal::database();
+  if (!$db->schema()->tableExists('commerce_product__field_activity')) {
+    return 'The activity field is installed but its table is missing: nothing was filled.';
+  }
+  $filled = (int) $db->select('commerce_product__field_activity', 'a')->countQuery()->execute()->fetchField();
+  if ($filled > 0) {
+    return "The activity field already has $filled values: nothing was filled.";
+  }
+  // One statement: every listing, paid where a catalogue checked it on chain.
+  // A product is not revisionable, so its revision id is its own id.
+  $select = $db->select('commerce_product', 'p');
+  $select->addField('p', 'product_id', 'entity_id');
+  $select->addField('p', 'product_id', 'revision_id');
+  $select->addField('p', 'type', 'bundle');
+  $select->addField('p', 'langcode', 'langcode');
+  $select->addExpression("'0'", 'deleted');
+  $select->addExpression("'0'", 'delta');
+  $select->leftJoin('commerce_product__field_source', 's', 's.entity_id = p.product_id');
+  $select->addExpression("CASE WHEN s.field_source_value IN ('bazaar', 'payai') THEN 'paid' ELSE 'unknown' END", 'field_activity_value');
+  $select->condition('p.type', 'listing');
+  $db->insert('commerce_product__field_activity')
+    ->fields(['entity_id', 'revision_id', 'bundle', 'langcode', 'deleted', 'delta', 'field_activity_value'])
+    ->from($select)
+    ->execute();
+  // An insert-select answers with the last insert id, not the rows: count.
+  $filled = (int) $db->select('commerce_product__field_activity', 'a')->countQuery()->execute()->fetchField();
+  return "Filled the on-chain activity of $filled listings.";
+}
+
+/**
+ * The catalogues' sources are values of the field the importers write.
+ *
+ * A site that had the importers before Bazaar and PayAI were added holds
+ * listings with those sources while the field does not allow them.
+ */
+function ombu_update_10041(): string {
+  $storage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->load('commerce_product.field_source');
+  if (!$storage) {
+    return 'No field_source: nothing to add.';
+  }
+  $allowed = (array) $storage->getSetting('allowed_values');
+  // A list field keeps them as value => label, or as a list of value/label
+  // pairs, depending on how they were set: accept both shapes.
+  $pairs = is_array(reset($allowed));
+  $values = $pairs ? array_column($allowed, 'value') : array_keys($allowed);
+  $added = [];
+  foreach (['bazaar' => 'Coinbase Bazaar', 'payai' => 'PayAI'] as $value => $label) {
+    if (!in_array($value, $values, TRUE)) {
+      if ($pairs) {
+        $allowed[] = ['value' => $value, 'label' => $label];
+      }
+      else {
+        $allowed[$value] = $label;
+      }
+      $added[] = $value;
+    }
+  }
+  if ($added) {
+    $storage->setSetting('allowed_values', $allowed)->save();
+  }
+  return $added ? 'Added the sources: ' . implode(', ', $added) . '.' : 'Every source was already a value.';
+}

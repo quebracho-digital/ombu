@@ -65,7 +65,8 @@ them by changing the path; each points to the other (`Link` header,
 | `provider` | name |
 | `payment` | `vanilla` (plain x402, any wallet) or `gateway` (Circle Gateway) |
 | `tag` | name |
-| `seller` | `ours`, `third_party` (listed at `/market/sell`) or `circle` |
+| `seller` | `ours`, `third_party` (listed at `/market/sell`), `circle`, `bazaar` or `payai`, by the name the field gives each |
+| `transactions` | `paid` (the wallet has received USDC), `unpaid`, `unknown` (not checked on chain) |
 
 The JSON lists every facet's values with their counts and the `url` that
 adds each, so an agent narrows a search by following links. Also: `limit`

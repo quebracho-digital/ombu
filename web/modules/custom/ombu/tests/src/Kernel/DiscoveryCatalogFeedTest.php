@@ -234,6 +234,7 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
     $this->assertSame(self::PAY_TO, $listing->get('field_pay_to')->value);
     $this->assertSame('GET', $listing->get('field_http_method')->value);
     $this->assertSame('Seller', $listing->get('field_provider_term')->entity->label());
+    $this->assertSame('paid', $listing->get('field_activity')->value, 'The check saw its transfers.');
     $this->assertSame(0.005, (float) $listing->get('variations')->entity->getPrice()->getNumber());
     $this->assertSame('listing_tag', $listing->get('field_tags')->entity->bundle());
     $this->assertSame('limit=100&offset=0', $this->pages[0], 'Pages of 100, from the start.');
@@ -989,7 +990,7 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
     $out = [];
     foreach ($storage->loadMultiple() as $p) {
       $values = [];
-      foreach (['title', 'field_endpoint', 'field_http_method', 'field_pay_to', 'field_accepts', 'field_input_schema', 'field_output_schema', 'field_provider', 'field_retired', 'field_source_hash', 'field_source', 'field_verified', 'field_source_updated', 'field_siwx', 'status'] as $field) {
+      foreach (['title', 'field_endpoint', 'field_http_method', 'field_pay_to', 'field_accepts', 'field_input_schema', 'field_output_schema', 'field_provider', 'field_retired', 'field_source_hash', 'field_source', 'field_verified', 'field_activity', 'field_source_updated', 'field_siwx', 'status'] as $field) {
         $values[$field] = $p->get($field)->value;
       }
       $values['body'] = $p->get('body')->value;

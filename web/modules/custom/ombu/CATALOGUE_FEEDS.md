@@ -88,6 +88,53 @@ cut the ones that were paid but not like a sale of that listing. A listing
 already imported is asked again when its catalogue entry changes, or when its
 last check is older than a week (`MAX_AGE`).
 
+## Where it is configured
+
+**The feed type's processor** is where the defaults live, for every run
+(hand, cron or batch): `/admin/structure/feeds/manage/ombu_bazaar/processor`
+and `/admin/structure/feeds/manage/ombu_payai/processor`.
+
+| Setting | What it does |
+|---|---|
+| *Resources to verify per run* (`budget`, 200) | How many new or changed entries a run checks; the rest wait for the next run (`deferred`). |
+| *Incoming USDC transfers payTo must have received* (`min_transfers`, 1) | The on-chain check: fewer than this and the resource is not listed (`inactive`, `no incoming USDC`). 0 lists a wallet with no history. |
+| *payTo must have received a transfer of exactly the listing's price on that day* (`price_match`) | The stricter version: a transfer of the listing's own price, not just any. |
+| *Only resources with one of these tags* (`only_tags`) | Narrows what comes in; an existing listing outside the tags stays. |
+
+**One run** can narrow it without touching the defaults, from drush:
+
+```sh
+ddev drush ombu:feed-import payai --min-transfers=3
+ddev drush ombu:feed-import payai --price-match --max-age-days=30
+ddev drush ombu:feed-import bazaar --only-tags=ai,inference --max=300
+```
+
+`--min-transfers` and `--price-match` are what "only listings with real
+transactions" means: the first demands history on the wallet, the second
+demands a payment that looks like a sale of that listing.
+
+## The source and the transactions in /market
+
+Two facets of the market view (`views.view.market`), both from list fields
+whose names come from the field itself (no second list of labels):
+
+| Facet | Field | Processor | Shows |
+|---|---|---|---|
+| *Source* (`?seller[]=`, label "Source") | `field_source` | `ombu_source_name` | "Quebracho", "Third party", "Circle Agent Marketplace", "Coinbase Bazaar", "PayAI" |
+| *Transactions* (`?transactions[]=`, label "Transactions") | `field_activity` | `ombu_activity_label` | "With transactions", "No transactions", "Not checked" |
+
+`field_activity` is what the catalogue check saw on chain: the Discovery
+processor writes `paid` when the wallet had incoming USDC, `unpaid` when the
+index answered zero and `unknown` when it could not answer; Circle writes
+`unknown` (its catalogue is not checked). `ombu_update_10040` fills the
+listings that existed before the field: `paid` for Bazaar and PayAI (that was
+their check) and `unknown` for the rest. `ombu_update_10041` adds `bazaar`
+and `payai` to `field_source` where the field did not allow them yet.
+
+Both indexes (`listings`, `listings_meilisearch`) carry the field as
+`activity`; after the deploy they need indexing again for the facet to have
+values.
+
 ## The rules the feeds keep
 
 Everything the importers checked, and where it lives now (the table in

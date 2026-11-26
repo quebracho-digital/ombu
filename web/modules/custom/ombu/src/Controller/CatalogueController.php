@@ -15,6 +15,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ombu\Catalog\ListLabels;
 use Drupal\ombu\Chains;
 use Drupal\ombu\CircleCatalogImporter;
 use Drupal\ombu\Markdown;
@@ -61,6 +62,7 @@ final class CatalogueController implements ContainerInjectionInterface {
     'payment' => 'rails',
     'tag' => 'tag',
     'seller' => 'source',
+    'transactions' => 'activity',
     'wallet' => 'wallet',
   ];
 
@@ -234,7 +236,8 @@ final class CatalogueController implements ContainerInjectionInterface {
   private function facets(array $facets, array $selected, Request $request): array {
     $labels = [
       'payment' => ['vanilla' => 'Plain x402', 'gateway' => 'Circle Gateway'],
-      'seller' => ['ours' => 'Quebracho', 'circle' => 'Circle Agent Marketplace', 'third_party' => 'Third party'],
+      'seller' => ListLabels::of('field_source'),
+      'transactions' => ListLabels::of('field_activity'),
     ];
     $query = $request->query->all();
     unset($query['offset']);

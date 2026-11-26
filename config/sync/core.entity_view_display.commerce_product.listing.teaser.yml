@@ -111,6 +111,7 @@ hidden:
   created: true
   field_a2ui: true
   field_accepts: true
+  field_activity: true
   field_docs_url: true
   field_endpoint: true
   field_files: true

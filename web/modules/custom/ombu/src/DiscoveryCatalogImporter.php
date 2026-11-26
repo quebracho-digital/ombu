@@ -355,7 +355,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       return 'inactive';
     }
     $seen[$r['key']] = TRUE;
-    return $this->save($product, $r, $report['accepts'], $hash);
+    return $this->save($product, $r, $report['accepts'], $hash, isset($report['activity']) ? (int) $report['activity'] : NULL);
   }
 
   /**
@@ -480,11 +480,13 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
    *   The live requirements that passed: what the listing is sold under.
    * @param string $hash
    *   Of the catalogue entry, to tell a change next time.
+   * @param int|null $activity
+   *   Incoming USDC transfers the check saw, or NULL when it could not tell.
    *
    * @return string
    *   `created` or `updated`.
    */
-  private function save(?ProductInterface $product, array $r, array $accepts, string $hash): string {
+  private function save(?ProductInterface $product, array $r, array $accepts, string $hash, ?int $activity = NULL): string {
     // The cheapest way to pay. Every verified asset is USDC (6 decimals).
     usort($accepts, fn($a, $b) => (int) ($a['amount'] ?? $a['maxAmountRequired']) <=> (int) ($b['amount'] ?? $b['maxAmountRequired']));
     $best = $accepts[0];
@@ -508,6 +510,7 @@ final class DiscoveryCatalogImporter implements CatalogImporterInterface {
       'field_source' => $this->source,
       'field_markets' => [$this->source],
       'field_verified' => FALSE,
+      'field_activity' => $activity === NULL ? 'unknown' : ($activity > 0 ? 'paid' : 'unpaid'),
       'field_source_updated' => $r['updated'],
       'field_tags' => array_map(fn($t) => $this->term('listing_tag', $t), $r['tags']),
       'status' => TRUE,

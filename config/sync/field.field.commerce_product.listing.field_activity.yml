@@ -1,0 +1,23 @@
+uuid: 9d3e6b14-2c58-4f07-8a91-6b7c0d2e5f38
+langcode: en
+status: true
+dependencies:
+  config:
+    - commerce_product.commerce_product_type.listing
+    - field.storage.commerce_product.field_activity
+  module:
+    - options
+id: commerce_product.listing.field_activity
+field_name: field_activity
+entity_type: commerce_product
+bundle: listing
+label: 'On-chain activity'
+description: 'What the catalogue check saw: incoming USDC to the wallet it pays.'
+required: false
+translatable: false
+default_value:
+  -
+    value: unknown
+default_value_callback: ''
+settings: {  }
+field_type: list_string

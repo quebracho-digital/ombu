@@ -137,3 +137,15 @@ feeds.processor.ombu_discovery_listing:
     max_age_days:
       type: integer
       label: 'Newest incoming transfer no older than this many days (0 = any)'
+
+# The facets processors that name a list field's values need no settings;
+# the view schema asks for one schema per processor id.
+plugin.plugin_configuration.facets_processor.ombu_source_name:
+  type: mapping
+  label: 'Source names (no settings)'
+  mapping: {  }
+
+plugin.plugin_configuration.facets_processor.ombu_activity_label:
+  type: mapping
+  label: 'Activity names (no settings)'
+  mapping: {  }

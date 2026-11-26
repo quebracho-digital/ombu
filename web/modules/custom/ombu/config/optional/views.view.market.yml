@@ -130,6 +130,18 @@ display:
                 soft_limit: 8
                 soft_limit_label_less: 'Show less'
                 soft_limit_label_more: 'Show more'
+              facets_activity:
+                plugin_id: bef
+                advanced:
+                  collapsible: true
+                  collapsible_disable_automatic_open: false
+                  open_by_default: false
+                  sort_options: false
+                  is_secondary: false
+                select_all_none: false
+                soft_limit: 8
+                soft_limit_label_less: 'Show less'
+                soft_limit_label_more: 'Show more'
       access:
         type: none
         options: {  }
@@ -286,7 +298,7 @@ display:
           plugin_id: facets_filter
           exposed: true
           expose:
-            label: Seller
+            label: Source
             identifier: seller
             multiple: true
           facet:
@@ -295,6 +307,37 @@ display:
             min_count: 1
             show_numbers: true
             processor_configs:
+              ombu_source_name:
+                processor_id: ombu_source_name
+                weights:
+                  post_query: 50
+                settings: {  }
+              list_item:
+                processor_id: list_item
+                weights:
+                  build: 50
+                settings: {  }
+        facets_activity:
+          id: facets_activity
+          table: search_api_index_listings
+          field: facets_activity
+          plugin_id: facets_filter
+          exposed: true
+          expose:
+            label: Transactions
+            identifier: transactions
+            multiple: true
+          facet:
+            query_operator: or
+            hard_limit: 0
+            min_count: 1
+            show_numbers: true
+            processor_configs:
+              ombu_activity_label:
+                processor_id: ombu_activity_label
+                weights:
+                  post_query: 50
+                settings: {  }
               list_item:
                 processor_id: list_item
                 weights:

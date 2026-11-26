@@ -17,10 +17,14 @@ Para arrancar una sesión nueva con contexto limpio. Leer en este orden: este ar
 - El bloqueo del instalador (arriba).
 - `config/sync/update.settings.yml`: sin email de avisos de actualización (era el placeholder `admin@example.com`; Leo no quiere un mail al día).
 - `scripts/deploy-ser5.sh` y el hook (solo repo, no cambian prod).
+- **Los feeds del catálogo, con los arreglos del review y de la auditoría de seguridad** (2026-11-26): guarda de retiro que ya no es trinquete, una entrada duplicada no retira el listado de otro, Circle no pisa el término del proveedor de otro vendedor. Siguen sin programarse: los importadores viejos corren en cron.
+- **Mercado: facetas de origen y de transacciones** (`ombu_update_10040`/`10041` instalan `field_activity` y completan lo que ya existía). Después del deploy hay que **reindexar los dos índices** (`drush search-api:index` o el cron) o la faceta Transactions muestra solo lo nuevo.
+- **El bloque de compartir con las marcas de cada red** (2026-11-26): solo plantilla, CSS y JS del módulo; ningún cambio de config.
 - **El script de deploy nunca corrió entero contra SER5**: el primer "deploya" es su primera ejecución real. Mirar la salida de cada paso; el mantenimiento se activa solo justo antes del `git pull`; usa `drush deploy` (updb, cim, cr), no cim antes que updb.
 
 ## Abierto
 - Pasar los importadores del catálogo a Feeds (programar los 3 feed types y quitar el cron viejo): decisión de Leo, no tomada.
+- Revisar los listados importados que quedaron `activity = unknown` cuando el índice no pudo decir si hubo transferencias: se completan en la próxima corrida que los verifique (`--min-transfers` filtra desde el import).
 - `quebracho/x402` 0.6.0 está bloqueado por `x402_pay` beta5 (`^0.5.1`): hace falta una versión de x402_pay que lo amplíe. La lista OFAC la refresca el cron de x402_pay, no la librería.
 - Auditoría, no atendido: `/ombu/a2ui/render` sin límite de tasa; el formulario A2UI envía claves del modelo de datos que no usa; portabilidad MySQL a Postgres sin probar (los Kernel tests deben correr en MySQL, no SQLite).
 - El post en pt-br necesita revisión de un hablante nativo.

@@ -118,20 +118,41 @@ final class CatalogParserTest extends UnitTestCase {
    * A malformed discovery entry is refused, not thrown.
    */
   public function testDiscoveryRefusesMalformedEntries(): void {
-    $this->assertNull(DiscoveryParser::normalize(['resource' => 'https://x.example/a', 'accepts' => 'not-an-array']));
-    $this->assertNull(DiscoveryParser::normalize(['resource' => 'http://x.example/a', 'accepts' => []]));
-    $this->assertNull(DiscoveryParser::normalize(['resource' => 'https://x.example/a', 'accepts' => [['asset' => 'x']], 'extensions' => 'not-an-array']));
+    $entries = [
+      ['resource' => 'https://x.example/a', 'accepts' => 'not-an-array'],
+      ['resource' => 'http://x.example/a', 'accepts' => []],
+      [
+        'resource' => 'https://x.example/a',
+        'accepts' => [['asset' => 'x']],
+        'extensions' => 'not-an-array',
+      ],
+    ];
+    foreach ($entries as $i => $entry) {
+      $this->assertNull(DiscoveryParser::normalize($entry), "entry $i");
+    }
   }
 
   /**
    * A malformed Circle entry is refused, not thrown.
    */
   public function testCircleRefusesMalformedEntries(): void {
-    $this->assertNull(CircleParser::normalize(['resource' => 'http://x.example/a', 'accepts' => [['scheme' => 'exact', 'amount' => '1', 'asset' => 'x']]]));
-    $this->assertNull(CircleParser::normalize(['resource' => 'https://x.example/a', 'accepts' => [['scheme' => 'exact', 'amount' => 'abc', 'asset' => 'x']]]));
-    $this->assertNull(CircleParser::normalize(['resource' => 'https://x.example/a', 'accepts' => [['scheme' => 'exact', 'amount' => '-1', 'asset' => 'x']]]));
-    $this->assertNull(CircleParser::normalize(['resource' => 'https://x.example/a', 'accepts' => [['scheme' => 'exact', 'amount' => '1', 'asset' => 'x', 'network' => 'not-a-chain', 'payTo' => '0xabc']]]));
-    $this->assertNull(CircleParser::normalize(['resource' => 'https://x.example/a', 'accepts' => [['scheme' => 'exact', 'amount' => '1', 'network' => 'base', 'payTo' => '0xabc']]]));
+    $https = 'https://x.example/a';
+    $exact = ['scheme' => 'exact', 'amount' => '1', 'asset' => 'x'];
+    $accepts = [
+      // Not https.
+      ['http://x.example/a', $exact],
+      // An amount that is not digits.
+      [$https, ['amount' => 'abc'] + $exact],
+      [$https, ['amount' => '-1'] + $exact],
+      // A network nobody knows.
+      [$https, $exact + ['network' => 'not-a-chain', 'payTo' => '0xabc']],
+      // No asset.
+      [$https, ['scheme' => 'exact', 'amount' => '1', 'network' => 'base', 'payTo' => '0xabc']],
+    ];
+    foreach ($accepts as $i => [$resource, $accept]) {
+      $entry = ['resource' => $resource, 'accepts' => [$accept]];
+      $this->assertNull(CircleParser::normalize($entry), "entry $i");
+    }
   }
 
   /**
@@ -146,7 +167,8 @@ final class CatalogParserTest extends UnitTestCase {
         'maxAmountRequired' => '2500',
         'payTo' => '0xabc',
         'asset' => '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-      ]],
+      ],
+      ],
     ]);
     $this->assertNotNull($normal);
     $this->assertSame('2500', $normal['exact'][0]['amount']);

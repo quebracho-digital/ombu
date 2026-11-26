@@ -1,0 +1,8 @@
+settings:
+  allowed_values:
+    -
+      label: 'Con transacciones'
+    -
+      label: 'Sin transacciones'
+    -
+      label: 'Sin verificar'

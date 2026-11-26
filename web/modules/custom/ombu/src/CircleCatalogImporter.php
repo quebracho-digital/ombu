@@ -33,7 +33,8 @@ final class CircleCatalogImporter implements CatalogImporterInterface {
   public const API = 'https://api.circle.com/v2/x402/discovery/resources';
 
   /**
-   * State: method + URL of the Circle listings taken down, never imported again.
+   * State: method + URL of the Circle listings taken down, never imported
+   * again.
    */
   public const BLOCKED = 'ombu.circle_blocked';
 

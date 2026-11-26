@@ -554,7 +554,7 @@ Done in dev: the Bazaar, PayAI and Circle feeds, with the full module suite pass
 
 ### The market facets name their sources, and a listing says whether it was paid
 
-Decidido por Leo (2026-11-26): "puedes agregar un campo de origen al indice de search_api y agregarlo al facet?" and "también podríamos tener una facet para filtrar listados con transacciones reales?".
+Asked by Leo (2026-11-26), to the jcode session: "puedes agregar un campo de origen al indice de search_api y agregarlo al facet?" and "tambien podriamos tener una facet para filtrar listados con transacciones reales?". Requests, not decisions: what follows is how they were done. The facet labels and the field's values are translated in `config/sync/language/es` and `pt-br` (added in review, 2026-11-26).
 
 Both indexes already carried `field_source` and the market view already had the facet, but it showed the keys (`bazaar`, `payai`) and was labelled "Seller". The facet is now labelled **Source** and names each value from the field's own `allowed_values` (`ombu_source_name`, `ListLabelProcessorBase`): Quebracho, Third party, Circle Agent Marketplace, Coinbase Bazaar, PayAI. The URL keeps `?seller[]=` so links that exist keep working. `ombu_update_10041` adds `bazaar` and `payai` to `field_source` on sites where the field did not allow them while listings already carried them.
 
@@ -564,7 +564,7 @@ A new field, `field_activity` (`paid`, `unpaid`, `unknown`; default `unknown`), 
 
 ### The share links are their networks' marks, and the name stays for whoever needs it
 
-Decidido por Leo (2026-11-26): "no sé por qué los links para compartir se ven los nombres en lugar del icono, eso ya lo habíamos resuelto".
+Reported by Leo (2026-11-26), to the jcode session: "no se porque los links para compartir en redes se ven los nombres en lugar del icono, eso ya lo habiamos resuelto". A bug report, not a decision. Git has no earlier commit with share icons in the module (checked 2026-11-26, `git log -S ombu-share__icon`): if they were solved before, it was somewhere else.
 
 Each network is now its mark and not its name (`templates/ombu-share.html.twig`, a macro over the module's own copy of the icons, Bootstrap Icons, MIT): a row of seven words wrapped on a phone and read as a list of labels, and the marks are recognised before the names are. The icons are inline SVG in the module and not a sprite from the theme: the theme's curated set has no Bluesky and no Mastodon, so a `<use>` would leave two links empty, and a subtheme or a change of theme would take the rest away.
 

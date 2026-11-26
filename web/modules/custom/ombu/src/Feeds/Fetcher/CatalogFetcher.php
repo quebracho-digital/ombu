@@ -203,7 +203,7 @@ final class CatalogFetcher extends PluginBase implements FetcherInterface, Conta
     ]);
     $status = $response->getStatusCode();
     if ($status >= 300 && $status < 400) {
-      throw new \RuntimeException("The catalogue redirected ($status); redirects are not followed.");
+      throw new \RuntimeException("The catalogue redirected ($status) more times than allowed.");
     }
     $stream = $response->getBody();
     $body = '';

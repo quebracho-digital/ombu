@@ -690,7 +690,9 @@ function ombu_update_10039(): void {
  * On-chain activity: the field behind the facet that filters by transactions.
  *
  * A listing from Bazaar or PayAI had incoming USDC on its wallet when it came
- * in (that is the check), so it starts as `paid`; Circle's listings were
+ * in (that is the check: min_transfers has been at least 1 in both the
+ * importers and the feed types since Bazaar and PayAI were added, cd0b3a7),
+ * so it starts as `paid`; Circle's listings were
  * never checked, and neither was anything else, so they start as `unknown`
  * until their next run says otherwise.
  */

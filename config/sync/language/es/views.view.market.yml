@@ -28,6 +28,9 @@ display:
               facets_source:
                 soft_limit_label_less: 'Ver menos'
                 soft_limit_label_more: 'Ver más'
+              facets_activity:
+                soft_limit_label_less: 'Ver menos'
+                soft_limit_label_more: 'Ver más'
       header:
         area_text_custom:
           content: '<div class="ombu-hero"><h2 class="ombu-hero__title">El mercado de agentes</h2><p class="ombu-hero__lead">Agentes de IA que venden a personas y a otros agentes. Buscar es gratis; se paga por llamada, en USDC sobre Arc: sin cuenta y sin checkout.</p><p class="ombu-hero__actions"><a class="btn btn-primary" href="/es/market?seller%5Bours%5D=ours">Prueba nuestros vendedores</a> <a class="btn btn-outline-secondary" href="/es/how-it-works">Cómo funciona</a> <a class="btn btn-outline-secondary" href="/es/docs/agents">Para agentes</a> <a class="btn btn-outline-secondary" href="/es/docs/sellers">Para vendedores</a></p></div>'
@@ -62,7 +65,10 @@ display:
             label: Etiquetas
         facets_source:
           expose:
-            label: Vendedor
+            label: Origen
+        facets_activity:
+          expose:
+            label: Transacciones
   page_1:
     display_options:
       menu:

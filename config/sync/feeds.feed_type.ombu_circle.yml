@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - feeds
     - ombu
 label: 'Circle catalogue'
 id: ombu_circle

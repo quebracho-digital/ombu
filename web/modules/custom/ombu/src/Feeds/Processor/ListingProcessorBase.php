@@ -76,6 +76,16 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
   protected array $written = [];
 
   /**
+   * The notes of this request, by list, as the state holds them.
+   *
+   * Each note used to rewrite the whole array of its list, thousands of
+   * times in a run; they are written once, when the run ends.
+   *
+   * @var array<string, array>
+   */
+  protected array $notes = [];
+
+  /**
    * Builds the processor.
    *
    * The services are not readonly: Feeds serializes its plugins between the
@@ -170,6 +180,7 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
   public function begin(FeedInterface $feed, CatalogRun $run): void {
     $run->started = TRUE;
     $this->written = [];
+    $this->notes = [];
     $store = $this->keyValue->get(CatalogRun::STORE);
     $run->options = (array) $store->get('options.' . $feed->id(), []);
     $store->delete('options.' . $feed->id());
@@ -292,9 +303,11 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
     }
     catch (\Throwable $e) {
       // Not this resource's fault alone, maybe: the run goes on, but a run
-      // with an error retires nothing.
+      // with an error retires nothing. The entry is named in the reasons, so
+      // a retirement stopped by it is visible in the report.
       $run->fail($e->getMessage());
       $run->count('failed');
+      $run->reason('failed: ' . mb_substr((string) $item->get('key'), 0, 160) . ': ' . mb_substr($e->getMessage(), 0, 120));
       $this->loggerFactory->get('ombu')->error('@source catalogue feed, @key: @m', [
         '@source' => $this->source(),
         '@key' => (string) $item->get('key'),
@@ -356,9 +369,20 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
         $this->drupalState->set("ombu.{$source}_read", $run->read);
         $this->drupalState->delete("ombu.{$source}_read_next");
       }
-      $this->afterWholeRun($feed, $run);
+      try {
+        $this->afterWholeRun($feed, $run);
+      }
+      catch (\Throwable $e) {
+        // A logo, a provider term: nothing that may escape finishImport() and
+        // leave the feed locked. The run is over; it is logged, not counted.
+        $this->loggerFactory->get('ombu')->error('@source catalogue feed, after the run: @m', [
+          '@source' => $source,
+          '@m' => $e->getMessage(),
+        ]);
+      }
       $this->drupalState->set("ombu.{$source}_last", $this->time->getRequestTime());
     }
+    $this->flushNotes();
     $report = $run->summary($this->outcomes(), $this->withReasons());
     $store = $this->keyValue->get(CatalogRun::STORE);
     $store->set("report.$source", [
@@ -367,7 +391,9 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
       'counts' => $report,
     ]);
     $store->delete('done.' . $feed->id());
-    $this->loggerFactory->get('ombu')->info('@source catalogue feed: @c', [
+    // A run that retired nothing (the guards, an error) is not routine news.
+    $level = ($report['retire_skipped'] ?? NULL) || ($report['error'] ?? NULL) ? 'warning' : 'info';
+    $this->loggerFactory->get('ombu')->log($level, '@source catalogue feed: @c', [
       '@source' => $source,
       '@c' => json_encode($report),
     ]);
@@ -607,8 +633,7 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
    * importer's keys: WalletChanges and the dashboard read them.
    */
   protected function note(string $list, int $id, mixed $value): void {
-    $key = "ombu.catalog.$list.{$this->source()}";
-    $all = $this->drupalState->get($key, []);
+    $all = $this->notes[$list] ??= (array) $this->drupalState->get("ombu.catalog.$list.{$this->source()}", []);
     if ($value === NULL) {
       if (!isset($all[$id])) {
         return;
@@ -618,7 +643,25 @@ abstract class ListingProcessorBase extends ProcessorBase implements CleanableIn
     else {
       $all[$id] = $value;
     }
-    $this->drupalState->set($key, $all);
+    $this->notes[$list] = $all;
+  }
+
+  /**
+   * A note of this request, or the one the state holds.
+   */
+  protected function noted(string $list, int $id): mixed {
+    $all = $this->notes[$list] ??= (array) $this->drupalState->get("ombu.catalog.$list.{$this->source()}", []);
+    return $all[$id] ?? NULL;
+  }
+
+  /**
+   * Writes the notes this request changed, once.
+   */
+  protected function flushNotes(): void {
+    foreach ($this->notes as $list => $all) {
+      $this->drupalState->set("ombu.catalog.$list.{$this->source()}", $all);
+    }
+    $this->notes = [];
   }
 
   /**

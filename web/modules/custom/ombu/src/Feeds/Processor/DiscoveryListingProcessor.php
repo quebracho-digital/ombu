@@ -355,8 +355,8 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
    * Whether a listing's last check is older than MAX_AGE (or was never noted).
    */
   private function stale(ProductInterface $product): bool {
-    $checked = $this->drupalState->get("ombu.catalog.checked.{$this->source()}", [])[(int) $product->id()] ?? 0;
-    return $this->time->getCurrentTime() - (int) $checked > self::MAX_AGE;
+    $checked = (int) $this->noted('checked', (int) $product->id());
+    return $this->time->getCurrentTime() - $checked > self::MAX_AGE;
   }
 
   /**
@@ -402,6 +402,8 @@ final class DiscoveryListingProcessor extends ListingProcessorBase {
     $product->set('field_source_hash', NULL);
     $product->save();
     $this->note('wallet_changed', (int) $product->id(), NULL);
+    // Staff's decision, outside any run: written now, not at the end of one.
+    $this->flushNotes();
     $this->loggerFactory->get('ombu')->notice('Listing @id (@url): new wallet @wallet accepted by staff.', [
       '@id' => $product->id(),
       '@url' => $product->get('field_endpoint')->value,

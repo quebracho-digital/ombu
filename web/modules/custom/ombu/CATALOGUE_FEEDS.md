@@ -49,6 +49,45 @@ set the feed type's *Import period* (Circle: 6 hours, as its importer's cron
 today); Feeds then queues the feed and imports it page by page in its
 queue. Run cron from the system, not `automated_cron`.
 
+## Only listings whose transactions Ombú can see
+
+Bazaar and PayAI do not list what the catalogue says: they list what Ombú
+verified (see *The rules the feeds keep*). Part of that check is on chain,
+through Alchemy (`ALCHEMY_API_KEY` in `.ddev/.env`): `payTo` must have
+received USDC (`alchemy_getAssetTransfers`), `min_transfers` times (1 in the
+feed type). Two options narrow it further for a run:
+
+- `--price-match`: a transfer of exactly the price the listing had on that
+  day, not just any transfer to that wallet.
+- `--max-age-days=30`: that transfer no older than 30 days.
+
+What the counts look like on the real catalogues, 2026-11-26, with the key in
+place (all partial runs: nothing is retired):
+
+| Run | Counts |
+|---|---|
+| `payai --max=60 --price-match --max-age-days=30` (73 s) | `created 26, unchanged 15, exists 2, unsupported 12, rejected 3, inactive 2` |
+| `bazaar --max=60` (1 m 40 s) | `created 18, updated 18, unchanged 15, exists 3, rejected 4, inactive 2` |
+| `bazaar --max=120 --price-match --max-age-days=30` (2 m 51 s) | `created 39, updated 5, unchanged 51, exists 5, unsupported 1, rejected 6, inactive 13` |
+
+And the reasons, which is where the on-chain check shows:
+
+- PayAI: `accepts: differs from the catalogue` 2, `probe: The endpoint
+  answered 403` 1, `no incoming transfer of the listing's price` 1, `no
+  incoming transfer in the window` 1.
+- Bazaar, plain: `accepts: differs from the catalogue` 2, `probe: The endpoint
+  answered 400` 2, `no incoming USDC` 2.
+- Bazaar, strict: `no incoming USDC` 5, `no incoming transfer in the window`
+  5, `accepts: differs from the catalogue` 4, `no incoming transfer of the
+  listing's price` 3, `probe: The endpoint answered 400` 2.
+
+So an entry whose wallet never received USDC stays out (`inactive`, `no
+incoming USDC`), an entry that disagrees with the live 402 is refused even
+when its wallet has history (`rejected`), and `--price-match`/`--max-age-days`
+cut the ones that were paid but not like a sale of that listing. A listing
+already imported is asked again when its catalogue entry changes, or when its
+last check is older than a week (`MAX_AGE`).
+
 ## The rules the feeds keep
 
 Everything the importers checked, and where it lives now (the table in
@@ -226,5 +265,33 @@ Not covered: whether CDP Bazaar, PayAI and Circle validate their entries, which 
 | 7 | A catalogue that reads less than half is trusted once it says the same twice in a row (`ombu.{source}_read_next`), so the reference can come down and retirement is not frozen for good (test: `testCatalogueThatShrinksByHalfRetiresNothing`). The importer got the same rule, so both leave the same state (`testTheFeedAndTheImporterLeaveTheSame`). |
 
 A3, M3, M4 and M5 of the review went in the same pass: the pointer moves by the items the server actually returned, the run completes only on an empty page or at `pagination.total` (a cap of 10000 pages leaves the run partial), a redirect is followed only to the same host, and `max_bytes` is enforced on the headers and while reading.
+
+A second pass closed the rest of the short list:
+
+- **M2, a failing item names itself.** The entry's key and the message go to
+  the run's reasons (`failed: GET https://…: …`), so a retirement stopped by
+  one entry is visible in `ombu:feed-report` instead of only in the log.
+- **M6, nothing after the run can lock the feed.** `afterWholeRun()` (logos,
+  unmarking) runs inside `try/catch`: an error there is logged and the import
+  finishes, with the feed unlocked.
+- **M8, the notes are written once.** `checked` and `wallet_changed` were
+  rewritten in state on every item (thousands of serialisations of a growing
+  array per run); they are kept in memory and written in `postProcess()`, and
+  `acceptWallet()` writes at once because it is not a run.
+- **L1, L5, L7.** A run that retired nothing is logged as `warning`, not
+  `info`; the reasons of a run are capped at 20 (the rest go to `other`), so a
+  catalogue of poisoned entries cannot grow the report; a provider's
+  description is written as `plain_text`, never as the catalogue's markup.
+- **L8.** The three feed types declare `feeds` as a dependency (in
+  `config/optional` and in `config/sync`); the fetcher already refuses a
+  non-https address in `validateConfigurationForm()`.
+
+What waits, and why: **M7** (inject the services into the plugins instead of
+reaching into the container) touches every plugin and gains nothing the
+tests can see; **L2** (a command to lower the reference by hand) is no longer
+needed now that a catalogue that says the same twice is trusted; **L3** (take
+the errors from the report) is cosmetic; **L4** (normalise the dedupe keys)
+must wait until the importers go, because the keys are shared with them; **L6**
+(hash in the parser) is a performance change with no behaviour behind it.
 
 The audit's files (`findings.json`, the coverage ledger and the proof scripts) are outside the repository, in the owner's `security-audits/ombu/run-1/`.

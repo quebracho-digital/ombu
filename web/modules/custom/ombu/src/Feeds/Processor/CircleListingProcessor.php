@@ -243,10 +243,9 @@ final class CircleListingProcessor extends ListingProcessorBase {
       return NULL;
     }
     $values = [
-      'description' => $provider['description'] ?? '',
       'field_website' => $website !== '' ? $website : NULL,
-      'field_docs_url' => $provider['docsUrl'] ?? NULL,
-      'field_openapi_url' => $provider['openApiUrl'] ?? NULL,
+      'field_docs_url' => is_scalar($provider['docsUrl'] ?? NULL) ? (string) $provider['docsUrl'] : NULL,
+      'field_openapi_url' => is_scalar($provider['openApiUrl'] ?? NULL) ? (string) $provider['openApiUrl'] : NULL,
     ];
     $changed = FALSE;
     foreach ($values as $field => $value) {
@@ -255,6 +254,12 @@ final class CircleListingProcessor extends ListingProcessorBase {
         $term->set($field, $value);
         $changed = TRUE;
       }
+    }
+    // The description is formatted text: plain, never the catalogue's markup.
+    $description = is_scalar($provider['description'] ?? NULL) ? trim((string) $provider['description']) : '';
+    if ($description !== '' && trim((string) $term->get('description')->value) === '') {
+      $term->set('description', ['value' => $description, 'format' => 'plain_text']);
+      $changed = TRUE;
     }
     if ($changed) {
       $term->save();

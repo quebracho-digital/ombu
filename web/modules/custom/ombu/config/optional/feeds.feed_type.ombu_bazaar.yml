@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - feeds
     - ombu
 label: 'CDP Bazaar catalogue'
 id: ombu_bazaar

@@ -257,6 +257,18 @@ final class DiscoveryCatalogFeedTest extends CommerceKernelTestBase {
   }
 
   /**
+   * Tests that the reasons a run keeps are capped.
+   */
+  public function testTheReasonsOfARunAreCapped(): void {
+    $run = CatalogRun::create($this->container, 0);
+    for ($i = 0; $i < CatalogRun::REASONS + 10; $i++) {
+      $run->reason("reason $i");
+    }
+    $this->assertCount(CatalogRun::REASONS + 1, $run->reasons);
+    $this->assertSame(10, $run->reasons['other']);
+  }
+
+  /**
    * Tests that a failed check is not listed and is counted.
    */
   public function testFailedCheckIsNotListedAndIsCounted(): void {

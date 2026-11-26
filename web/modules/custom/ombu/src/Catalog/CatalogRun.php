@@ -133,9 +133,20 @@ final class CatalogRun extends State {
   }
 
   /**
+   * Distinct reasons one run keeps: past them the rest go to `other`.
+   */
+  public const REASONS = 20;
+
+  /**
    * Counts one reason for a rejection.
+   *
+   * Capped, so a catalogue of poisoned entries cannot grow the report
+   * without bound.
    */
   public function reason(string $reason): void {
+    if (!isset($this->reasons[$reason]) && count($this->reasons) >= self::REASONS) {
+      $reason = 'other';
+    }
     $this->reasons[$reason] = ($this->reasons[$reason] ?? 0) + 1;
   }
 

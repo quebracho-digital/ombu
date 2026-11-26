@@ -561,3 +561,19 @@ Both indexes already carried `field_source` and the market view already had the 
 A new field, `field_activity` (`paid`, `unpaid`, `unknown`; default `unknown`), holds what the on-chain check saw, and the **Transactions** facet filters on it (`?transactions[]=`, `ombu_activity_label`): "With transactions", "No transactions", "Not checked". The Discovery processor writes it from the verifier's answer (`activity`: NULL when the index could not tell); Circle writes `unknown`, because its catalogue is never checked on chain. It is a stored field and not something computed at query time because the answer is only known when the check runs, and the index must hold it to facet on it. `ombu_update_10040` installs the field and fills what existed before it: `paid` for Bazaar and PayAI listings (that was their check) and `unknown` for the rest.
 
 "How do I import only listings with transactions?" is a question about the import, not the facet: the feed type's processor (`/admin/structure/feeds/manage/ombu_bazaar/processor`) holds `min_transfers` (1), `price_match` and `only_tags`, and one run can narrow it from drush (`--min-transfers`, `--price-match`, `--max-age-days`, `--only-tags`); `--min-transfers` was added with this. After the deploy both indexes need indexing again for the new field's values (cron does it, or `drush search-api:index listings_meilisearch`).
+
+### The share links are their networks' marks, and the name stays for whoever needs it
+
+Decidido por Leo (2026-11-26): "no sé por qué los links para compartir se ven los nombres en lugar del icono, eso ya lo habíamos resuelto".
+
+Each network is now its mark and not its name (`templates/ombu-share.html.twig`, a macro over the module's own copy of the icons, Bootstrap Icons, MIT): a row of seven words wrapped on a phone and read as a list of labels, and the marks are recognised before the names are. The icons are inline SVG in the module and not a sprite from the theme: the theme's curated set has no Bluesky and no Mastodon, so a `<use>` would leave two links empty, and a subtheme or a change of theme would take the rest away.
+
+Nothing is lost to a screen reader or to a person who does not know a mark: the name stays as the link's accessible name and as its tooltip (`aria-label` and `title`), with "(opens in a new tab)" on the six that leave the site, and the copy button keeps "Copy link" as a visually hidden label while its mark turns into a check for two seconds (`js/share.js`). `Share::links()` and the block are unchanged, so nothing new is loaded from any network: each link is still a plain address until a person follows it.
+
+Tested by `ShareRenderTest` (kernel): one anchor per network of `Share::links()`, each with a mark and with no visible text; the copy button with its two marks; and that no `<use>` or `<img>` is used. A network added to `Share::links()` without a mark here fails that test.
+
+### x402_pay will accept more than USDC, one currency per price, before any swap
+
+Decidido por Leo (2026-11-26): "lo segundo" (first version: price and payment in the same currency, USD or EUR; the exchange rate waits for a second stage), after "me gustaria tener una opcion de multicurrency en x402_pay".
+
+A buyer who holds EURC and not USDC is helped by the seller accepting EURC, not by Ombú quoting a third party's swap: nothing leaves our server, no aggregator sits between buyer and seller, and the payment is still one signed transfer the budget checks already cover. The issue from Peach (an Arc swap aggregator offering funding quotes on listings) is not integrated; if buyers ask, an optional external link the buyer's browser opens. Not started: see HANDOFF.md, "Abierto".

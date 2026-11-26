@@ -1,8 +1,8 @@
 /**
  * @file
- * The share block's copy button: puts the address on the clipboard and says
- * so to a screen reader. Without clipboard access the button does nothing
- * visible and the links still work.
+ * The share block's copy button: puts the address on the clipboard, turns its
+ * mark into a check, and says so to a screen reader. Without clipboard access
+ * the button does nothing visible and the links still work.
  */
 (function (Drupal, once) {
   Drupal.behaviors.ombuShareCopy = {
@@ -12,10 +12,16 @@
           button.hidden = true;
           return;
         }
+        const done = () => button.classList.add('is-copied');
+        const undone = () => button.classList.remove('is-copied');
         button.addEventListener('click', () => {
           const status = button.closest('.ombu-share').querySelector('.ombu-share__status');
           navigator.clipboard.writeText(button.dataset.ombuShareUrl).then(
-            () => { status.textContent = Drupal.t('Link copied'); },
+            () => {
+              status.textContent = Drupal.t('Link copied');
+              done();
+              window.setTimeout(undone, 2000);
+            },
             () => { status.textContent = Drupal.t('The link could not be copied'); },
           );
         });
